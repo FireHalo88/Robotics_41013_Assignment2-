@@ -8,7 +8,7 @@ classdef Cyton300e < handle
     end
     
     methods
-        function GetUR3Robot(self)
+        function GetCytonRobot(self)
 
         pause(0.001);
         name = ['Cyton_',datestr(now,'yyyymmddTHHMMSSFFF')];
