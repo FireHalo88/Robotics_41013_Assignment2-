@@ -4,13 +4,14 @@ classdef Cyton300e < handle
     
     properties
         model;
+        workspace = [0 4 0 4 0 4]
     end
     
     methods
         function GetUR3Robot(self)
 
         pause(0.001);
-        name = ['UR_3_',datestr(now,'yyyymmddTHHMMSSFFF')];
+        name = ['Cyton_',datestr(now,'yyyymmddTHHMMSSFFF')];
 
         %DH params from:
         %https://link.springer.com/content/pdf/10.1007/s00500-017-2975-y.pdf
