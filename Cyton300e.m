@@ -8,10 +8,14 @@ classdef Cyton300e < handle
     end
     
     methods
+        function self = Cyton300e()
+            self.GetCytonRobot();
+        end
+        
         function GetCytonRobot(self)
 
         pause(0.001);
-        name = ['Cyton_',datestr(now,'yyyymmddTHHMMSSFFF')];
+        name = ['CytonATV'];
 
         %DH params from:
         %https://link.springer.com/content/pdf/10.1007/s00500-017-2975-y.pdf
