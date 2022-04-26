@@ -56,7 +56,7 @@ handles.output = hObject;
 
 % Creation of the Cyton/Hans Cute Robot Class
 cyton = Cyton300e;
-robot = cyton.model;
+myRobot = cyton.model;
 
 % Set initial angles
 handles.q1.String = '0';
@@ -70,10 +70,25 @@ handles.q7.String = '0';
 % Plot the Robot at default state
 axes(handles.axes1)
 q = zeros(1,7);
-robot.plot(q)
+myRobot.plot(q, 'noarrow');
+axis equal;
+view(3);
+
+% Calculate the Robot EE Position with FK
+myRobot_TR = myRobot.fkine(q);
+handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+% Extract Rotation Portion of FK Matrix
+rot = myRobot_TR(1:3, 1:3);
+% Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+RPY = tr2rpy(rot, 'deg');
+handles.ee_Roll.String = num2str(round(RPY(1), 3));
+handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+handles.ee_Yaw.String = num2str(round(RPY(3), 3));
 
 % Updating Handles
-handles.mRobot = robot;
+handles.myRobot = myRobot;
 % Update handles structure
 guidata(hObject, handles);
 
@@ -201,6 +216,27 @@ function slider1_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+% Get current slider value
+newQ1 = round(get(hObject, 'Value'), 1);
+% Set RHS text box to be this value
+handles.q1.String = num2str(newQ1);
+% Update X,Y,Z and R,P,Y values and animate robot to match new joint state.
+allQ = handles.myRobot.getpos();
+allQ(1) = newQ1*pi/180;
+handles.myRobot.animate(allQ);
+% Now we want to update the EE Position on the GUI
+% Calculate the Robot EE Position with FK
+myRobot_TR = handles.myRobot.fkine(allQ);
+handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+% Extract Rotation Portion of FK Matrix
+rot = myRobot_TR(1:3, 1:3);
+% Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+RPY = tr2rpy(rot, 'deg');
+handles.ee_Roll.String = num2str(round(RPY(1), 3));
+handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+handles.ee_Yaw.String = num2str(round(RPY(3), 3));
 
 
 % --- Executes during object creation, after setting all properties.
@@ -209,8 +245,10 @@ function slider1_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 % Define Min and Max for Q1 Slider
-get(hObject, 'Min') = deg2rad(0);
-get(hObject, 'Max') = deg2rad(300);
+set(hObject,'Min',0,'Max',300);
+% Set step sizes of 5 degrees when pressing slider buttons
+step = [5, 5]/(get(hObject, 'Max') - get(hObject, 'Min'));
+set(hObject, 'SliderStep', step);
 
 % Hint: slider controls usually have a light gray background.
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
@@ -226,6 +264,27 @@ function slider2_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+% Get current slider value
+newQ2 = round(get(hObject, 'Value'), 1);
+% Set RHS text box to be this value
+handles.q2.String = num2str(newQ2);
+% Update X,Y,Z and R,P,Y values and animate robot to match new joint state.
+allQ = handles.myRobot.getpos();
+allQ(2) = newQ2*pi/180;
+handles.myRobot.animate(allQ);
+% Now we want to update the EE Position on the GUI
+% Calculate the Robot EE Position with FK
+myRobot_TR = handles.myRobot.fkine(allQ);
+handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+% Extract Rotation Portion of FK Matrix
+rot = myRobot_TR(1:3, 1:3);
+% Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+RPY = tr2rpy(rot, 'deg');
+handles.ee_Roll.String = num2str(round(RPY(1), 3));
+handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+handles.ee_Yaw.String = num2str(round(RPY(3), 3));
 
 
 % --- Executes during object creation, after setting all properties.
@@ -233,9 +292,11 @@ function slider2_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to slider2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-% Define Min and Max for Q1 Slider
-get(hObject, 'Min') = deg2rad(0);
-get(hObject, 'Max') = deg2rad(210);
+% Define Min and Max for Q2 Slider
+set(hObject,'Min',0,'Max',210);
+% Set step sizes of 5 degrees when pressing slider buttons
+step = [5, 5]/(get(hObject, 'Max') - get(hObject, 'Min'));
+set(hObject, 'SliderStep', step);
 
 % Hint: slider controls usually have a light gray background.
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
@@ -251,16 +312,38 @@ function slider3_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-
+% Get current slider value
+newQ3 = round(get(hObject, 'Value'), 1);
+% Set RHS text box to be this value
+handles.q3.String = num2str(newQ3);
+% Update X,Y,Z and R,P,Y values and animate robot to match new joint state.
+allQ = handles.myRobot.getpos();
+allQ(3) = newQ3*pi/180;
+handles.myRobot.animate(allQ);
+% Now we want to update the EE Position on the GUI
+% Calculate the Robot EE Position with FK
+myRobot_TR = handles.myRobot.fkine(allQ);
+handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+% Extract Rotation Portion of FK Matrix
+rot = myRobot_TR(1:3, 1:3);
+% Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+RPY = tr2rpy(rot, 'deg');
+handles.ee_Roll.String = num2str(round(RPY(1), 3));
+handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+handles.ee_Yaw.String = num2str(round(RPY(3), 3));
 
 % --- Executes during object creation, after setting all properties.
 function slider3_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to slider3 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-% Define Min and Max for Q1 Slider
-get(hObject, 'Min') = deg2rad(0);
-get(hObject, 'Max') = deg2rad(300);
+% Define Min and Max for Q3 Slider
+set(hObject,'Min',0,'Max',300);
+% Set step sizes of 5 degrees when pressing slider buttons
+step = [5, 5]/(get(hObject, 'Max') - get(hObject, 'Min'));
+set(hObject, 'SliderStep', step);
 
 % Hint: slider controls usually have a light gray background.
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
@@ -276,16 +359,39 @@ function slider4_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-
+% Get current slider value
+newQ4 = round(get(hObject, 'Value'), 1);
+% Set RHS text box to be this value
+handles.q4.String = num2str(newQ4);
+% Update X,Y,Z and R,P,Y values and animate robot to match new joint state.
+allQ = handles.myRobot.getpos();
+allQ(4) = newQ4*pi/180;
+handles.myRobot.animate(allQ);
+% Now we want to update the EE Position on the GUI
+% Calculate the Robot EE Position with FK
+myRobot_TR = handles.myRobot.fkine(allQ);
+handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+% Extract Rotation Portion of FK Matrix
+rot = myRobot_TR(1:3, 1:3);
+% Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+RPY = tr2rpy(rot, 'deg');
+handles.ee_Roll.String = num2str(round(RPY(1), 3));
+handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+handles.ee_Yaw.String = num2str(round(RPY(3), 3));
 
 % --- Executes during object creation, after setting all properties.
 function slider4_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to slider4 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-% Define Min and Max for Q1 Slider
-get(hObject, 'Min') = deg2rad(0);
-get(hObject, 'Max') = deg2rad(210);
+% Define Min and Max for Q4 Slider
+set(hObject,'Min',0,'Max',210);
+% Set step sizes of 5 degrees when pressing slider buttons
+step = [5, 5]/(get(hObject, 'Max') - get(hObject, 'Min'));
+set(hObject, 'SliderStep', step);
+
 
 % Hint: slider controls usually have a light gray background.
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
@@ -301,16 +407,39 @@ function slider5_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-
+% Get current slider value
+newQ5 = round(get(hObject, 'Value'), 1);
+% Set RHS text box to be this value
+handles.q5.String = num2str(newQ5);
+% Update X,Y,Z and R,P,Y values and animate robot to match new joint state.
+allQ = handles.myRobot.getpos();
+allQ(5) = newQ5*pi/180;
+handles.myRobot.animate(allQ);
+% Now we want to update the EE Position on the GUI
+% Calculate the Robot EE Position with FK
+myRobot_TR = handles.myRobot.fkine(allQ);
+handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+% Extract Rotation Portion of FK Matrix
+rot = myRobot_TR(1:3, 1:3);
+% Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+RPY = tr2rpy(rot, 'deg');
+handles.ee_Roll.String = num2str(round(RPY(1), 3));
+handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+handles.ee_Yaw.String = num2str(round(RPY(3), 3));
 
 % --- Executes during object creation, after setting all properties.
 function slider5_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to slider5 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-% Define Min and Max for Q1 Slider
-get(hObject, 'Min') = deg2rad(0);
-get(hObject, 'Max') = deg2rad(210);
+% Define Min and Max for Q5 Slider
+set(hObject,'Min',0,'Max',210);
+% Set step sizes of 5 degrees when pressing slider buttons
+step = [5, 5]/(get(hObject, 'Max') - get(hObject, 'Min'));
+set(hObject, 'SliderStep', step);
+
 
 % Hint: slider controls usually have a light gray background.
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
@@ -323,19 +452,42 @@ function slider6_Callback(hObject, eventdata, handles)
 % hObject    handle to slider6 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% Define Min and Max for Q1 Slider
-get(hObject, 'Min') = deg2rad(0);
-get(hObject, 'Max') = deg2rad(210);
+
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-
+% Get current slider value
+newQ6 = round(get(hObject, 'Value'), 1);
+% Set RHS text box to be this value
+handles.q6.String = num2str(newQ6);
+% Update X,Y,Z and R,P,Y values and animate robot to match new joint state.
+allQ = handles.myRobot.getpos();
+allQ(6) = newQ6*pi/180;
+handles.myRobot.animate(allQ);
+% Now we want to update the EE Position on the GUI
+% Calculate the Robot EE Position with FK
+myRobot_TR = handles.myRobot.fkine(allQ);
+handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+% Extract Rotation Portion of FK Matrix
+rot = myRobot_TR(1:3, 1:3);
+% Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+RPY = tr2rpy(rot, 'deg');
+handles.ee_Roll.String = num2str(round(RPY(1), 3));
+handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+handles.ee_Yaw.String = num2str(round(RPY(3), 3));
 
 % --- Executes during object creation, after setting all properties.
 function slider6_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to slider6 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
+% Define Min and Max for Q6 Slider
+set(hObject,'Min',0,'Max',210);
+% Set step sizes of 5 degrees when pressing slider buttons
+step = [5, 5]/(get(hObject, 'Max') - get(hObject, 'Min'));
+set(hObject, 'SliderStep', step);
 
 % Hint: slider controls usually have a light gray background.
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
@@ -351,16 +503,39 @@ function slider7_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-
+% Get current slider value
+newQ7 = round(get(hObject, 'Value'), 1);
+% Set RHS text box to be this value
+handles.q7.String = num2str(newQ7);
+% Update X,Y,Z and R,P,Y values and animate robot to match new joint state.
+allQ = handles.myRobot.getpos();
+allQ(7) = newQ7*pi/180;
+handles.myRobot.animate(allQ);
+% Now we want to update the EE Position on the GUI
+% Calculate the Robot EE Position with FK
+myRobot_TR = handles.myRobot.fkine(allQ);
+handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+% Extract Rotation Portion of FK Matrix
+rot = myRobot_TR(1:3, 1:3);
+% Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+RPY = tr2rpy(rot, 'deg');
+handles.ee_Roll.String = num2str(round(RPY(1), 3));
+handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+handles.ee_Yaw.String = num2str(round(RPY(3), 3));
 
 % --- Executes during object creation, after setting all properties.
 function slider7_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to slider7 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-% Define Min and Max for Q1 Slider
-get(hObject, 'Min') = deg2rad(0);
-get(hObject, 'Max') = deg2rad(300);
+% Define Min and Max for Q7 Slider
+set(hObject,'Min',0,'Max',300);
+% Set step sizes of 5 degrees when pressing slider buttons
+step = [5, 5]/(get(hObject, 'Max') - get(hObject, 'Min'));
+set(hObject, 'SliderStep', step);
+
 
 % Hint: slider controls usually have a light gray background.
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
@@ -376,6 +551,37 @@ function q1_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of q1 as text
 %        str2double(get(hObject,'String')) returns contents of q1 as a double
+% Get new value
+newQ1 = round(str2double(get(hObject,'String')), 1);
+handles.q1.String = num2str(newQ1); % We only want to show to the first d.p.
+% Get current values
+allQ = handles.myRobot.getpos();
+
+% Check new value is in joint range
+if newQ1*pi/180 < handles.myRobot.qlim(1,1) || newQ1*pi/180 > handles.myRobot.qlim(1,2)
+    % Not in joint limits, need to revert to old Q1
+    handles.q1.String = num2str(round(allQ(1)*180/pi, 1));
+else
+    % Move slider for Q1 to this position
+    set(handles.slider1,'Value',newQ1);
+    % Adjust pose of robot with animate
+    allQ = handles.myRobot.getpos();
+    allQ(1) = newQ1*pi/180;
+    handles.myRobot.animate(allQ);
+    % Now we want to update the EE Position on the GUI
+    % Calculate the Robot EE Position with FK
+    myRobot_TR = handles.myRobot.fkine(allQ);
+    handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+    handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+    handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+    % Extract Rotation Portion of FK Matrix
+    rot = myRobot_TR(1:3, 1:3);
+    % Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+    RPY = tr2rpy(rot, 'deg');
+    handles.ee_Roll.String = num2str(round(RPY(1), 3));
+    handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+    handles.ee_Yaw.String = num2str(round(RPY(3), 3));
+end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -399,7 +605,37 @@ function q2_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of q2 as text
 %        str2double(get(hObject,'String')) returns contents of q2 as a double
+% Get new value
+newQ2 = round(str2double(get(hObject,'String')), 1);
+handles.q2.String = num2str(newQ2); % We only want to show to the first d.p.
+% Get current values
+allQ = handles.myRobot.getpos();
 
+% Check new value is in joint range
+if newQ2*pi/180 < handles.myRobot.qlim(2,1) || newQ2*pi/180 > handles.myRobot.qlim(2,2)
+    % Not in joint limits, need to revert to old Q2
+    handles.q2.String = num2str(round(allQ(2)*180/pi, 1));
+else
+    % Move slider for Q2 to this position
+    set(handles.slider2,'Value',newQ2);
+    % Adjust pose of robot with animate
+    allQ = handles.myRobot.getpos();
+    allQ(2) = newQ2*pi/180;
+    handles.myRobot.animate(allQ);
+    % Now we want to update the EE Position on the GUI
+    % Calculate the Robot EE Position with FK
+    myRobot_TR = handles.myRobot.fkine(allQ);
+    handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+    handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+    handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+    % Extract Rotation Portion of FK Matrix
+    rot = myRobot_TR(1:3, 1:3);
+    % Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+    RPY = tr2rpy(rot, 'deg');
+    handles.ee_Roll.String = num2str(round(RPY(1), 3));
+    handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+    handles.ee_Yaw.String = num2str(round(RPY(3), 3));
+end
 
 % --- Executes during object creation, after setting all properties.
 function q2_CreateFcn(hObject, eventdata, handles)
@@ -422,7 +658,37 @@ function q3_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of q3 as text
 %        str2double(get(hObject,'String')) returns contents of q3 as a double
+% Get new value
+newQ3 = round(str2double(get(hObject,'String')), 1);
+handles.q3.String = num2str(newQ3); % We only want to show to the first d.p.
+% Get current values
+allQ = handles.myRobot.getpos();
 
+% Check new value is in joint range
+if newQ3*pi/180 < handles.myRobot.qlim(3,1) || newQ3*pi/180 > handles.myRobot.qlim(3,2)
+    % Not in joint limits, need to revert to old Q3
+    handles.q3.String = num2str(round(allQ(3)*180/pi, 1));
+else
+    % Move slider for Q3 to this position
+    set(handles.slider3,'Value',newQ3);
+    % Adjust pose of robot with animate
+    allQ = handles.myRobot.getpos();
+    allQ(3) = newQ3*pi/180;
+    handles.myRobot.animate(allQ);
+    % Now we want to update the EE Position on the GUI
+    % Calculate the Robot EE Position with FK
+    myRobot_TR = handles.myRobot.fkine(allQ);
+    handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+    handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+    handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+    % Extract Rotation Portion of FK Matrix
+    rot = myRobot_TR(1:3, 1:3);
+    % Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+    RPY = tr2rpy(rot, 'deg');
+    handles.ee_Roll.String = num2str(round(RPY(1), 3));
+    handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+    handles.ee_Yaw.String = num2str(round(RPY(3), 3));
+end
 
 % --- Executes during object creation, after setting all properties.
 function q3_CreateFcn(hObject, eventdata, handles)
@@ -445,7 +711,37 @@ function q4_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of q4 as text
 %        str2double(get(hObject,'String')) returns contents of q4 as a double
+% Get new value
+newQ4 = round(str2double(get(hObject,'String')), 1);
+handles.q4.String = num2str(newQ4); % We only want to show to the first d.p.
+% Get current values
+allQ = handles.myRobot.getpos();
 
+% Check new value is in joint range
+if newQ4*pi/180 < handles.myRobot.qlim(4,1) || newQ4*pi/180 > handles.myRobot.qlim(4,2)
+    % Not in joint limits, need to revert to old Q4
+    handles.q2.String = num2str(round(allQ(4)*180/pi, 1));
+else
+    % Move slider for Q4 to this position
+    set(handles.slider2,'Value',newQ4);
+    % Adjust pose of robot with animate
+    allQ = handles.myRobot.getpos();
+    allQ(4) = newQ4*pi/180;
+    handles.myRobot.animate(allQ);
+    % Now we want to update the EE Position on the GUI
+    % Calculate the Robot EE Position with FK
+    myRobot_TR = handles.myRobot.fkine(allQ);
+    handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+    handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+    handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+    % Extract Rotation Portion of FK Matrix
+    rot = myRobot_TR(1:3, 1:3);
+    % Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+    RPY = tr2rpy(rot, 'deg');
+    handles.ee_Roll.String = num2str(round(RPY(1), 3));
+    handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+    handles.ee_Yaw.String = num2str(round(RPY(3), 3));
+end
 
 % --- Executes during object creation, after setting all properties.
 function q4_CreateFcn(hObject, eventdata, handles)
@@ -468,7 +764,37 @@ function q5_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of q5 as text
 %        str2double(get(hObject,'String')) returns contents of q5 as a double
+% Get new value
+newQ5 = round(str2double(get(hObject,'String')), 1);
+handles.q5.String = num2str(newQ5); % We only want to show to the first d.p.
+% Get current values
+allQ = handles.myRobot.getpos();
 
+% Check new value is in joint range
+if newQ5*pi/180 < handles.myRobot.qlim(5,1) || newQ5*pi/180 > handles.myRobot.qlim(5,2)
+    % Not in joint limits, need to revert to old Q5
+    handles.q5.String = num2str(round(allQ(5)*180/pi, 1));
+else
+    % Move slider for Q5 to this position
+    set(handles.slider5,'Value',newQ5);
+    % Adjust pose of robot with animate
+    allQ = handles.myRobot.getpos();
+    allQ(5) = newQ5*pi/180;
+    handles.myRobot.animate(allQ);
+    % Now we want to update the EE Position on the GUI
+    % Calculate the Robot EE Position with FK
+    myRobot_TR = handles.myRobot.fkine(allQ);
+    handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+    handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+    handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+    % Extract Rotation Portion of FK Matrix
+    rot = myRobot_TR(1:3, 1:3);
+    % Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+    RPY = tr2rpy(rot, 'deg');
+    handles.ee_Roll.String = num2str(round(RPY(1), 3));
+    handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+    handles.ee_Yaw.String = num2str(round(RPY(3), 3));
+end
 
 % --- Executes during object creation, after setting all properties.
 function q5_CreateFcn(hObject, eventdata, handles)
@@ -491,7 +817,37 @@ function q6_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of q6 as text
 %        str2double(get(hObject,'String')) returns contents of q6 as a double
+% Get new value
+newQ6 = round(str2double(get(hObject,'String')), 1);
+handles.q6.String = num2str(newQ6); % We only want to show to the first d.p.
+% Get current values
+allQ = handles.myRobot.getpos();
 
+% Check new value is in joint range
+if newQ6*pi/180 < handles.myRobot.qlim(6,1) || newQ6*pi/180 > handles.myRobot.qlim(6,2)
+    % Not in joint limits, need to revert to old Q6
+    handles.q6.String = num2str(round(allQ(6)*180/pi, 1));
+else
+    % Move slider for Q6 to this position
+    set(handles.slider6,'Value',newQ6);
+    % Adjust pose of robot with animate
+    allQ = handles.myRobot.getpos();
+    allQ(6) = newQ6*pi/180;
+    handles.myRobot.animate(allQ);
+    % Now we want to update the EE Position on the GUI
+    % Calculate the Robot EE Position with FK
+    myRobot_TR = handles.myRobot.fkine(allQ);
+    handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+    handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+    handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+    % Extract Rotation Portion of FK Matrix
+    rot = myRobot_TR(1:3, 1:3);
+    % Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+    RPY = tr2rpy(rot, 'deg');
+    handles.ee_Roll.String = num2str(round(RPY(1), 3));
+    handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+    handles.ee_Yaw.String = num2str(round(RPY(3), 3));
+end
 
 % --- Executes during object creation, after setting all properties.
 function q6_CreateFcn(hObject, eventdata, handles)
@@ -514,7 +870,37 @@ function q7_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of q7 as text
 %        str2double(get(hObject,'String')) returns contents of q7 as a double
+% Get new value
+newQ7 = round(str2double(get(hObject,'String')), 1);
+handles.q7.String = num2str(newQ7); % We only want to show to the first d.p.
+% Get current values
+allQ = handles.myRobot.getpos();
 
+% Check new value is in joint range
+if newQ7*pi/180 < handles.myRobot.qlim(7,1) || newQ7*pi/180 > handles.myRobot.qlim(7,2)
+    % Not in joint limits, need to revert to old Q7
+    handles.q7.String = num2str(round(allQ(7)*180/pi, 1));
+else
+    % Move slider for Q7 to this position
+    set(handles.slider7,'Value',newQ7);
+    % Adjust pose of robot with animate
+    allQ = handles.myRobot.getpos();
+    allQ(7) = newQ7*pi/180;
+    handles.myRobot.animate(allQ);
+    % Now we want to update the EE Position on the GUI
+    % Calculate the Robot EE Position with FK
+    myRobot_TR = handles.myRobot.fkine(allQ);
+    handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+    handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+    handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+    % Extract Rotation Portion of FK Matrix
+    rot = myRobot_TR(1:3, 1:3);
+    % Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+    RPY = tr2rpy(rot, 'deg');
+    handles.ee_Roll.String = num2str(round(RPY(1), 3));
+    handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+    handles.ee_Yaw.String = num2str(round(RPY(3), 3));
+end
 
 % --- Executes during object creation, after setting all properties.
 function q7_CreateFcn(hObject, eventdata, handles)
