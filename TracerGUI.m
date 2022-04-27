@@ -22,7 +22,7 @@ function varargout = TracerGUI(varargin)
 
 % Edit the above text to modify the response to help TracerGUI
 
-% Last Modified by GUIDE v2.5 26-Apr-2022 00:04:39
+% Last Modified by GUIDE v2.5 28-Apr-2022 02:01:09
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -67,10 +67,13 @@ handles.q5.String = '0';
 handles.q6.String = '0';
 handles.q7.String = '0';
 
+% Updating Handles
+handles.myRobot = myRobot;
+
 % Plot the Robot at default state
-axes(handles.axes1)
+axes(handles.axes2)
 q = zeros(1,7);
-myRobot.plot(q, 'noarrow');
+myRobot.plot(q, 'noarrow', 'workspace', [-2 2 -2 2 0 2]);
 axis equal;
 view(3);
 
@@ -87,8 +90,11 @@ handles.ee_Roll.String = num2str(round(RPY(1), 3));
 handles.ee_Pitch.String = num2str(round(RPY(2), 3));
 handles.ee_Yaw.String = num2str(round(RPY(3), 3));
 
-% Updating Handles
-handles.myRobot = myRobot;
+% Setting a cartesian increment
+cartInc = 0.05;
+% Adding a handle
+handles.cartInc = cartInc;
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -920,3 +926,249 @@ function eStop_Callback(hObject, eventdata, handles)
 % hObject    handle to eStop (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in up_X.
+function up_X_Callback(hObject, eventdata, handles)
+% hObject    handle to up_X (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% Increase X value by 0.05m
+handles.ee_X.String = num2str(str2double(handles.ee_X.String)+handles.cartInc);
+% Create a 4x4 Matrix to define new transform (Get FK, add 0.05 to X
+% translation)
+currentQ = handles.myRobot.getpos();
+ee_TR = handles.myRobot.fkine(currentQ);
+XYZ = [ee_TR(1,4)+handles.cartInc, ee_TR(2,4), ee_TR(3,4)];
+TR = [eye(3)    XYZ';
+      zeros(1,3) 1]
+% Use IK to get joint state for new desired EE pose
+newQ = handles.myRobot.ikcon(TR, currentQ);
+
+% ee_TR(1,4) = ee_TR(1,4) + handles.cartInc;
+% % Use IK to get joint state for new desired EE pose
+% newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+
+% Update sliders with new joint states
+handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
+set(handles.slider1,'Value',round(rad2deg(newQ(1)),1));
+handles.q2.String = num2str(round(rad2deg(newQ(2)),1));
+set(handles.slider2,'Value',round(rad2deg(newQ(2)),1));
+handles.q3.String = num2str(round(rad2deg(newQ(3)),1));
+set(handles.slider3,'Value',round(rad2deg(newQ(3)),1));
+handles.q4.String = num2str(round(rad2deg(newQ(4)),1));
+set(handles.slider4,'Value',round(rad2deg(newQ(4)),1));
+handles.q5.String = num2str(round(rad2deg(newQ(5)),1));
+set(handles.slider5,'Value',round(rad2deg(newQ(5)),1));
+handles.q6.String = num2str(round(rad2deg(newQ(6)),1));
+set(handles.slider6,'Value',round(rad2deg(newQ(6)),1));
+handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
+set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
+% Update robot pose
+handles.myRobot.animate(newQ);
+handles.myRobot.fkine(newQ)
+
+
+% --- Executes on button press in down_X.
+function down_X_Callback(hObject, eventdata, handles)
+% hObject    handle to down_X (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% Decrease X value by 0.05m
+handles.ee_X.String = num2str(str2double(handles.ee_X.String)-handles.cartInc);
+% Create a 4x4 Matrix to define new transform (Get FK, add 0.05 to X
+% translation)
+currentQ = handles.myRobot.getpos();
+ee_TR = handles.myRobot.fkine(currentQ);
+XYZ = [ee_TR(1,4)-handles.cartInc, ee_TR(2,4), ee_TR(3,4)];
+TR = [eye(3)    XYZ';
+      zeros(1,3) 1]
+% Use IK to get joint state for new desired EE pose
+newQ = handles.myRobot.ikcon(TR, currentQ);
+
+% ee_TR(1,4) = ee_TR(1,4) - handles.cartInc;
+% % Use IK to get joint state for new desired EE pose
+% newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+
+% Update sliders with new joint states
+handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
+set(handles.slider1,'Value',round(rad2deg(newQ(1)),1));
+handles.q2.String = num2str(round(rad2deg(newQ(2)),1));
+set(handles.slider2,'Value',round(rad2deg(newQ(2)),1));
+handles.q3.String = num2str(round(rad2deg(newQ(3)),1));
+set(handles.slider3,'Value',round(rad2deg(newQ(3)),1));
+handles.q4.String = num2str(round(rad2deg(newQ(4)),1));
+set(handles.slider4,'Value',round(rad2deg(newQ(4)),1));
+handles.q5.String = num2str(round(rad2deg(newQ(5)),1));
+set(handles.slider5,'Value',round(rad2deg(newQ(5)),1));
+handles.q6.String = num2str(round(rad2deg(newQ(6)),1));
+set(handles.slider6,'Value',round(rad2deg(newQ(6)),1));
+handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
+set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
+% Update robot pose
+handles.myRobot.animate(newQ);
+handles.myRobot.fkine(newQ)
+
+
+% --- Executes on button press in up_Y.
+function up_Y_Callback(hObject, eventdata, handles)
+% hObject    handle to up_Y (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% Increase Y value by 0.05m
+handles.ee_Y.String = num2str(str2double(handles.ee_Y.String)+handles.cartInc);
+% Create a 4x4 Matrix to define new transform (Get FK, add 0.05 to X
+% translation)
+currentQ = handles.myRobot.getpos();
+ee_TR = handles.myRobot.fkine(currentQ);
+XYZ = [ee_TR(1,4), ee_TR(2,4)+handles.cartInc, ee_TR(3,4)];
+TR = [eye(3)    XYZ';
+      zeros(1,3) 1]
+% Use IK to get joint state for new desired EE pose
+newQ = handles.myRobot.ikcon(TR, currentQ);
+
+% ee_TR(2,4) = ee_TR(2,4) + handles.cartInc;
+% % Use IK to get joint state for new desired EE pose
+% newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+
+% Update sliders with new joint states
+handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
+set(handles.slider1,'Value',round(rad2deg(newQ(1)),1));
+handles.q2.String = num2str(round(rad2deg(newQ(2)),1));
+set(handles.slider2,'Value',round(rad2deg(newQ(2)),1));
+handles.q3.String = num2str(round(rad2deg(newQ(3)),1));
+set(handles.slider3,'Value',round(rad2deg(newQ(3)),1));
+handles.q4.String = num2str(round(rad2deg(newQ(4)),1));
+set(handles.slider4,'Value',round(rad2deg(newQ(4)),1));
+handles.q5.String = num2str(round(rad2deg(newQ(5)),1));
+set(handles.slider5,'Value',round(rad2deg(newQ(5)),1));
+handles.q6.String = num2str(round(rad2deg(newQ(6)),1));
+set(handles.slider6,'Value',round(rad2deg(newQ(6)),1));
+handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
+set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
+% Update robot pose
+handles.myRobot.animate(newQ);
+%handles.myRobot.fkine(newQ)
+
+
+% --- Executes on button press in down_Y.
+function down_Y_Callback(hObject, eventdata, handles)
+% hObject    handle to down_Y (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% Decrease Y value by 0.05m
+handles.ee_Y.String = num2str(str2double(handles.ee_Y.String)-handles.cartInc);
+% Create a 4x4 Matrix to define new transform (Get FK, add 0.05 to X
+% translation)
+currentQ = handles.myRobot.getpos();
+ee_TR = handles.myRobot.fkine(currentQ);
+XYZ = [ee_TR(1,4), ee_TR(2,4)-handles.cartInc, ee_TR(3,4)];
+TR = [eye(3)    XYZ';
+      zeros(1,3) 1]
+% Use IK to get joint state for new desired EE pose
+newQ = handles.myRobot.ikcon(TR, currentQ);
+
+% ee_TR(2,4) = ee_TR(2,4) - handles.cartInc;
+% % Use IK to get joint state for new desired EE pose
+% newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+
+% Update sliders with new joint states
+handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
+set(handles.slider1,'Value',round(rad2deg(newQ(1)),1));
+handles.q2.String = num2str(round(rad2deg(newQ(2)),1));
+set(handles.slider2,'Value',round(rad2deg(newQ(2)),1));
+handles.q3.String = num2str(round(rad2deg(newQ(3)),1));
+set(handles.slider3,'Value',round(rad2deg(newQ(3)),1));
+handles.q4.String = num2str(round(rad2deg(newQ(4)),1));
+set(handles.slider4,'Value',round(rad2deg(newQ(4)),1));
+handles.q5.String = num2str(round(rad2deg(newQ(5)),1));
+set(handles.slider5,'Value',round(rad2deg(newQ(5)),1));
+handles.q6.String = num2str(round(rad2deg(newQ(6)),1));
+set(handles.slider6,'Value',round(rad2deg(newQ(6)),1));
+handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
+set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
+% Update robot pose
+handles.myRobot.animate(newQ);
+%handles.myRobot.fkine(newQ)
+
+
+% --- Executes on button press in up_Z.
+function up_Z_Callback(hObject, eventdata, handles)
+% hObject    handle to up_Z (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% Increase Z value by 0.05m
+handles.ee_Z.String = num2str(str2double(handles.ee_Z.String)+handles.cartInc);
+% Create a 4x4 Matrix to define new transform (Get FK, add 0.05 to X
+% translation)
+currentQ = handles.myRobot.getpos();
+ee_TR = handles.myRobot.fkine(currentQ);
+XYZ = [ee_TR(1,4), ee_TR(2,4), ee_TR(3,4)+handles.cartInc];
+TR = [eye(3)    XYZ';
+      zeros(1,3) 1]
+% Use IK to get joint state for new desired EE pose
+newQ = handles.myRobot.ikcon(TR, currentQ);
+
+% ee_TR(3,4) = ee_TR(3,4) + handles.cartInc;
+% % Use IK to get joint state for new desired EE pose
+% newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+
+% Update sliders with new joint states
+handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
+set(handles.slider1,'Value',round(rad2deg(newQ(1)),1));
+handles.q2.String = num2str(round(rad2deg(newQ(2)),1));
+set(handles.slider2,'Value',round(rad2deg(newQ(2)),1));
+handles.q3.String = num2str(round(rad2deg(newQ(3)),1));
+set(handles.slider3,'Value',round(rad2deg(newQ(3)),1));
+handles.q4.String = num2str(round(rad2deg(newQ(4)),1));
+set(handles.slider4,'Value',round(rad2deg(newQ(4)),1));
+handles.q5.String = num2str(round(rad2deg(newQ(5)),1));
+set(handles.slider5,'Value',round(rad2deg(newQ(5)),1));
+handles.q6.String = num2str(round(rad2deg(newQ(6)),1));
+set(handles.slider6,'Value',round(rad2deg(newQ(6)),1));
+handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
+set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
+% Update robot pose
+handles.myRobot.animate(newQ);
+%handles.myRobot.fkine(newQ)
+
+
+% --- Executes on button press in down_Z.
+function down_Z_Callback(hObject, eventdata, handles)
+% hObject    handle to down_Z (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% Decrease Z value by 0.05m
+handles.ee_Z.String = num2str(str2double(handles.ee_Z.String)-handles.cartInc);
+% Create a 4x4 Matrix to define new transform (Get FK, add 0.05 to X
+% translation)
+currentQ = handles.myRobot.getpos();
+ee_TR = handles.myRobot.fkine(currentQ);
+XYZ = [ee_TR(1,4), ee_TR(2,4), ee_TR(3,4)-handles.cartInc];
+TR = [eye(3)    XYZ';
+      zeros(1,3) 1]
+% Use IK to get joint state for new desired EE pose
+newQ = handles.myRobot.ikcon(TR, currentQ);
+
+% ee_TR(3,4) = ee_TR(3,4) - handles.cartInc;
+% % Use IK to get joint state for new desired EE pose
+% newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+
+% Update sliders with new joint states
+handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
+set(handles.slider1,'Value',round(rad2deg(newQ(1)),1));
+handles.q2.String = num2str(round(rad2deg(newQ(2)),1));
+set(handles.slider2,'Value',round(rad2deg(newQ(2)),1));
+handles.q3.String = num2str(round(rad2deg(newQ(3)),1));
+set(handles.slider3,'Value',round(rad2deg(newQ(3)),1));
+handles.q4.String = num2str(round(rad2deg(newQ(4)),1));
+set(handles.slider4,'Value',round(rad2deg(newQ(4)),1));
+handles.q5.String = num2str(round(rad2deg(newQ(5)),1));
+set(handles.slider5,'Value',round(rad2deg(newQ(5)),1));
+handles.q6.String = num2str(round(rad2deg(newQ(6)),1));
+set(handles.slider6,'Value',round(rad2deg(newQ(6)),1));
+handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
+set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
+% Update robot pose
+handles.myRobot.animate(newQ);
+%handles.myRobot.fkine(newQ)
