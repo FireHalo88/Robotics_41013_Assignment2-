@@ -1,4 +1,4 @@
- PlaceObject('cup.ply')
+ PlaceObject('table8.ply')
  axis equal
  camlight
 %x = zeros(1,1)
