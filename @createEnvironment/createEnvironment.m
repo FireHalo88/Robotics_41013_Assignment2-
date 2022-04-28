@@ -77,28 +77,103 @@ function placeObjects(class, paint_pot_1, paint_pot_2, paint_pot_3, canvas)
         Canvas.points = {vertexData,[]};                        % Inputting brick faces and vertices                                        % Creating initial joint angles as zero for all bricks
         Canvas.plot3d(qa,'scale',0.0001); 
 end
-function placeObjectsBetter(class, canvas, pen)
+function placeObjectsBetter(class, canvas,table, pen1, pen2, pen3, safetyBarrier1,safetyBarrier2,safetyBarrier3,safetyBarrier4,guard,fireExtinguisher)
         % Plotting Objects
-        object_h = {0 0}; % Cell array for storing token handles
-        objectVertices = {0 0}; % Cell array for storing token vertices
-        for i = 1:1:2 % Plotting all tokens
+        object_h = {0 0 0 0 0 0 0 0 0 0 0}; % Cell array for storing token handles
+        objectVertices = {0 0 0 0 0 0 0 0 0 0 0}; % Cell array for storing token vertices
+        for i = 1:1:11 % Plotting all tokens
             switch i
-                case 1
+                %Canvas
+                case 1 
                     object_h{i} = PlaceObject('canvas3.ply'); % Importing Canvas
-                case 2
-                    object_h{i} = PlaceObject('pen.ply'); % Importing Pen
-            end
-            objectVertices{i} = get(object_h{i},'Vertices'); % Extracting vertices data
-            switch i
-                case 1
+                    objectVertices{i} = get(object_h{i},'Vertices'); % Extracting vertices data
                     transformedVertices = [objectVertices{i},ones(size(objectVertices{i},1),1)] * canvas'; % Transforming vertices
+                    set(object_h{i},'Vertices',transformedVertices(:,1:3)); % Updating token location
+                    drawnow; % Update simulation
+                    pause(0.001); % Wait before execution                    
                 case 2
-                    transformedVertices = [objectVertices{i},ones(size(objectVertices{i},1),1)] * pen'; % Transforming vertices
+                    object_h{i} = PlaceObject('table8.ply');
+                    objectVertices{i} = get(object_h{i},'Vertices'); % Extracting vertices data
+                    transformedVertices = [objectVertices{i},ones(size(objectVertices{i},1),1)] * table'; % Transforming vertices    
+                    set(object_h{i},'Vertices',transformedVertices(:,1:3)); % Updating token location
+                    drawnow; % Update simulation
+                    pause(0.001); % Wait before execution                    
+                case 3
+                    object_h{i} = PlaceObject('pen.ply');
+                    objectVertices{i} = get(object_h{i},'Vertices'); % Extracting vertices data
+                    transformedVertices = [objectVertices{i},ones(size(objectVertices{i},1),1)] * pen1'; % Transforming vertices
+                    set(object_h{i},'Vertices',transformedVertices(:,1:3)); % Updating token location
+                    drawnow; % Update simulation
+                    pause(0.001); % Wait before execution                    
+                case 4
+                    object_h{i} = PlaceObject('pen.ply');
+                    objectVertices{i} = get(object_h{i},'Vertices'); % Extracting vertices data
+                    transformedVertices = [objectVertices{i},ones(size(objectVertices{i},1),1)] * pen2'; % Transforming vertices
+                    set(object_h{i},'Vertices',transformedVertices(:,1:3)); % Updating token location
+                    drawnow; % Update simulation
+                    pause(0.001); % Wait before execution                    
+                case 5
+                    object_h{i} = PlaceObject('pen.ply'); % Importing Pen
+                    objectVertices{i} = get(object_h{i},'Vertices'); % Extracting vertices data
+                    transformedVertices = [objectVertices{i},ones(size(objectVertices{i},1),1)] * pen3'; % Transforming vertices
+                    set(object_h{i},'Vertices',transformedVertices(:,1:3)); % Updating token location
+                    drawnow; % Update simulation
+                    pause(0.001); % Wait before execution                    
+                case 6
+                    object_h{i} = PlaceObject('safetyBarrier.ply');
+                    objectVertices{i} = get(object_h{i},'Vertices'); % Extracting vertices data
+                    transformedVertices = [objectVertices{i},ones(size(objectVertices{i},1),1)] * safetyBarrier1'; % Transforming vertices
+                    set(object_h{i},'Vertices',transformedVertices(:,1:3)); % Updating token location
+                    drawnow; % Update simulation
+                    pause(0.001); % Wait before execution                    
+                case 7
+                    object_h{i} = PlaceObject('safetyBarrier.ply');
+                    objectVertices{i} = get(object_h{i},'Vertices'); % Extracting vertices data
+                    transformedVertices = [objectVertices{i},ones(size(objectVertices{i},1),1)] * safetyBarrier2'; % Transforming vertices
+                    set(object_h{i},'Vertices',transformedVertices(:,1:3)); % Updating token location
+                    drawnow; % Update simulation
+                    pause(0.001); % Wait before execution                    
+                case 8
+                    object_h{i} = PlaceObject('safetyBarrier.ply');
+                    objectVertices{i} = get(object_h{i},'Vertices'); % Extracting vertices data
+                    transformedVertices = [objectVertices{i},ones(size(objectVertices{i},1),1)] * safetyBarrier3'; % Transforming vertices
+                    set(object_h{i},'Vertices',transformedVertices(:,1:3)); % Updating token location
+                    drawnow; % Update simulation
+                    pause(0.001); % Wait before execution                    
+                case 9
+                    object_h{i} = PlaceObject('safetyBarrier.ply'); 
+                    objectVertices{i} = get(object_h{i},'Vertices'); % Extracting vertices data
+                    transformedVertices = [objectVertices{i},ones(size(objectVertices{i},1),1)] * safetyBarrier4'; % Transforming vertices
+                    set(object_h{i},'Vertices',transformedVertices(:,1:3)); % Updating token location
+                    drawnow; % Update simulation
+                    pause(0.001); % Wait before execution                    
+                case 10
+                    object_h{i} = PlaceObject('guard.ply');
+                    objectVertices{i} = get(object_h{i},'Vertices'); % Extracting vertices data
+                    transformedVertices = [objectVertices{i},ones(size(objectVertices{i},1),1)] * guard'; % Transforming vertices
+                    set(object_h{i},'Vertices',transformedVertices(:,1:3)); % Updating token location
+                    drawnow; % Update simulation
+                    pause(0.001); % Wait before execution                    
+                case 11
+                    object_h{i} = PlaceObject('FireExtinguisher.ply');
+                    objectVertices{i} = get(object_h{i},'Vertices'); % Extracting vertices data
+                    transformedVertices = [objectVertices{i},ones(size(objectVertices{i},1),1)] * fireExtinguisher'; % Transforming vertices
+                    set(object_h{i},'Vertices',transformedVertices(:,1:3)); % Updating token location
+                    drawnow; % Update simulation
+                    pause(0.001); % Wait before execution
             end
-            set(object_h{i},'Vertices',transformedVertices(:,1:3)); % Updating token location
-            drawnow; % Update simulation
-            pause(0.001); % Wait before execution
+%             %objectVertices{i} = get(object_h{i},'Vertices'); % Extracting vertices data
+%             switch i
+%                 case 1
+%                     transformedVertices = [objectVertices{i},ones(size(objectVertices{i},1),1)] * canvas'; % Transforming vertices
+%                 case 2
+%                     transformedVertices = [objectVertices{i},ones(size(objectVertices{i},1),1)] * pen'; % Transforming vertices
+%             end
+% %             set(object_h{i},'Vertices',transformedVertices(:,1:3)); % Updating token location
+% %             drawnow; % Update simulation
+% %             pause(0.001); % Wait before execution            
         end
+        camlight
 end
     end
 end
