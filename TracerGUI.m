@@ -73,7 +73,7 @@ handles.myRobot = myRobot;
 % Plot the Robot at default state
 axes(handles.axes2)
 q = zeros(1,7);
-myRobot.plot(q, 'noarrow', 'workspace', [-2 2 -2 2 0 2]);
+myRobot.plot(q, 'noarrow', 'workspace', [-1 1 -1 1 0 0.75]);
 axis equal;
 view(3);
 
@@ -91,9 +91,10 @@ handles.ee_Pitch.String = num2str(round(RPY(2), 3));
 handles.ee_Yaw.String = num2str(round(RPY(3), 3));
 
 % Setting a cartesian increment
-cartInc = 0.05;
+cartInc = 0.01;
 % Adding a handle
 handles.cartInc = cartInc;
+handles.cartKeepCurrentRPY = 1;
 
 % Update handles structure
 guidata(hObject, handles);
@@ -250,8 +251,9 @@ function slider1_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to slider1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-% Define Min and Max for Q1 Slider
-set(hObject,'Min',0,'Max',300);
+% Define Min, Max and starting Angle for Q1 Slider
+set(hObject,'Min',-150,'Max',150);
+set(hObject, 'Value', 0);
 % Set step sizes of 5 degrees when pressing slider buttons
 step = [5, 5]/(get(hObject, 'Max') - get(hObject, 'Min'));
 set(hObject, 'SliderStep', step);
@@ -298,8 +300,9 @@ function slider2_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to slider2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-% Define Min and Max for Q2 Slider
-set(hObject,'Min',0,'Max',210);
+% Define Min, Max and starting Angle for Q2 Slider
+set(hObject,'Min',-105,'Max',105);
+set(hObject, 'Value', 0);
 % Set step sizes of 5 degrees when pressing slider buttons
 step = [5, 5]/(get(hObject, 'Max') - get(hObject, 'Min'));
 set(hObject, 'SliderStep', step);
@@ -345,8 +348,9 @@ function slider3_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to slider3 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-% Define Min and Max for Q3 Slider
-set(hObject,'Min',0,'Max',300);
+% Define Min, Max and starting Angle for Q3 Slider
+set(hObject,'Min',-150,'Max',150);
+set(hObject, 'Value', 0);
 % Set step sizes of 5 degrees when pressing slider buttons
 step = [5, 5]/(get(hObject, 'Max') - get(hObject, 'Min'));
 set(hObject, 'SliderStep', step);
@@ -392,8 +396,9 @@ function slider4_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to slider4 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-% Define Min and Max for Q4 Slider
-set(hObject,'Min',0,'Max',210);
+% Define Min, Max and starting Angle for Q4 Slider
+set(hObject,'Min',-105,'Max',105);
+set(hObject, 'Value', 0);
 % Set step sizes of 5 degrees when pressing slider buttons
 step = [5, 5]/(get(hObject, 'Max') - get(hObject, 'Min'));
 set(hObject, 'SliderStep', step);
@@ -440,8 +445,9 @@ function slider5_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to slider5 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-% Define Min and Max for Q5 Slider
-set(hObject,'Min',0,'Max',210);
+% Define Min, Max and starting Angle for Q5 Slider
+set(hObject,'Min',-105,'Max',105);
+set(hObject, 'Value', 0);
 % Set step sizes of 5 degrees when pressing slider buttons
 step = [5, 5]/(get(hObject, 'Max') - get(hObject, 'Min'));
 set(hObject, 'SliderStep', step);
@@ -489,8 +495,9 @@ function slider6_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to slider6 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-% Define Min and Max for Q6 Slider
-set(hObject,'Min',0,'Max',210);
+% Define Min, Max and starting Angle for Q6 Slider
+set(hObject,'Min',-105,'Max',105);
+set(hObject, 'Value', 0);
 % Set step sizes of 5 degrees when pressing slider buttons
 step = [5, 5]/(get(hObject, 'Max') - get(hObject, 'Min'));
 set(hObject, 'SliderStep', step);
@@ -536,8 +543,9 @@ function slider7_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to slider7 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-% Define Min and Max for Q7 Slider
-set(hObject,'Min',0,'Max',300);
+% Define Min, Max and starting Angle for Q7 Slider
+set(hObject,'Min',-150,'Max',150);
+set(hObject, 'Value', 0);
 % Set step sizes of 5 degrees when pressing slider buttons
 step = [5, 5]/(get(hObject, 'Max') - get(hObject, 'Min'));
 set(hObject, 'SliderStep', step);
@@ -933,21 +941,23 @@ function up_X_Callback(hObject, eventdata, handles)
 % hObject    handle to up_X (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% Increase X value by 0.05m
-handles.ee_X.String = num2str(str2double(handles.ee_X.String)+handles.cartInc);
+% Increase X value by 0.05m;
 % Create a 4x4 Matrix to define new transform (Get FK, add 0.05 to X
 % translation)
 currentQ = handles.myRobot.getpos();
 ee_TR = handles.myRobot.fkine(currentQ);
-XYZ = [ee_TR(1,4)+handles.cartInc, ee_TR(2,4), ee_TR(3,4)];
-TR = [eye(3)    XYZ';
-      zeros(1,3) 1]
-% Use IK to get joint state for new desired EE pose
-newQ = handles.myRobot.ikcon(TR, currentQ);
 
-% ee_TR(1,4) = ee_TR(1,4) + handles.cartInc;
-% % Use IK to get joint state for new desired EE pose
-% newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+if handles.cartKeepCurrentRPY == 1
+    ee_TR(1,4) = ee_TR(1,4) + handles.cartInc;
+    % Use IK to get joint state for new desired EE pose
+    newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+else
+    XYZ = [ee_TR(1,4)+handles.cartInc, ee_TR(2,4), ee_TR(3,4)];
+    TR = [eye(3)    XYZ';
+          zeros(1,3) 1]
+    % Use IK to get joint state for new desired EE pose
+    newQ = handles.myRobot.ikcon(TR, currentQ);
+end
 
 % Update sliders with new joint states
 handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
@@ -966,7 +976,18 @@ handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
 set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
 % Update robot pose
 handles.myRobot.animate(newQ);
-handles.myRobot.fkine(newQ)
+% Get new EE pose with FK and update XYZ, RPY values
+myRobot_TR = handles.myRobot.fkine(newQ)
+handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+% Extract Rotation Portion of FK Matrix
+rot = myRobot_TR(1:3, 1:3);
+% Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+RPY = tr2rpy(rot, 'deg');
+handles.ee_Roll.String = num2str(round(RPY(1), 3));
+handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+handles.ee_Yaw.String = num2str(round(RPY(3), 3));
 
 
 % --- Executes on button press in down_X.
@@ -975,20 +996,22 @@ function down_X_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % Decrease X value by 0.05m
-handles.ee_X.String = num2str(str2double(handles.ee_X.String)-handles.cartInc);
-% Create a 4x4 Matrix to define new transform (Get FK, add 0.05 to X
+% Create a 4x4 Matrix to define new transform (Get FK, sub 0.05 to X
 % translation)
 currentQ = handles.myRobot.getpos();
 ee_TR = handles.myRobot.fkine(currentQ);
-XYZ = [ee_TR(1,4)-handles.cartInc, ee_TR(2,4), ee_TR(3,4)];
-TR = [eye(3)    XYZ';
-      zeros(1,3) 1]
-% Use IK to get joint state for new desired EE pose
-newQ = handles.myRobot.ikcon(TR, currentQ);
 
-% ee_TR(1,4) = ee_TR(1,4) - handles.cartInc;
-% % Use IK to get joint state for new desired EE pose
-% newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+if handles.cartKeepCurrentRPY == 1
+    ee_TR(1,4) = ee_TR(1,4) - handles.cartInc;
+    % Use IK to get joint state for new desired EE pose
+    newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+else
+    XYZ = [ee_TR(1,4)-handles.cartInc, ee_TR(2,4), ee_TR(3,4)];
+    TR = [eye(3)    XYZ';
+          zeros(1,3) 1]
+    % Use IK to get joint state for new desired EE pose
+    newQ = handles.myRobot.ikcon(TR, currentQ);
+end
 
 % Update sliders with new joint states
 handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
@@ -1007,7 +1030,18 @@ handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
 set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
 % Update robot pose
 handles.myRobot.animate(newQ);
-handles.myRobot.fkine(newQ)
+% Get new EE pose with FK and update XYZ, RPY values
+myRobot_TR = handles.myRobot.fkine(newQ)
+handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+% Extract Rotation Portion of FK Matrix
+rot = myRobot_TR(1:3, 1:3);
+% Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+RPY = tr2rpy(rot, 'deg');
+handles.ee_Roll.String = num2str(round(RPY(1), 3));
+handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+handles.ee_Yaw.String = num2str(round(RPY(3), 3));
 
 
 % --- Executes on button press in up_Y.
@@ -1016,20 +1050,22 @@ function up_Y_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % Increase Y value by 0.05m
-handles.ee_Y.String = num2str(str2double(handles.ee_Y.String)+handles.cartInc);
-% Create a 4x4 Matrix to define new transform (Get FK, add 0.05 to X
+% Create a 4x4 Matrix to define new transform (Get FK, add 0.05 to Y
 % translation)
 currentQ = handles.myRobot.getpos();
 ee_TR = handles.myRobot.fkine(currentQ);
-XYZ = [ee_TR(1,4), ee_TR(2,4)+handles.cartInc, ee_TR(3,4)];
-TR = [eye(3)    XYZ';
-      zeros(1,3) 1]
-% Use IK to get joint state for new desired EE pose
-newQ = handles.myRobot.ikcon(TR, currentQ);
 
-% ee_TR(2,4) = ee_TR(2,4) + handles.cartInc;
-% % Use IK to get joint state for new desired EE pose
-% newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+if handles.cartKeepCurrentRPY == 1
+    XYZ = [ee_TR(1,4), ee_TR(2,4)+handles.cartInc, ee_TR(3,4)];
+    TR = [eye(3)    XYZ';
+          zeros(1,3) 1]
+    % Use IK to get joint state for new desired EE pose
+    newQ = handles.myRobot.ikcon(TR, currentQ);
+else
+    ee_TR(2,4) = ee_TR(2,4) + handles.cartInc;
+    % Use IK to get joint state for new desired EE pose
+    newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+end
 
 % Update sliders with new joint states
 handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
@@ -1048,7 +1084,18 @@ handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
 set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
 % Update robot pose
 handles.myRobot.animate(newQ);
-%handles.myRobot.fkine(newQ)
+% Get new EE pose with FK and update XYZ, RPY values
+myRobot_TR = handles.myRobot.fkine(newQ)
+handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+% Extract Rotation Portion of FK Matrix
+rot = myRobot_TR(1:3, 1:3);
+% Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+RPY = tr2rpy(rot, 'deg');
+handles.ee_Roll.String = num2str(round(RPY(1), 3));
+handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+handles.ee_Yaw.String = num2str(round(RPY(3), 3));
 
 
 % --- Executes on button press in down_Y.
@@ -1057,20 +1104,22 @@ function down_Y_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % Decrease Y value by 0.05m
-handles.ee_Y.String = num2str(str2double(handles.ee_Y.String)-handles.cartInc);
-% Create a 4x4 Matrix to define new transform (Get FK, add 0.05 to X
+% Create a 4x4 Matrix to define new transform (Get FK, sub 0.05 to Y
 % translation)
 currentQ = handles.myRobot.getpos();
 ee_TR = handles.myRobot.fkine(currentQ);
-XYZ = [ee_TR(1,4), ee_TR(2,4)-handles.cartInc, ee_TR(3,4)];
-TR = [eye(3)    XYZ';
-      zeros(1,3) 1]
-% Use IK to get joint state for new desired EE pose
-newQ = handles.myRobot.ikcon(TR, currentQ);
 
-% ee_TR(2,4) = ee_TR(2,4) - handles.cartInc;
-% % Use IK to get joint state for new desired EE pose
-% newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+if handles.cartKeepCurrentRPY == 1
+    ee_TR(2,4) = ee_TR(2,4) - handles.cartInc;
+    % Use IK to get joint state for new desired EE pose
+    newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+else
+    XYZ = [ee_TR(1,4), ee_TR(2,4)-handles.cartInc, ee_TR(3,4)];
+    TR = [eye(3)    XYZ';
+          zeros(1,3) 1]
+    % Use IK to get joint state for new desired EE pose
+    newQ = handles.myRobot.ikcon(TR, currentQ);
+end
 
 % Update sliders with new joint states
 handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
@@ -1089,7 +1138,18 @@ handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
 set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
 % Update robot pose
 handles.myRobot.animate(newQ);
-%handles.myRobot.fkine(newQ)
+% Get new EE pose with FK and update XYZ, RPY values
+myRobot_TR = handles.myRobot.fkine(newQ)
+handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+% Extract Rotation Portion of FK Matrix
+rot = myRobot_TR(1:3, 1:3);
+% Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+RPY = tr2rpy(rot, 'deg');
+handles.ee_Roll.String = num2str(round(RPY(1), 3));
+handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+handles.ee_Yaw.String = num2str(round(RPY(3), 3));
 
 
 % --- Executes on button press in up_Z.
@@ -1098,20 +1158,22 @@ function up_Z_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % Increase Z value by 0.05m
-handles.ee_Z.String = num2str(str2double(handles.ee_Z.String)+handles.cartInc);
-% Create a 4x4 Matrix to define new transform (Get FK, add 0.05 to X
+% Create a 4x4 Matrix to define new transform (Get FK, add 0.05 to Z
 % translation)
 currentQ = handles.myRobot.getpos();
 ee_TR = handles.myRobot.fkine(currentQ);
-XYZ = [ee_TR(1,4), ee_TR(2,4), ee_TR(3,4)+handles.cartInc];
-TR = [eye(3)    XYZ';
-      zeros(1,3) 1]
-% Use IK to get joint state for new desired EE pose
-newQ = handles.myRobot.ikcon(TR, currentQ);
 
-% ee_TR(3,4) = ee_TR(3,4) + handles.cartInc;
-% % Use IK to get joint state for new desired EE pose
-% newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+if handles.cartKeepCurrentRPY == 1
+    ee_TR(3,4) = ee_TR(3,4) + handles.cartInc;
+    % Use IK to get joint state for new desired EE pose
+    newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+else
+    XYZ = [ee_TR(1,4), ee_TR(2,4), ee_TR(3,4)+handles.cartInc];
+    TR = [eye(3)    XYZ';
+          zeros(1,3) 1]
+    % Use IK to get joint state for new desired EE pose
+    newQ = handles.myRobot.ikcon(TR, currentQ);
+end
 
 % Update sliders with new joint states
 handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
@@ -1130,7 +1192,18 @@ handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
 set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
 % Update robot pose
 handles.myRobot.animate(newQ);
-%handles.myRobot.fkine(newQ)
+% Get new EE pose with FK and update XYZ, RPY values
+myRobot_TR = handles.myRobot.fkine(newQ)
+handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+% Extract Rotation Portion of FK Matrix
+rot = myRobot_TR(1:3, 1:3);
+% Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+RPY = tr2rpy(rot, 'deg');
+handles.ee_Roll.String = num2str(round(RPY(1), 3));
+handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+handles.ee_Yaw.String = num2str(round(RPY(3), 3));
 
 
 % --- Executes on button press in down_Z.
@@ -1139,20 +1212,22 @@ function down_Z_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % Decrease Z value by 0.05m
-handles.ee_Z.String = num2str(str2double(handles.ee_Z.String)-handles.cartInc);
-% Create a 4x4 Matrix to define new transform (Get FK, add 0.05 to X
+% Create a 4x4 Matrix to define new transform (Get FK, sub 0.05 to Z
 % translation)
 currentQ = handles.myRobot.getpos();
 ee_TR = handles.myRobot.fkine(currentQ);
-XYZ = [ee_TR(1,4), ee_TR(2,4), ee_TR(3,4)-handles.cartInc];
-TR = [eye(3)    XYZ';
-      zeros(1,3) 1]
-% Use IK to get joint state for new desired EE pose
-newQ = handles.myRobot.ikcon(TR, currentQ);
 
-% ee_TR(3,4) = ee_TR(3,4) - handles.cartInc;
-% % Use IK to get joint state for new desired EE pose
-% newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+if handles.cartKeepCurrentRPY == 1
+    ee_TR(3,4) = ee_TR(3,4) - handles.cartInc;
+    % Use IK to get joint state for new desired EE pose
+    newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+else
+    XYZ = [ee_TR(1,4), ee_TR(2,4), ee_TR(3,4)-handles.cartInc];
+    TR = [eye(3)    XYZ';
+          zeros(1,3) 1]
+    % Use IK to get joint state for new desired EE pose
+    newQ = handles.myRobot.ikcon(TR, currentQ);
+end
 
 % Update sliders with new joint states
 handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
@@ -1171,4 +1246,15 @@ handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
 set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
 % Update robot pose
 handles.myRobot.animate(newQ);
-%handles.myRobot.fkine(newQ)
+% Get new EE pose with FK and update XYZ, RPY values
+myRobot_TR = handles.myRobot.fkine(newQ)
+handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+% Extract Rotation Portion of FK Matrix
+rot = myRobot_TR(1:3, 1:3);
+% Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+RPY = tr2rpy(rot, 'deg');
+handles.ee_Roll.String = num2str(round(RPY(1), 3));
+handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+handles.ee_Yaw.String = num2str(round(RPY(3), 3));
