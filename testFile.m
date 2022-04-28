@@ -15,7 +15,7 @@ P4 = [ -4.0, -2.0,  0.0];
 P1_transl = transl(P1);
 P4_transl = transl(P4);
 build = createEnvironment(workspace);
-placeObjectsBetter(build, P1_transl, P4_transl);
+placeObjectsBetter(build, P1_transl, P4_transl); 
 
 %placeObjects(build, P1, P2, P3, P4);
 
