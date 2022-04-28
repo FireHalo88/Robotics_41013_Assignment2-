@@ -30,7 +30,7 @@ function self = createEnvironment(workspace)
         hold on;
         %self.placeObjects();
 end
-function placeObjects(class,paint_pot_1, paint_pot_2, paint_pot_3, canvas) 
+function placeObjects(class, paint_pot_1, paint_pot_2, paint_pot_3, canvas) 
     L1 = Link('d',0.1519,'a',0,'alpha',pi/2,'qlim',deg2rad([-360,360]), 'offset', 0);     
     qa = zeros(1,1);  
     %For cups
@@ -76,6 +76,29 @@ function placeObjects(class,paint_pot_1, paint_pot_2, paint_pot_3, canvas)
         Canvas.faces = {faceData,[]};                           % Referring to robotcows.m file
         Canvas.points = {vertexData,[]};                        % Inputting brick faces and vertices                                        % Creating initial joint angles as zero for all bricks
         Canvas.plot3d(qa,'scale',0.0001); 
-    end
 end
+function placeObjectsBetter(class, canvas, pen)
+        % Plotting Objects
+        object_h = {0 0}; % Cell array for storing token handles
+        objectVertices = {0 0}; % Cell array for storing token vertices
+        for i = 1:1:2 % Plotting all tokens
+            switch i
+                case 1
+                    object_h{i} = PlaceObject('canvas3.ply'); % Importing Canvas
+                case 2
+                    object_h{i} = PlaceObject('pen.ply'); % Importing Pen
+            end
+            objectVertices{i} = get(object_h{i},'Vertices'); % Extracting vertices data
+            switch i
+                case 1
+                    transformedVertices = [objectVertices{i},ones(size(objectVertices{i},1),1)] * canvas'; % Transforming vertices
+                case 2
+                    transformedVertices = [objectVertices{i},ones(size(objectVertices{i},1),1)] * pen'; % Transforming vertices
+            end
+            set(object_h{i},'Vertices',transformedVertices(:,1:3)); % Updating token location
+            drawnow; % Update simulation
+            pause(0.001); % Wait before execution
+        end
+end
+    end
 end
