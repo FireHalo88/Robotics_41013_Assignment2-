@@ -22,7 +22,7 @@ function varargout = TracerGUI(varargin)
 
 % Edit the above text to modify the response to help TracerGUI
 
-% Last Modified by GUIDE v2.5 28-Apr-2022 02:01:09
+% Last Modified by GUIDE v2.5 29-Apr-2022 23:57:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1258,3 +1258,60 @@ RPY = tr2rpy(rot, 'deg');
 handles.ee_Roll.String = num2str(round(RPY(1), 3));
 handles.ee_Pitch.String = num2str(round(RPY(2), 3));
 handles.ee_Yaw.String = num2str(round(RPY(3), 3));
+
+
+% --- Executes on button press in greenPen.
+function greenPen_Callback(hObject, eventdata, handles)
+% hObject    handle to greenPen (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of greenPen
+
+
+% --- Executes on button press in bluePen.
+function bluePen_Callback(hObject, eventdata, handles)
+% hObject    handle to bluePen (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of bluePen
+
+
+% --- Executes on button press in redPen.
+function redPen_Callback(hObject, eventdata, handles)
+% hObject    handle to redPen (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of redPen
+
+
+% --- Executes on button press in blackPen.
+function blackPen_Callback(hObject, eventdata, handles)
+% hObject    handle to blackPen (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of blackPen
+
+
+% --- Executes on button press in chooseDrawingBtn.
+function chooseDrawingBtn_Callback(hObject, eventdata, handles)
+% hObject    handle to chooseDrawingBtn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in startDrawingBtn.
+function startDrawingBtn_Callback(hObject, eventdata, handles)
+% hObject    handle to startDrawingBtn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in resumeBtn.
+function resumeBtn_Callback(hObject, eventdata, handles)
+% hObject    handle to resumeBtn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
