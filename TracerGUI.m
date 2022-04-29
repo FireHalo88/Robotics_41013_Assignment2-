@@ -22,7 +22,7 @@ function varargout = TracerGUI(varargin)
 
 % Edit the above text to modify the response to help TracerGUI
 
-% Last Modified by GUIDE v2.5 29-Apr-2022 23:57:10
+% Last Modified by GUIDE v2.5 30-Apr-2022 01:08:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -92,9 +92,12 @@ handles.ee_Yaw.String = num2str(round(RPY(3), 3));
 
 % Setting a cartesian increment
 cartInc = 0.01;
-% Adding a handle
+% Adding handles
 handles.cartInc = cartInc;
 handles.cartKeepCurrentRPY = 1;
+handles.colour = 'blackPen';
+handles.drawing = [];
+handles.drawingPath = '';
 
 % Update handles structure
 guidata(hObject, handles);
@@ -1301,7 +1304,18 @@ function chooseDrawingBtn_Callback(hObject, eventdata, handles)
 % hObject    handle to chooseDrawingBtn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+% Search for an Image/Drawing
+[filename, filepath] = uigetfile({'*.*'; '*.jpg*'; '*.jpeg*'; '*.png*'}, ...
+                        'Search Drawing');
+handles.drawingPath = [filepath filename];
 
+% Read the Image
+handles.drawing = imread(handles.drawingPath);
+% Display the Image
+axes(handles.axes3)
+imshow(handles.drawing);
+% Remove Axis Scale
+axis off
 
 % --- Executes on button press in startDrawingBtn.
 function startDrawingBtn_Callback(hObject, eventdata, handles)
@@ -1309,9 +1323,19 @@ function startDrawingBtn_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+% Set handles.colour to be the colour pen chosen from the Button Group
+h = get(handles.colourBtnGroup,'SelectedObject');
+handles.colour = get(h, 'Tag');
 
 % --- Executes on button press in resumeBtn.
 function resumeBtn_Callback(hObject, eventdata, handles)
 % hObject    handle to resumeBtn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes when selected object is changed in uibuttongroup4.
+function uibuttongroup4_SelectionChangedFcn(hObject, eventdata, handles)
+% hObject    handle to the selected object in uibuttongroup4 
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
