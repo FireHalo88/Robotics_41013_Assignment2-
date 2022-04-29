@@ -28,11 +28,11 @@ classdef HansCute < handle
             0.2;                % in m/s.
         angularSpeed = ...      % Angular speed during L trajectories (tool rotation speed)
             pi/2;               % in rad/s.
-        workspace = [-1 1 -1 1 -0.3 1];   % Robot workspace
+        workspace = [-0.75 0.75 -0.75 0.75 0 0.75];   % Robot workspace
     end
     
     properties
-        robotModel      % SerialLink object describing the robot
+        model      % SerialLink object describing the robot
         joints          % Joint Positions
         realRobotHAL    % HAL for the actual robot itself
         moveRealRobot   % Hardware State (simulation or actual)
@@ -43,32 +43,32 @@ classdef HansCute < handle
     
     methods
         function plotModel(self)   %robot,workspace
-            for linkIndex = 0:self.robotModel.n
+            for linkIndex = 0:self.model.n
                 [ faceData, vertexData, plyData{linkIndex + 1} ] =  ...
-                    plyread(['HansLink',num2str(linkIndex),'.ply'],'tri');
+                    plyread(['HansCuteToShare/HansLink',num2str(linkIndex),'.ply'],'tri');
                 
-                self.robotModel.faces{linkIndex + 1} = faceData;
-                self.robotModel.points{linkIndex + 1} = vertexData;
+                self.model.faces{linkIndex + 1} = faceData;
+                self.model.points{linkIndex + 1} = vertexData;
             end
 
             % Display robot
-            self.robotModel.plot3d(zeros(1,self.robotModel.n),...
+            self.model.plot3d(zeros(1,self.model.n),...
                 'noarrow','workspace',self.workspace);
             hold all
             if isempty(findobj(get(gca,'Children'),'Type','Light'))
                 camlight
             end  
-            self.robotModel.delay = 0;
+            self.model.delay = 0;
 
             % Try to correctly colour the arm (if colours are in ply file data)
-            for linkIndex = 0:self.robotModel.n
-                handles = findobj('Tag', self.robotModel.name);
+            for linkIndex = 0:self.model.n
+                handles = findobj('Tag', self.model.name);
                 h = get(handles,'UserData');
                 try 
                     h.link(linkIndex+1).Children.FaceVertexCData = ...
                         [plyData{linkIndex+1}.vertex.red ...
-                        , plyData{linkIndex+1}.vertex.green ...
-                        , plyData{linkIndex+1}.vertex.blue]/255;
+                         plyData{linkIndex+1}.vertex.green ...
+                         plyData{linkIndex+1}.vertex.blue]/255;
                     h.link(linkIndex+1).Children.FaceColor = 'interp';
                 catch ME_1
                     disp(ME_1);
@@ -121,8 +121,8 @@ classdef HansCute < handle
                     'qlim', deg2rad([-obj.DHParams(i,4)/2, obj.DHParams(i,4)/2]), ...
                     'offset', deg2rad(obj.DHParams(i,5)));
             end           
-            obj.robotModel = SerialLink(links, 'name', name);
-            obj.plotModel;
+            obj.model = SerialLink(links, 'name', name);
+            %obj.plotModel;
             obj.joints = zeros(1, obj.nJoints);
             obj.moveRealRobot = false;
             obj.moveJFrequency = 15;
@@ -131,7 +131,7 @@ classdef HansCute < handle
                
         function teach(obj)
             % Opens a figure with the robot for teaching new poses
-            obj.robotModel.teach(obj.joints);
+            obj.model.teach(obj.joints);
         end
         
         function transform = getEndEffectorTransform(obj, joints)
@@ -140,7 +140,7 @@ classdef HansCute < handle
             if nargin < 2
                 joints = obj.joints;
             end
-            transform = obj.robotModel.fkine(joints);
+            transform = obj.model.fkine(joints);
         end
         
         function position = getEndEffectorPosition(obj, joints)
@@ -149,7 +149,7 @@ classdef HansCute < handle
             if nargin < 2
                 joints = obj.joints;
             end
-            transform = obj.robotModel.fkine(joints);
+            transform = obj.model.fkine(joints);
             position = transform(1:3,4);
         end
         
@@ -159,17 +159,17 @@ classdef HansCute < handle
             if nargin < 2
                 joints = obj.joints;
             end
-            jacobian = obj.robotModel.jacob0(joints);
+            jacobian = obj.model.jacob0(joints);
         end
         
         function plot(obj)
             % Plots the robot
-            obj.robotModel.plot(obj.joints);
+            obj.model.plot(obj.joints);
         end
         
         function animate(obj)
             % Updates the plot of a robot
-            obj.robotModel.animate(obj.joints);
+            obj.model.animate(obj.joints);
             pause(0.1)
         end
         

@@ -55,8 +55,8 @@ function TracerGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 % Creation of the Cyton/Hans Cute Robot Class
-cyton = Cyton300e;
-myRobot = cyton.model;
+hansCute = HansCute('ATV');
+myRobot = hansCute.model;
 
 % Set initial angles
 handles.q1.String = '0';
@@ -73,8 +73,8 @@ handles.myRobot = myRobot;
 % Plot the Robot at default state
 axes(handles.axes2)
 q = zeros(1,7);
-myRobot.plot(q, 'noarrow', 'workspace', [-1 1 -1 1 0 0.75]);
-axis equal;
+hansCute.plotModel();
+%axis equal;
 view(3);
 
 % Calculate the Robot EE Position with FK
