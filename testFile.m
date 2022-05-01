@@ -7,18 +7,21 @@ clf
 set(0,'DefaultFigureWindowStyle','docked')   % Docking simulation beside code
 
 %Workspace and Scaling
-workspace = [-6 6 -6 6 0 5];             % Scaling workspace to fit the robots 
-P1 = [ 0.3, 0.8,  0.0]; 
-P2 = [ 5.0, 0.8,  0.0]; 
-P3 = [ -5.0, 0.8,  0.0]; 
-P4 = [ -4.0, -2.0,  0.0]; 
-P1_transl = transl(P1);
-P4_transl = transl(P4);
+workspace = [-0.75 0.75 -0.75 0.75 0 0.75];             % Scaling workspace to fit the robots 
+table = transl(0.0, 0.0, 0.0); 
+pen1 = transl(0.15, -0.2, 0.273);
+pen2 = transl(0.20, -0.2, 0.273);
+pen3 = transl(0.25, -0.2, 0.273);
+canvas = transl(-0.3, -0.2, 0.22);
+safetyBarrierPoint1 = transl(-0.47, -0.45, 0.0);
+safetyBarrierPoint2 = transl(-0.47, 0.5, 0.0);
+
+safetyBarrierPoint3 = transl(0.35, -0.45, 0.0);
+safetyBarrierPoint4 = transl(0.35, 0.5, 0.0);
+
+guard = transl(0.6, 0.6, 0);
+fireExtinguisher = transl(0.3, 0.1, 0.57);
 build = createEnvironment(workspace);
-%Ignore the repeating translations, I didn't want to have to write 11 of
-%them out for a test
-placeObjectsBetter(build, P1_transl, P4_transl,P1_transl, P4_transl,P1_transl, P4_transl,P1_transl, P4_transl,P1_transl, P4_transl,P1_transl); 
+%Places all the objects (minus the Hans Cute Robot) into the environment
+placeObjectsBetter(build, canvas, table,pen1, pen2,pen3, safetyBarrierPoint1,safetyBarrierPoint2, safetyBarrierPoint3,safetyBarrierPoint4, guard,fireExtinguisher); 
 
-%placeObjects(build, P1, P2, P3, P4);
-
-%placeObjectsBetter(build, P1_transl, P4_transl);
