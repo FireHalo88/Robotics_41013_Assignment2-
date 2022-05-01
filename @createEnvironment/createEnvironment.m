@@ -85,7 +85,7 @@ function placeObjectsBetter(class, canvas,table, pen1, pen2, pen3, safetyBarrier
             switch i
                 %Canvas
                 case 1 
-                    object_h{i} = PlaceObject('canvas6.ply'); % Importing Canvas
+                    object_h{i} = PlaceObject('canvas2.ply'); % Importing Canvas
                     objectVertices{i} = get(object_h{i},'Vertices'); % Extracting vertices data
                     transformedVertices = [objectVertices{i},ones(size(objectVertices{i},1),1)] * canvas'; % Transforming vertices
                     set(object_h{i},'Vertices',transformedVertices(:,1:3)); % Updating token location
