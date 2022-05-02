@@ -81,28 +81,31 @@ guard = transl(0.6, 0.4, 0)*trotz(pi/2);
 fireExtinguisher = transl(0.3, 0.15, 0.7);
 
 % Special Objects needing Handles
-pen1 = transl(0.15, -0.2, 0.273);
-pen2 = transl(0.20, -0.2, 0.273);
-pen3 = transl(0.25, -0.2, 0.273);
+pen1 = transl(0, -0.3, 0.273);
+pen2 = transl(0.07, -0.3, 0.273);
+pen3 = transl(0.14, -0.3, 0.273);
+pen4 = transl(0.21, -0.3, 0.273);
 canvas = transl(-0.3, -0.2, 0.22);
 handles.pen1 = pen1;
 handles.pen2 = pen2;
 handles.pen3 = pen3;
 handles.canvas = canvas;
 
-% Plot Environment
-axes(handles.axes2)
-% Create Instance of Environment Class
-environ = createEnvironment(workspace);
-environ.placeObjectsBetter(canvas, table, pen1, pen2, pen3, ...
-    safetyBarrierPoint1, safetyBarrierPoint2, safetyBarrierPoint3, ...
-    safetyBarrierPoint4, guard, fireExtinguisher)
-
 % Plot the Robot at default state
+axes(handles.axes2)
 hold on
+
 q = zeros(1,7);
 hansCute.model.base = transl(0.2, 0, 0.22);
 hansCute.plotModel();
+
+% Plot Environment
+% Create Instance of Environment Class
+environ = createEnvironment(workspace);
+environ.placeObjectsBetter(canvas, table, pen1, pen2, pen3, pen4, ...
+    safetyBarrierPoint1, safetyBarrierPoint2, safetyBarrierPoint3, ...
+    safetyBarrierPoint4, guard, fireExtinguisher)
+
 view(3);
 
 % Calculate the Robot EE Position with FK
@@ -768,7 +771,7 @@ if newQ4*pi/180 < handles.myRobot.qlim(4,1) || newQ4*pi/180 > handles.myRobot.ql
     handles.q2.String = num2str(round(allQ(4)*180/pi, 1));
 else
     % Move slider for Q4 to this position
-    set(handles.slider2,'Value',newQ4);
+    set(handles.slider4,'Value',newQ4);
     % Adjust pose of robot with animate
     allQ = handles.myRobot.getpos();
     allQ(4) = newQ4*pi/180;
