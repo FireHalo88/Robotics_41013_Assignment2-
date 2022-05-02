@@ -55,7 +55,8 @@ function TracerGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 % Creation of the Cyton/Hans Cute Robot Class
-hansCute = HansCute('ATV');
+workspace = [-0.75 0.75 -0.75 0.75 0 0.75];     % Workspace Definition
+hansCute = HansCute('ATV', workspace);
 myRobot = hansCute.model;
 
 % Set initial angles
@@ -70,11 +71,38 @@ handles.q7.String = '0';
 % Updating Handles
 handles.myRobot = myRobot;
 
-% Plot the Robot at default state
+% Defining 4x4 Transforms for Environment Objects
+table = transl(0.0, 0.0, 0.0); 
+safetyBarrierPoint1 = transl(-0.47, -0.45, 0.0);
+safetyBarrierPoint2 = transl(-0.47, 0.5, 0.0);
+safetyBarrierPoint3 = transl(0.35, -0.45, 0.0);
+safetyBarrierPoint4 = transl(0.35, 0.5, 0.0);
+guard = transl(0.6, 0.4, 0)*trotz(pi/2);
+fireExtinguisher = transl(0.3, 0.15, 0.7);
+
+% Special Objects needing Handles
+pen1 = transl(0.15, -0.2, 0.273);
+pen2 = transl(0.20, -0.2, 0.273);
+pen3 = transl(0.25, -0.2, 0.273);
+canvas = transl(-0.3, -0.2, 0.22);
+handles.pen1 = pen1;
+handles.pen2 = pen2;
+handles.pen3 = pen3;
+handles.canvas = canvas;
+
+% Plot Environment
 axes(handles.axes2)
+% Create Instance of Environment Class
+environ = createEnvironment(workspace);
+environ.placeObjectsBetter(canvas, table, pen1, pen2, pen3, ...
+    safetyBarrierPoint1, safetyBarrierPoint2, safetyBarrierPoint3, ...
+    safetyBarrierPoint4, guard, fireExtinguisher)
+
+% Plot the Robot at default state
+hold on
 q = zeros(1,7);
+hansCute.model.base = transl(0.2, 0, 0.22);
 hansCute.plotModel();
-%axis equal;
 view(3);
 
 % Calculate the Robot EE Position with FK

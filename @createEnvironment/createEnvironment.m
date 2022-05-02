@@ -9,28 +9,31 @@ classdef createEnvironment < handle
 
     methods%%   
 function self = createEnvironment(workspace)
-            %%x = 1;
+            %%x = 1;          
+        % Save Workspace
+        self.workspace = workspace;
+        
             %Makes the floor 
-        surf([workspace(1,1), workspace(1,1); workspace(1,2), workspace(1,2)], ...
-            [workspace(1,3), workspace(1,4); workspace(1,3), workspace(1,4)], ...
+        surf([self.workspace(1,1), self.workspace(1,1); self.workspace(1,2), self.workspace(1,2)], ...
+            [self.workspace(1,3), self.workspace(1,4); self.workspace(1,3), self.workspace(1,4)], ...
             [0.01, 0.01; 0.01, 0.01], ...
             'CData',imread('woodenFloor.jpg'), 'FaceColor','texturemap');
         hold on;
         %Makes the brick wall along the x axis
-        surf([workspace(1,1), workspace(1,2); workspace(1,1), workspace(1,2)], ...
-            [workspace(1,3), workspace(1,3); workspace(1,3), workspace(1,3)], ...
-            [workspace(1,6), workspace(1,6); 0.0, 0.0], ...
+        surf([self.workspace(1,1), self.workspace(1,2); self.workspace(1,1), self.workspace(1,2)], ...
+            [self.workspace(1,4), self.workspace(1,4); self.workspace(1,4), self.workspace(1,4)], ...
+            [self.workspace(1,6), self.workspace(1,6); 0.0, 0.0], ...
             'CData',imread('galleryWall.jpg'), 'FaceColor','texturemap');
-        hold on;
+        
         %Makes the brick wall along the y axis
         surf([workspace(1,1), workspace(1,1); workspace(1,1), workspace(1,1)], ...
             [workspace(1,4), workspace(1,3); workspace(1,4), workspace(1,3)], ...
             [workspace(1,6), workspace(1,6); 0, 0], ...
             'CData',imread('galleryWall.jpg'), 'FaceColor','texturemap');  
-        hold on;
+        
         %self.placeObjects();
 end
-function placeObjects(class, paint_pot_1, paint_pot_2, paint_pot_3, canvas) 
+function placeObjects(~, paint_pot_1, paint_pot_2, paint_pot_3, canvas) 
     L1 = Link('d',0.1519,'a',0,'alpha',pi/2,'qlim',deg2rad([-360,360]), 'offset', 0);     
     qa = zeros(1,1);  
     %For cups
@@ -77,7 +80,7 @@ function placeObjects(class, paint_pot_1, paint_pot_2, paint_pot_3, canvas)
         Canvas.points = {vertexData,[]};                        % Inputting brick faces and vertices                                        % Creating initial joint angles as zero for all bricks
         Canvas.plot3d(qa,'scale',0.0001); 
 end
-function placeObjectsBetter(class, canvas,table, pen1, pen2, pen3, safetyBarrier1,safetyBarrier2,safetyBarrier3,safetyBarrier4,guard,fireExtinguisher)
+function placeObjectsBetter(~, canvas,table, pen1, pen2, pen3, safetyBarrier1,safetyBarrier2,safetyBarrier3,safetyBarrier4,guard,fireExtinguisher)
         % Plotting Objects
         object_h = {0 0 0 0 0 0 0 0 0 0 0}; % Cell array for storing token handles
         objectVertices = {0 0 0 0 0 0 0 0 0 0 0}; % Cell array for storing token vertices

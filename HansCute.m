@@ -28,7 +28,6 @@ classdef HansCute < handle
             0.2;                % in m/s.
         angularSpeed = ...      % Angular speed during L trajectories (tool rotation speed)
             pi/2;               % in rad/s.
-        workspace = [-0.75 0.75 -0.75 0.75 0 0.75];   % Robot workspace
     end
     
     properties
@@ -39,6 +38,7 @@ classdef HansCute < handle
         useRealController   % Controller State (keyboard or controller)
         moveJFrequency	% Rate at which joint moves should run
         moveLFrequency	% Rate at which tool moves should run
+        workspace = [];   % Robot workspace
     end
     
     methods
@@ -109,7 +109,7 @@ classdef HansCute < handle
             end
         end
         
-        function obj = HansCute(name)
+        function obj = HansCute(name, workspace)
             % Creates a new Cyton 300 Robot Object. Default pose is 0
             if nargin < 1
                 name = 'Hans Cute Robot';
@@ -127,6 +127,7 @@ classdef HansCute < handle
             obj.moveRealRobot = false;
             obj.moveJFrequency = 15;
             obj.moveLFrequency = 15;
+            obj.workspace = workspace;
         end
                
         function teach(obj)
