@@ -81,14 +81,15 @@ guard = transl(0.6, 0.4, 0)*trotz(pi/2);
 fireExtinguisher = transl(0.3, 0.15, 0.7);
 
 % Special Objects needing Handles
-pen1 = transl(0, -0.3, 0.273);
-pen2 = transl(0.07, -0.3, 0.273);
-pen3 = transl(0.14, -0.3, 0.273);
-pen4 = transl(0.21, -0.3, 0.273);
+pen1 = transl(0.05, -0.3, 0.273);
+pen2 = transl(0.1, -0.3, 0.273);
+pen3 = transl(0.15, -0.3, 0.273);
+pen4 = transl(0.2, -0.3, 0.273);
 canvas = transl(-0.3, -0.2, 0.22);
-handles.pen1 = pen1;
-handles.pen2 = pen2;
-handles.pen3 = pen3;
+handles.blackPen = pen1;
+handles.redPen = pen2;
+handles.greenPen = pen3;
+handles.bluePen = pen4;
 handles.canvas = canvas;
 
 % Plot the Robot at default state
@@ -129,6 +130,9 @@ handles.cartKeepCurrentRPY = 1;
 handles.colour = 'blackPen';
 handles.drawing = [];
 handles.drawingPath = '';
+% Handle for Robot Movement Class
+rMove = RobotMovement;
+handles.rMove = rMove;
 
 % Update handles structure
 guidata(hObject, handles);
@@ -1357,6 +1361,28 @@ function startDrawingBtn_Callback(hObject, eventdata, handles)
 % Set handles.colour to be the colour pen chosen from the Button Group
 h = get(handles.colourBtnGroup,'SelectedObject');
 handles.colour = get(h, 'Tag');
+% Switch statement to get 4x4 Transform Matrix of colour pen to pick up
+switch handles.colour
+    case 'blackPen'
+        pen_T = handles.blackPen;
+    case 'redPen'
+        pen_T = handles.redPen;
+    case 'greenPen'
+        pen_T = handles.greenPen;
+    case 'bluePen'
+        pen_T = handles.bluePen;
+end
+
+% Move the Hans Cute to pick up the pen!
+pen_T = pen_T*transl(-0.015, 0, 0); % Shifting target transform slightly so pen is centred in gripper
+%qGuess_Pen = [25 90 0 0 -65 0 90]*pi/180;
+%qGuess_Pen = [60 45 0 105 0 -60 90]*pi/180;
+qGuess_Pen = [60 60 0 80 0 -50 90]*pi/180;
+steps = 70;
+qOut = handles.rMove.MoveRobotToObject(handles.myRobot, pen_T, 0.1, ...
+    qGuess_Pen, steps)
+qOutDeg = qOut*180/pi
+        
 
 % --- Executes on button press in resumeBtn.
 function resumeBtn_Callback(hObject, eventdata, handles)
