@@ -1,3 +1,3 @@
- PlaceObject('canvas6.ply')
+ PlaceObject('brown_table.ply')
  axis equal
  camlight

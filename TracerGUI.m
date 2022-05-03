@@ -55,7 +55,8 @@ function TracerGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 % Creation of the Cyton/Hans Cute Robot Class
-hansCute = HansCute('ATV');
+workspace = [-0.75 0.75 -0.75 0.75 0 0.75];     % Workspace Definition
+hansCute = HansCute('ATV', workspace);
 myRobot = hansCute.model;
 
 % Set initial angles
@@ -70,11 +71,42 @@ handles.q7.String = '0';
 % Updating Handles
 handles.myRobot = myRobot;
 
+% Defining 4x4 Transforms for Environment Objects
+table = transl(0.0, 0.0, 0.0); 
+safetyBarrierPoint1 = transl(-0.47, -0.45, 0.0);
+safetyBarrierPoint2 = transl(-0.47, 0.5, 0.0);
+safetyBarrierPoint3 = transl(0.35, -0.45, 0.0);
+safetyBarrierPoint4 = transl(0.35, 0.5, 0.0);
+guard = transl(0.6, 0.4, 0)*trotz(pi/2);
+fireExtinguisher = transl(0.3, 0.15, 0.7);
+
+% Special Objects needing Handles
+pen1 = transl(0.05, -0.3, 0.273);
+pen2 = transl(0.1, -0.3, 0.273);
+pen3 = transl(0.15, -0.3, 0.273);
+pen4 = transl(0.2, -0.3, 0.273);
+canvas = transl(-0.3, -0.2, 0.22);
+handles.blackPen = pen1;
+handles.redPen = pen2;
+handles.greenPen = pen3;
+handles.bluePen = pen4;
+handles.canvas = canvas;
+
 % Plot the Robot at default state
 axes(handles.axes2)
+hold on
+
 q = zeros(1,7);
+hansCute.model.base = transl(0.2, 0, 0.22);
 hansCute.plotModel();
-%axis equal;
+
+% Plot Environment
+% Create Instance of Environment Class
+environ = createEnvironment(workspace);
+environ.placeObjectsBetter(canvas, table, pen1, pen2, pen3, pen4, ...
+    safetyBarrierPoint1, safetyBarrierPoint2, safetyBarrierPoint3, ...
+    safetyBarrierPoint4, guard, fireExtinguisher)
+
 view(3);
 
 % Calculate the Robot EE Position with FK
@@ -98,6 +130,9 @@ handles.cartKeepCurrentRPY = 1;
 handles.colour = 'blackPen';
 handles.drawing = [];
 handles.drawingPath = '';
+% Handle for Robot Movement Class
+rMove = RobotMovement;
+handles.rMove = rMove;
 
 % Update handles structure
 guidata(hObject, handles);
@@ -740,7 +775,7 @@ if newQ4*pi/180 < handles.myRobot.qlim(4,1) || newQ4*pi/180 > handles.myRobot.ql
     handles.q2.String = num2str(round(allQ(4)*180/pi, 1));
 else
     % Move slider for Q4 to this position
-    set(handles.slider2,'Value',newQ4);
+    set(handles.slider4,'Value',newQ4);
     % Adjust pose of robot with animate
     allQ = handles.myRobot.getpos();
     allQ(4) = newQ4*pi/180;
@@ -1326,6 +1361,28 @@ function startDrawingBtn_Callback(hObject, eventdata, handles)
 % Set handles.colour to be the colour pen chosen from the Button Group
 h = get(handles.colourBtnGroup,'SelectedObject');
 handles.colour = get(h, 'Tag');
+% Switch statement to get 4x4 Transform Matrix of colour pen to pick up
+switch handles.colour
+    case 'blackPen'
+        pen_T = handles.blackPen;
+    case 'redPen'
+        pen_T = handles.redPen;
+    case 'greenPen'
+        pen_T = handles.greenPen;
+    case 'bluePen'
+        pen_T = handles.bluePen;
+end
+
+% Move the Hans Cute to pick up the pen!
+pen_T = pen_T*transl(-0.015, 0, 0); % Shifting target transform slightly so pen is centred in gripper
+%qGuess_Pen = [25 90 0 0 -65 0 90]*pi/180;
+%qGuess_Pen = [60 45 0 105 0 -60 90]*pi/180;
+qGuess_Pen = [60 60 0 80 0 -50 90]*pi/180;
+steps = 70;
+qOut = handles.rMove.MoveRobotToObject(handles.myRobot, pen_T, 0.1, ...
+    qGuess_Pen, steps)
+qOutDeg = qOut*180/pi
+        
 
 % --- Executes on button press in resumeBtn.
 function resumeBtn_Callback(hObject, eventdata, handles)
