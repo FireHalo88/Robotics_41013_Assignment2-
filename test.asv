@@ -1,0 +1,3 @@
+ PlaceObject('green_pen.ply')
+ axis equal
+ camlight
