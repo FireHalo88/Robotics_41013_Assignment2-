@@ -1380,8 +1380,14 @@ pen_T = pen_T*transl(-0.015, 0, 0); % Shifting target transform slightly so pen 
 qGuess_Pen = [60 60 0 80 0 -50 90]*pi/180;
 steps = 70;
 qOut = handles.rMove.MoveRobotToObject(handles.myRobot, pen_T, 0.1, ...
-    qGuess_Pen, steps)
-qOutDeg = qOut*180/pi
+    qGuess_Pen, steps);
+
+hold on
+% Use RMRC to move the Hans Cute back up 20cm
+% Define starting and desired end transform
+start_T = handles.myRobot.fkine(qOut);
+end_T = start_T*transl(0, -0.1, 0);  % Y-Axis pointing downwards
+qOut = handles.rMove.RMRC_7DOF(handles.myRobot, start_T, end_T, 1);
         
 
 % --- Executes on button press in resumeBtn.

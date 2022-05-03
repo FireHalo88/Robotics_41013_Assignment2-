@@ -204,14 +204,14 @@ classdef RobotMovement < handle
                      
         end
         
-        function [qOut] = RMRC_7DOF(self, robot, start_T, end_T, qGuess, ...
-                steps, withObject)
+        function [qOut] = RMRC_7DOF(self, robot, start_T, end_T, time, ...
+                withObject)
             % This function is modified from the exercise completed in the
             % Lab 9 Tutorial Questions for a 7DOF Robot (Hans Cute).
             
             % If no 'withObject' value input, set 'withObject' to 0 (no
             % object).
-            if nargin < 6
+            if nargin < 5
                 withObject = 0;
             end
             
@@ -221,11 +221,10 @@ classdef RobotMovement < handle
                 funcName, char(13)]};
             
             % Setting Parameters
-            t = 5;                  % Total time
-            deltaT = 0.02;          % Control Freq. (Around 50Hz is a good start)
-            steps = t/deltaT;       % No. of Steps
+            deltaT = 0.02;          % Control Freq. (Around 50Hz)
+            steps = time/deltaT;    % No. of Steps
             delta = 2*pi/steps;     % Small angle change
-            epsilon = 0.1;          % Threshold value for manipulability/Damped Least Squares
+            epsilon = 0.0015;         % Threshold value for manipulability/Damped Least Squares
             lambda_max = 0.05;      % Set Lambda_Max when attenuating the Damping Factor for DLS Method
             W = diag([1 1 1 0.1 0.1 0.1]);     % Weighting matrix for the velocity vector
             
@@ -236,6 +235,9 @@ classdef RobotMovement < handle
             theta = zeros(3,steps);         % Array for roll-pitch-yaw angles
             X = zeros(3,steps);             % Array for x-y-z trajectory
             
+            positionError = zeros(3,steps); % For plotting trajectory error
+            angleError = zeros(3,steps);    % For plotting trajectory error
+            
             % Get X-Y-Z of Start and End Poses
             startXYZ = start_T(1:3, 4);
             finXYZ = end_T(1:3, 4);
@@ -244,6 +246,7 @@ classdef RobotMovement < handle
             RPY = tr2rpy(start_T);
             
             % Create straight line trajectory in X-Y-Z plane at current RPY
+            s = lspb(0,1,steps);            % Trapezoidal Trajectory Scalar
             for i = 1:steps
                 % XYZ Trajectory
                 X(:,i) = startXYZ*(1-s(i)) + s(i)*finXYZ;
@@ -258,8 +261,8 @@ classdef RobotMovement < handle
             
             % Perform RMRC
             for i = 1:steps-1
-                T = p560.fkine(qMatrix(i,:));      % FK for current joint state
-                deltaX = x(:,i+1) - T(1:3, 4);     % Get position error from next waypoint
+                T = robot.fkine(qMatrix(i,:));      % FK for current joint state
+                deltaX = X(:,i+1) - T(1:3, 4);     % Get position error from next waypoint
                 % Get next and current RPY angles as a 3x3 Rotation Matrix
                 R_Next = rpy2r(theta(1, i+1), theta(2, i+1), theta(3, i+1));
                 R_Curr = T(1:3, 1:3);
@@ -274,7 +277,7 @@ classdef RobotMovement < handle
                 % Therefore: Skew(w)*R*R' = R'*(R(t+1) - R(t))/delta_t
                 % Therefore: Skew(w) = R(t)'*(R(t+1) - R(t))/delta_t
                 % Knowing that Rdot = (R(t+1) - R(t))/delta_t, and R(t) = R_Curr:
-                S = Rdot*Ra';
+                S = Rdot*R_Curr';
                 % OR we can also define the Skew Symmetric Matrix as:
                 S_M = (1/deltaT)*(R_Next*R_Curr' - eye(3)); % By expanding and simplifying the equation in Line 276
                 
@@ -293,15 +296,15 @@ classdef RobotMovement < handle
                 Xdot = W*[linVel;
                           angVel]; 
                       
-                J = p560.jacob0(qMatrix(i,:));   % Get Jacobian at current joint state
+                J = robot.jacob0(qMatrix(i,:));   % Get Jacobian at current joint state
                 MoM(i) = sqrt(det(J*J'));        % Record Measure of Manipulability
                 
-                if m(i) < epsilon  % If manipulability is less than given threshold, use DLS Method
-                    lambda = (1-(m(i)/epsilon))*lambda_max;   % Damping coefficient (try scaling it)    
+                if MoM(i) < epsilon  % If manipulability is less than given threshold, use DLS Method
+                    lambda = (1-(MoM(i)/epsilon))*lambda_max;   % Damping coefficient (try scaling it)    
                 else
                     lambda = 0;
                 end
-                invJ = inv(J'*J + lambda*eye(6))*J'; % Apply Damped Least Squares pseudoinverse
+                invJ = pinv(J'*J + lambda*eye(7))*J'; % Apply Damped Least Squares pseudoinverse
                 
                 qDot(i,:) = (invJ*Xdot)';    % Solve the RMRC equation
                 % Check if next joint is outside allowable joint limits.
@@ -312,19 +315,92 @@ classdef RobotMovement < handle
                             || qMatrix(i, joint) + deltaT*qDot(i, joint) ...
                             > robot.qlim(joint, 2)
                         qDot(i, joint) = 0;
+                        disp('Motors Stopped - RMRC!');
                     end
                 end
                 
                 % Calculate next joint state given calculated joint
                 % velocities
-                qMatrix(i+1, :) = qMatrix(:, i) + deltaT*qDot(i, :);          
+                qMatrix(i+1, :) = qMatrix(i, :) + deltaT*qDot(i, :);  
+                
+                positionError(:,i) = X(:,i) - T(1:3, 4);  % For plotting position error at current timestamp
+                angleError(:,i) = deltaTheta; % For plotting angle error at current timestamp
             end
             
             % Animate through calculated joint states
-            robot.animate(qMatrix)
+            trail = nan(3, steps);
+            for i = 1:steps
+                % Get FK
+                FK = robot.fkine(qMatrix(i, :));
+                trail(:, i) = FK(1:3, 4);
+                robot.animate(qMatrix(i, :));
+                drawnow();
+                pause(0.01);
+            end
+            
+            % Plot trail data
+            trailData_h = plot3(trail(1,:), trail(2,:), trail(3,:), 'c*');
+            drawnow();
+            
+            % Check we have reached the desired final pose
+            % Debugging Position
+            FK = robot.fkine(robot.getpos());
+            [check, dist] = self.compareTwoPositions(FK, end_T);
+            
+            self.L.mlog = {self.L.DEBUG,funcName,['The robot transform at ' ...
+                'the goal pose is: ',self.L.MatrixToString(FK)]};
+            if check == true
+                self.L.mlog = {self.L.DEBUG,funcName,['The robot has reached' ...
+                    ' its goal position (within 0.01m)',char(13)]};
+            else
+                self.L.mlog = {self.L.WARN,funcName,['The robot has missed ' ...
+                    'its goal position (', num2str(dist), ' > 0.01m)',char(13)]};
+            end
+            
+            % Print desired transform
+            self.L.mlog = {self.L.DEBUG,funcName,['The desired transform ' ...
+                'was: ', self.L.MatrixToString(end_T)]};
             
             % Return final joint state (as output)
-            qOut = qMatrix(end, :);          
+            qOut = qMatrix(end, :);
+            
+            % Plot Results (Testing)
+            for i = 1:7
+                figure(2)
+                subplot(4,2,i)
+                plot(qMatrix(:,i),'k','LineWidth',1)
+                title(['Joint ', num2str(i)])
+                ylabel('Angle (rad)')
+                refline(0,robot.qlim(i,1));
+                refline(0,robot.qlim(i,2));
+
+                figure(3)
+                subplot(4,2,i)
+                plot(qDot(:,i),'k','LineWidth',1)
+                title(['Joint ',num2str(i)]);
+                ylabel('Velocity (rad/s)')
+                refline(0,0)
+            end
+
+            figure(4)
+            subplot(2,1,1)
+            plot(positionError'*1000,'LineWidth',1)
+            refline(0,0)
+            xlabel('Step')
+            ylabel('Position Error (mm)')
+            legend('X-Axis','Y-Axis','Z-Axis')
+
+            subplot(2,1,2)
+            plot(angleError','LineWidth',1)
+            refline(0,0)
+            xlabel('Step')
+            ylabel('Angle Error (rad)')
+            legend('Roll','Pitch','Yaw')
+            figure(5)
+            plot(MoM,'k','LineWidth',1)
+            refline(0,epsilon)
+            title('Manipulability')
+            
         end
         
         
