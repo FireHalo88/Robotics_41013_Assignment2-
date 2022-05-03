@@ -92,9 +92,10 @@ function placeObjects(~, paint_pot_1, paint_pot_2, paint_pot_3, canvas)
         Canvas.points = {vertexData,[]};                        % Inputting brick faces and vertices                                        % Creating initial joint angles as zero for all bricks
         Canvas.plot3d(qa,'scale',0.0001); 
 end
-function placeObjectsBetter(~, canvas,table, pen1, pen2, pen3, pen4, ...
-        safetyBarrier1, safetyBarrier2, safetyBarrier3, safetyBarrier4, ...
-        guard, fireExtinguisher)
+function[object_h, objectVertices] = placeObjectsBetter(~, canvas,table, ...
+        pen1, pen2, pen3, pen4, safetyBarrier1, safetyBarrier2, ...
+        safetyBarrier3, safetyBarrier4, guard, fireExtinguisher)
+    
         % Plotting Objects
         object_h = {0 0 0 0 0 0 0 0 0 0 0 0 0 0}; % Cell array for storing token handles
         objectVertices = {0 0 0 0 0 0 0 0 0 0 0 0 0 0}; % Cell array for storing token vertices

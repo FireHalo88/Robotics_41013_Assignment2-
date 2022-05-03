@@ -72,25 +72,25 @@ handles.q7.String = '0';
 handles.myRobot = myRobot;
 
 % Defining 4x4 Transforms for Environment Objects
-table = transl(0.0, 0.0, 0.0); 
-safetyBarrierPoint1 = transl(-0.47, -0.45, 0.0);
-safetyBarrierPoint2 = transl(-0.47, 0.5, 0.0);
-safetyBarrierPoint3 = transl(0.35, -0.45, 0.0);
-safetyBarrierPoint4 = transl(0.35, 0.5, 0.0);
-guard = transl(0.6, 0.4, 0)*trotz(pi/2);
-fireExtinguisher = transl(0.3, 0.15, 0.7);
+table_T = transl(0.0, 0.0, 0.0); 
+safetyBarrierPoint1_T = transl(-0.47, -0.45, 0.0);
+safetyBarrierPoint2_T = transl(-0.47, 0.5, 0.0);
+safetyBarrierPoint3_T = transl(0.35, -0.45, 0.0);
+safetyBarrierPoint4_T = transl(0.35, 0.5, 0.0);
+guard_T = transl(0.6, 0.4, 0)*trotz(pi/2);
+fireExtinguisher_T = transl(0.3, 0.15, 0.7);
 
 % Special Objects needing Handles
-pen1 = transl(0.02, -0.3, 0.273);
-pen2 = transl(0.07, -0.3, 0.273);
-pen3 = transl(0.12, -0.3, 0.273);
-pen4 = transl(0.17, -0.3, 0.273);
-canvas = transl(-0.3, -0.2, 0.22);
-handles.blackPen = pen1;
-handles.redPen = pen2;
-handles.greenPen = pen3;
-handles.bluePen = pen4;
-handles.canvas = canvas;
+pen1_T = transl(0.02, -0.3, 0.273);
+pen2_T = transl(0.07, -0.3, 0.273);
+pen3_T = transl(0.12, -0.3, 0.273);
+pen4_T = transl(0.17, -0.3, 0.273);
+canvas_T = transl(-0.3, -0.2, 0.22);
+handles.blackPen_T = pen1_T;
+handles.redPen_T = pen2_T;
+handles.greenPen_T = pen3_T;
+handles.bluePen_T = pen4_T;
+handles.canvas_T = canvas_T;
 
 % Plot the Robot at default state
 axes(handles.axes2)
@@ -103,9 +103,20 @@ hansCute.plotModel();
 % Plot Environment
 % Create Instance of Environment Class
 environ = createEnvironment(workspace);
-environ.placeObjectsBetter(canvas, table, pen1, pen2, pen3, pen4, ...
-    safetyBarrierPoint1, safetyBarrierPoint2, safetyBarrierPoint3, ...
-    safetyBarrierPoint4, guard, fireExtinguisher)
+[objectMeshes_h, objectVertices] = environ.placeObjectsBetter(canvas_T, table_T, ...
+    pen1_T, pen2_T, pen3_T, pen4_T, safetyBarrierPoint1_T, safetyBarrierPoint2_T, ...
+    safetyBarrierPoint3_T, safetyBarrierPoint4_T, guard_T, fireExtinguisher_T);
+
+% We need to save some of the object meshes and vertices as handles such
+% that they can be moved around (e.g. the pens).
+handles.blackPen_h = objectMeshes_h{3};
+handles.blackPenVertices = objectVertices{3};
+handles.redPen_h = objectMeshes_h{4};
+handles.redPenVertices = objectVertices{4};
+handles.greenPen_h = objectMeshes_h{5};
+handles.greenPenVertices = objectVertices{5};
+handles.bluePen_h = objectMeshes_h{6};
+handles.bluePenVertices = objectVertices{6};
 
 view(3);
 
@@ -1364,13 +1375,21 @@ handles.colour = get(h, 'Tag');
 % Switch statement to get 4x4 Transform Matrix of colour pen to pick up
 switch handles.colour
     case 'blackPen'
-        pen_T = handles.blackPen;
+        pen_T = handles.blackPen_T;
+        penMesh_h = handles.blackPen_h;
+        penVertices = handles.blackPenVertices;
     case 'redPen'
-        pen_T = handles.redPen;
+        pen_T = handles.redPen_T;
+        penMesh_h = handles.redPen_h;
+        penVertices = handles.redPenVertices;
     case 'greenPen'
-        pen_T = handles.greenPen;
+        pen_T = handles.greenPen_T;
+        penMesh_h = handles.greenPen_h;
+        penVertices = handles.greenPenVertices;
     case 'bluePen'
-        pen_T = handles.bluePen;
+        pen_T = handles.bluePen_T;
+        penMesh_h = handles.bluePen_h;
+        penVertices = handles.bluePenVertices;
 end
 
 % Move the Hans Cute to pick up the pen!
@@ -1390,9 +1409,10 @@ if usingRMRC == 0
     % Define starting and desired end transform
     start_T = handles.myRobot.fkine(qOut);
     end_T = pen_T*transl(0, -0.08, 0);  % Y-Axis pointing downwards
-    % RMRC Parameters: Robot, Start 4x4, End 4x4, Time of Traj, ...
-    % Plot Traj Trail?, Plot Traj Data?, Moving Mesh?
-    qOut = handles.rMove.RMRC_7DOF(handles.myRobot, start_T, end_T, 1, 0, 0);
+    % RMRC (with object) Parameters: Robot, Start 4x4, End 4x4, Object Mesh, ...
+    % Object Vertices, Time of Traj, Plot Traj Trail?, Plot Traj Data?
+    qOut = handles.rMove.RMRC_7DOF(handles.myRobot, start_T, end_T, ...
+        penMesh_h, penVertices, 1, 0, 0);
     
 else
     % Move above the target point
@@ -1401,17 +1421,20 @@ else
         qGuess_Pen, steps);
     
     % Use RMRC to move down towards the pen and then back up with it
-    % RMRC Parameters: Robot, Start 4x4, End 4x4, Time of Traj, ...
-    % Plot Traj Trail?, Plot Traj Data?, Moving Mesh?
+    % RMRC (no object) Parameters: Robot, Start 4x4, End 4x4, Time of Traj, ...
+    % Plot Traj Trail?, Plot Traj Data?
     % Moving down:
     start_T = handles.myRobot.fkine(qOut);
     end_T = pen_T*transl(0, 0, -0.08);  % Y-Axis pointing downwards
-    qOut = handles.rMove.RMRC_7DOF(handles.myRobot, start_T, end_T, 1, 1, 0);
+    qOut = handles.rMove.RMRC_7DOF(handles.myRobot, start_T, end_T, 1, 0, 0);
     
+    % RMRC (with object) Parameters: Robot, Start 4x4, End 4x4, Object Mesh, ...
+    % Object Vertices, Time of Traj, Plot Traj Trail?, Plot Traj Data?
     % Moving up:
     start_T = handles.myRobot.fkine(qOut);
     end_T = pen_T;
-    qOut = handles.rMove.RMRC_7DOF(handles.myRobot, start_T, end_T, 1, 1, 0);
+    qOut = handles.rMove.RMRC_7DOF_OBJ(handles.myRobot, start_T, end_T, ...
+        penMesh_h, penVertices, 1, 0, 0);
 end
     
         
