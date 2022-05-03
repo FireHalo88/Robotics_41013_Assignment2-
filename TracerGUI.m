@@ -81,10 +81,10 @@ guard = transl(0.6, 0.4, 0)*trotz(pi/2);
 fireExtinguisher = transl(0.3, 0.15, 0.7);
 
 % Special Objects needing Handles
-pen1 = transl(0.05, -0.3, 0.273);
-pen2 = transl(0.1, -0.3, 0.273);
-pen3 = transl(0.15, -0.3, 0.273);
-pen4 = transl(0.2, -0.3, 0.273);
+pen1 = transl(0.02, -0.3, 0.273);
+pen2 = transl(0.07, -0.3, 0.273);
+pen3 = transl(0.12, -0.3, 0.273);
+pen4 = transl(0.17, -0.3, 0.273);
 canvas = transl(-0.3, -0.2, 0.22);
 handles.blackPen = pen1;
 handles.redPen = pen2;
@@ -1374,20 +1374,46 @@ switch handles.colour
 end
 
 % Move the Hans Cute to pick up the pen!
-pen_T = pen_T*transl(-0.015, 0, 0); % Shifting target transform slightly so pen is centred in gripper
-%qGuess_Pen = [25 90 0 0 -65 0 90]*pi/180;
-%qGuess_Pen = [60 45 0 105 0 -60 90]*pi/180;
 qGuess_Pen = [60 60 0 80 0 -50 90]*pi/180;
 steps = 70;
-qOut = handles.rMove.MoveRobotToObject(handles.myRobot, pen_T, 0.1, ...
-    qGuess_Pen, steps);
-
 hold on
-% Use RMRC to move the Hans Cute back up 20cm
-% Define starting and desired end transform
-start_T = handles.myRobot.fkine(qOut);
-end_T = start_T*transl(0, -0.1, 0);  % Y-Axis pointing downwards
-qOut = handles.rMove.RMRC_7DOF(handles.myRobot, start_T, end_T, 1);
+
+usingRMRC = 1;
+if usingRMRC == 0
+    pen_T = pen_T*transl(-0.01, 0, 0); % Shifting target transform slightly so pen is centred in gripper
+    %qGuess_Pen = [25 90 0 0 -65 0 90]*pi/180;
+    %qGuess_Pen = [60 45 0 105 0 -60 90]*pi/180;
+
+    qOut = handles.rMove.MoveRobotToObject(handles.myRobot, pen_T, 0.1, ...
+        qGuess_Pen, steps);
+    % Use RMRC to move the Hans Cute back up 10cm
+    % Define starting and desired end transform
+    start_T = handles.myRobot.fkine(qOut);
+    end_T = pen_T*transl(0, -0.08, 0);  % Y-Axis pointing downwards
+    % RMRC Parameters: Robot, Start 4x4, End 4x4, Time of Traj, ...
+    % Plot Traj Trail?, Plot Traj Data?, Moving Mesh?
+    qOut = handles.rMove.RMRC_7DOF(handles.myRobot, start_T, end_T, 1, 0, 0);
+    
+else
+    % Move above the target point
+    pen_T = pen_T*transl(-0.01, 0, 0.1);
+    qOut = handles.rMove.MoveRobotToObject2(handles.myRobot, pen_T, ...
+        qGuess_Pen, steps);
+    
+    % Use RMRC to move down towards the pen and then back up with it
+    % RMRC Parameters: Robot, Start 4x4, End 4x4, Time of Traj, ...
+    % Plot Traj Trail?, Plot Traj Data?, Moving Mesh?
+    % Moving down:
+    start_T = handles.myRobot.fkine(qOut);
+    end_T = pen_T*transl(0, 0, -0.08);  % Y-Axis pointing downwards
+    qOut = handles.rMove.RMRC_7DOF(handles.myRobot, start_T, end_T, 1, 1, 0);
+    
+    % Moving up:
+    start_T = handles.myRobot.fkine(qOut);
+    end_T = pen_T;
+    qOut = handles.rMove.RMRC_7DOF(handles.myRobot, start_T, end_T, 1, 1, 0);
+end
+    
         
 
 % --- Executes on button press in resumeBtn.

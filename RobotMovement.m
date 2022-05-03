@@ -110,6 +110,66 @@ classdef RobotMovement < handle
 
         end
         
+        function [qOut] = MoveRobotToObject2(self, robot, loc_T, qGuess, ...
+                steps)
+            %This function takes a SerialLink robot, a desired 4x4 Transformation ...
+            %Matrix to reach, and animates a calculated minimum jerk trajectory
+            %to the configuration.
+            
+            % TO BE ADDED: COLLISION AVOIDANCE/DETECTION
+            
+            % Defining and logging to log file for information
+            funcName = 'MoveRobotToObject2';
+            self.L.mlog = {self.L.DEBUG,funcName,['RUNNING FUNCTION: ', ...
+                funcName, char(13)]};
+            
+            % Getting the transform above the desired end location.
+            % Define a rotation of PI/2 about X to face End Effector
+            % sidewards.
+            loc_T = loc_T*trotx(pi/2)*trotz(pi);
+
+            % Moving to Location
+            % Getting required Joint Angles to reach position above using ...
+            % Inverse Kinematics
+            newQ = robot.ikcon(loc_T, qGuess);
+
+            % Plannning a Trajectory using the Min. Jerk Method
+            % (Quintic Polynomial Method)
+            % jtraj(Starting Joint Angles, Target Joint Angles, Steps to Take)
+            qpMatrix = jtraj(robot.getpos(), newQ, steps);
+
+            % Moving to the spot above the desired location
+            for i = 1:steps
+               % Plot Robot Moving
+               robot.animate(qpMatrix(i, :));
+               drawnow();
+            end
+
+            % Debugging pose above desired position
+            FK = robot.fkine(qpMatrix(end, :));
+            [check, dist] = self.compareTwoPositions(FK, loc_T);
+            
+            self.L.mlog = {self.L.DEBUG,funcName,['The robot transform ' ...
+                'above input location is: ',self.L.MatrixToString(FK)]};
+            
+            if check == true
+                self.L.mlog = {self.L.DEBUG,funcName,['The robot has reached' ...
+                    ' its goal position (within 0.01m)',char(13)]};
+            else
+                self.L.mlog = {self.L.WARN,funcName,['The robot has missed ' ...
+                    'its goal position (', num2str(dist), ' > 0.01m)',char(13)]};
+            end
+            
+            % Print desired transform
+            self.L.mlog = {self.L.DEBUG,funcName,['The desired transform ' ...
+                'was: ', self.L.MatrixToString(loc_T)]};
+            
+            % Return the ending pose which could be used as a guess for
+            % further movement of the robot from this position.
+            qOut = qpMatrix(end, :);
+
+        end
+        
         function [qOut] = MoveRobotWithObject(self, robot, end_T, dAbove, ...
                 objMesh_h, objVertices, qGuess, steps)
             %This function takes a SerialLink robot, a desired 4x4 Transformation ...
@@ -205,13 +265,25 @@ classdef RobotMovement < handle
         end
         
         function [qOut] = RMRC_7DOF(self, robot, start_T, end_T, time, ...
-                withObject)
+                plotTrail, plotData, withObject)
             % This function is modified from the exercise completed in the
             % Lab 9 Tutorial Questions for a 7DOF Robot (Hans Cute).
             
-            % If no 'withObject' value input, set 'withObject' to 0 (no
-            % object).
+            % If no 'plotTrail' value input, set 'plotTrail' to 0 (do not ...
+            % show trajectory trail).
             if nargin < 5
+                plotTrail = 0;
+            end
+            
+            % If no 'plotData' value input, set 'plotData' to 0 (do not ...
+            % show plot data).
+            if nargin < 6
+                plotData = 0;
+            end
+            
+            % If no 'withObject' value input, set 'withObject' to 0 (not ...
+            % moving with a mesh).
+            if nargin < 7
                 withObject = 0;
             end
             
@@ -339,8 +411,10 @@ classdef RobotMovement < handle
             end
             
             % Plot trail data
-            trailData_h = plot3(trail(1,:), trail(2,:), trail(3,:), 'c*');
-            drawnow();
+            if plotTrail == 1
+                trailData_h = plot3(trail(1,:), trail(2,:), trail(3,:), 'c*');
+                drawnow();
+            end
             
             % Check we have reached the desired final pose
             % Debugging Position
@@ -363,43 +437,45 @@ classdef RobotMovement < handle
             
             % Return final joint state (as output)
             qOut = qMatrix(end, :);
-            
-            % Plot Results (Testing)
-            for i = 1:7
-                figure(2)
-                subplot(4,2,i)
-                plot(qMatrix(:,i),'k','LineWidth',1)
-                title(['Joint ', num2str(i)])
-                ylabel('Angle (rad)')
-                refline(0,robot.qlim(i,1));
-                refline(0,robot.qlim(i,2));
+           
+            if plotData == 1
+                % Plot Results (Testing)
+                for i = 1:7
+                    figure(2)
+                    subplot(4,2,i)
+                    plot(qMatrix(:,i),'k','LineWidth',1)
+                    title(['Joint ', num2str(i)])
+                    ylabel('Angle (rad)')
+                    refline(0,robot.qlim(i,1));
+                    refline(0,robot.qlim(i,2));
 
-                figure(3)
-                subplot(4,2,i)
-                plot(qDot(:,i),'k','LineWidth',1)
-                title(['Joint ',num2str(i)]);
-                ylabel('Velocity (rad/s)')
+                    figure(3)
+                    subplot(4,2,i)
+                    plot(qDot(:,i),'k','LineWidth',1)
+                    title(['Joint ',num2str(i)]);
+                    ylabel('Velocity (rad/s)')
+                    refline(0,0)
+                end
+
+                figure(4)
+                subplot(2,1,1)
+                plot(positionError'*1000,'LineWidth',1)
                 refline(0,0)
+                xlabel('Step')
+                ylabel('Position Error (mm)')
+                legend('X-Axis','Y-Axis','Z-Axis')
+
+                subplot(2,1,2)
+                plot(angleError','LineWidth',1)
+                refline(0,0)
+                xlabel('Step')
+                ylabel('Angle Error (rad)')
+                legend('Roll','Pitch','Yaw')
+                figure(5)
+                plot(MoM,'k','LineWidth',1)
+                refline(0,epsilon)
+                title('Manipulability')
             end
-
-            figure(4)
-            subplot(2,1,1)
-            plot(positionError'*1000,'LineWidth',1)
-            refline(0,0)
-            xlabel('Step')
-            ylabel('Position Error (mm)')
-            legend('X-Axis','Y-Axis','Z-Axis')
-
-            subplot(2,1,2)
-            plot(angleError','LineWidth',1)
-            refline(0,0)
-            xlabel('Step')
-            ylabel('Angle Error (rad)')
-            legend('Roll','Pitch','Yaw')
-            figure(5)
-            plot(MoM,'k','LineWidth',1)
-            refline(0,epsilon)
-            title('Manipulability')
             
         end
         
