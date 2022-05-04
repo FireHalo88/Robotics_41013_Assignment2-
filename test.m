@@ -1,3 +1,3 @@
- PlaceObject('brown_table.ply')
+ PlaceObject('red_pen.ply')
  axis equal
  camlight
