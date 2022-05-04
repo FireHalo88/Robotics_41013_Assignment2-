@@ -203,9 +203,10 @@ classdef RobotMovement < handle
                robot.animate(qpMatrix(i, :));
                % Get Robot Pose with Forward Kinematics
                robot_TR = robot.fkine(qpMatrix(i, :));
+               edited_TR = robot_TR*trotx(pi/2);
                % Transform Object to this Pose
                objTransformVertices = [objVertices,ones(size(objVertices,1),1)] ...
-                   * robot_TR';
+                   * edited_TR';
                set(objMesh_h, 'Vertices', objTransformVertices(:,1:3));
                
                drawnow();
@@ -236,9 +237,10 @@ classdef RobotMovement < handle
                robot.animate(qpMatrix(i, :));
                % Get Robot Pose with Forward Kinematics
                robot_TR = robot.fkine(qpMatrix(i, :));
+               edited_TR = robot_TR*trotx(pi/2);
                % Transform Object to this Pose
                objTransformVertices = [objVertices,ones(size(objVertices,1),1)] ...
-                   * robot_TR';
+                   * edited_TR';
                set(objMesh_h, 'Vertices', objTransformVertices(:,1:3));
                
                drawnow();
@@ -260,8 +262,75 @@ classdef RobotMovement < handle
             
             % Return the ending pose which could be used as a guess for
             % further movement of the robot from this position.
+            qOut = qpMatrix(end, :);                    
+        end
+        
+        function [qOut] = MoveRobotWithObject2(self, robot, loc_T, ...
+                objMesh_h, objVertices, qGuess, steps)
+            %This function takes a SerialLink robot, a desired 4x4 Transformation ...
+            %Matrix to reach, and animates a calculated minimum jerk trajectory
+            %to the configuration while moving an object mesh with the end
+            %effector.
+            
+            % TO BE ADDED: COLLISION AVOIDANCE/DETECTION
+            
+            % Defining and logging to log file for information
+            funcName = 'MoveRobotWithObject2';
+            self.L.mlog = {self.L.DEBUG,funcName,['RUNNING FUNCTION: ', ...
+                funcName, char(13)]};
+            
+            % Getting the transform above the desired end location.
+            % Define a rotation of PI/2 about X to face End Effector
+            % sidewards.
+            loc_T = loc_T*trotx(pi/2)*trotz(pi);
+
+            % Moving to Location
+            % Getting required Joint Angles to reach position above using ...
+            % Inverse Kinematics
+            newQ = robot.ikcon(loc_T, qGuess);
+
+            % Plannning a Trajectory using the Min. Jerk Method
+            % (Quintic Polynomial Method)
+            % jtraj(Starting Joint Angles, Target Joint Angles, Steps to Take)
+            qpMatrix = jtraj(robot.getpos(), newQ, steps);
+
+            % Moving to the spot above the desired location
+            for i = 1:steps
+               % Plot Robot Moving
+               robot.animate(qpMatrix(i, :));
+               % Get Robot Pose with Forward Kinematics
+               robot_TR = robot.fkine(qpMatrix(i, :));
+               edited_TR = robot_TR*trotx(pi/2);
+               % Transform Object to this Pose
+               objTransformVertices = [objVertices,ones(size(objVertices,1),1)] ...
+                   * edited_TR';
+               set(objMesh_h, 'Vertices', objTransformVertices(:,1:3));
+               drawnow();
+            end
+
+            % Debugging pose above desired position
+            FK = robot.fkine(qpMatrix(end, :));
+            [check, dist] = self.compareTwoPositions(FK, loc_T);
+            
+            self.L.mlog = {self.L.DEBUG,funcName,['The robot transform ' ...
+                'above input location is: ',self.L.MatrixToString(FK)]};
+            
+            if check == true
+                self.L.mlog = {self.L.DEBUG,funcName,['The robot has reached' ...
+                    ' its goal position (within 0.01m)',char(13)]};
+            else
+                self.L.mlog = {self.L.WARN,funcName,['The robot has missed ' ...
+                    'its goal position (', num2str(dist), ' > 0.01m)',char(13)]};
+            end
+            
+            % Print desired transform
+            self.L.mlog = {self.L.DEBUG,funcName,['The desired transform ' ...
+                'was: ', self.L.MatrixToString(loc_T)]};
+            
+            % Return the ending pose which could be used as a guess for
+            % further movement of the robot from this position.
             qOut = qpMatrix(end, :);
-                     
+            
         end
         
         function [qOut] = RMRC_7DOF(self, robot, start_T, end_T, time, ...
@@ -290,7 +359,7 @@ classdef RobotMovement < handle
             deltaT = 0.02;          % Control Freq. (Around 50Hz)
             steps = time/deltaT;    % No. of Steps
             delta = 2*pi/steps;     % Small angle change
-            epsilon = 0.0015;         % Threshold value for manipulability/Damped Least Squares
+            epsilon = 0.01;         % Threshold value for manipulability/Damped Least Squares
             lambda_max = 0.05;      % Set Lambda_Max when attenuating the Damping Factor for DLS Method
             W = diag([1 1 1 0.1 0.1 0.1]);     % Weighting matrix for the velocity vector
             

@@ -1369,6 +1369,12 @@ function startDrawingBtn_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+% IMAGE PROCESSING GOES HERE
+
+
+axes(handles.axes2);
+hold on
+
 % Set handles.colour to be the colour pen chosen from the Button Group
 h = get(handles.colourBtnGroup,'SelectedObject');
 handles.colour = get(h, 'Tag');
@@ -1419,6 +1425,7 @@ else
     pen_T = pen_T*transl(-0.01, 0, 0.1);
     qOut = handles.rMove.MoveRobotToObject2(handles.myRobot, pen_T, ...
         qGuess_Pen, steps);
+    updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
     
     % Use RMRC to move down towards the pen and then back up with it
     % RMRC (no object) Parameters: Robot, Start 4x4, End 4x4, Time of Traj, ...
@@ -1427,6 +1434,7 @@ else
     start_T = handles.myRobot.fkine(qOut);
     end_T = pen_T*transl(0, 0, -0.08);  % Y-Axis pointing downwards
     qOut = handles.rMove.RMRC_7DOF(handles.myRobot, start_T, end_T, 1, 0, 0);
+    updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
     
     % RMRC (with object) Parameters: Robot, Start 4x4, End 4x4, Object Mesh, ...
     % Object Vertices, Time of Traj, Plot Traj Trail?, Plot Traj Data?
@@ -1435,6 +1443,7 @@ else
     end_T = pen_T;
     qOut = handles.rMove.RMRC_7DOF_OBJ(handles.myRobot, start_T, end_T, ...
         penMesh_h, penVertices, 1, 0, 0);
+    updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
 end
     
         
@@ -1451,3 +1460,47 @@ function uibuttongroup4_SelectionChangedFcn(hObject, eventdata, handles)
 % hObject    handle to the selected object in uibuttongroup4 
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+% --- Updated the Teach GUI whenever the robot has finished a movement
+function updateTeachGUI(handles)
+% Get robot EE current pose with FK
+currQ = handles.myRobot.getpos();
+FK = handles.myRobot.fkine(currQ);
+% Update X Y Z Position
+handles.ee_X.String = num2str(round(FK(1,4), 3));
+handles.ee_Y.String = num2str(round(FK(2,4), 3));
+handles.ee_Z.String = num2str(round(FK(3,4), 3));
+% Extract Rotation Portion of FK Matrix
+rot = FK(1:3, 1:3);
+% Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+RPY = tr2rpy(rot, 'deg');
+handles.ee_Roll.String = num2str(round(RPY(1), 3));
+handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+handles.ee_Yaw.String = num2str(round(RPY(3), 3));
+
+% Update Sliders + Text Boxes for Joint Angles
+qDeg = round(rad2deg(currQ), 1);
+% q1
+handles.q1.String = num2str(qDeg(1));
+set(handles.slider1,'Value',qDeg(1));
+% q2
+handles.q2.String = num2str(qDeg(2));
+set(handles.slider2,'Value',qDeg(2));
+% q3
+handles.q3.String = num2str(qDeg(3));
+set(handles.slider3,'Value',qDeg(3));
+% q4
+handles.q4.String = num2str(qDeg(4));
+set(handles.slider4,'Value',qDeg(4));
+% q5
+handles.q5.String = num2str(qDeg(5));
+set(handles.slider5,'Value',qDeg(5));
+% q6
+handles.q6.String = num2str(qDeg(6));
+set(handles.slider6,'Value',qDeg(6));
+% q7
+handles.q7.String = num2str(qDeg(7));
+set(handles.slider7,'Value',qDeg(7));
+
+
+
