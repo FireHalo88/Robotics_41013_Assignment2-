@@ -2,7 +2,7 @@ classdef DOBOT < handle
     
     properties
         model;
-        workspace = [-2 2 -2 2 -0.3 2];   
+        workspace = [-.4 .4 -.4 .4 -0.3 .4];   
         
     end
     
@@ -19,13 +19,13 @@ classdef DOBOT < handle
             pause(0.001);
             name = ['DOBOT_',datestr(now,'yyyymmddTHHMMSSFFF')];
 
-            L1 = Link('d',0.0,'a',0,'alpha',0,'offset',0,'qlim',[deg2rad(-360),deg2rad(360)]);
-            L2 = Link('d',0.0,'a',0,'alpha',0,'offset',0,'qlim',[deg2rad(-90),deg2rad(90)]);
-            L3 = Link('d',0.0,'a',0,'alpha',0,'offset',0,'qlim',[deg2rad(-170),deg2rad(170)]);
-            L4 = Link('d',0.0,'a',0,'alpha',0,'offset',0,'qlim',[deg2rad(-360),deg2rad(360)]);
+            L1 = Link('d',0.12,'a',0.0,'alpha',-pi/2,'offset',0,'qlim',[deg2rad(-90),deg2rad(90)]);
+            L2 = Link('d',0.0,'a',0.145,'alpha',0,'offset',0,'qlim',[deg2rad(-90),deg2rad(10)]);
+            L3 = Link('d',0.0,'a',0.16,'alpha',0,'offset',0,'qlim',[deg2rad(0),deg2rad(120)]);
+            L4 = Link('d',0.0,'a',-0.04,'alpha',-pi/2,'offset',pi,'qlim',[deg2rad(-90),deg2rad(0)]);
             %L5 = Link('d',0.093,'a',0,'alpha',-pi/2,'offset',0,'qlim',[deg2rad(-360),deg2rad(360)]);
 
-            self.model = SerialLink([L1 L2 L3 L4],'name',name);
+            self.model = SerialLink([L1 L2 L3 L4],'name',name);%L1
         end
         
         function PlotAndColourRobot(self)%robot,workspace)
