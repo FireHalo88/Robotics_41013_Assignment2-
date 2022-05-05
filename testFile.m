@@ -19,7 +19,6 @@ safetyBarrierPoint2 = transl(-0.47, 0.5, 0.0);
 
 safetyBarrierPoint3 = transl(0.35, -0.45, 0.0);
 safetyBarrierPoint4 = transl(0.35, 0.5, 0.0);
-
 guard = transl(0.6, 0.57, 0.0);
 fireExtinguisher = transl(0.3, 0.1, 0.57);
 build = createEnvironment(workspace);
@@ -37,18 +36,30 @@ scale = 0.5;
 robot.base = transl(0.55,0.0,0.3);
 robot.plot(q,'workspace',workspace,'scale',scale);                  % Plot the robot
 % Checks for collision between multi-linked robot and workspace zone
-[collision] = plottingCollisionDetection(robot,[pi/2,0,0],[pi,0,0],0.0,0.0,0.5,0.94);
+collision = plottingCollisionDetection(robot, [pi/2,0,0], [pi/2,0,0], 0.0, 0.0, 0.5, 0.94);
 if collision == true
     %Change for your own use
     display("um");
 end
+%%
+% Create a 3-Link Robot
+L1 = Link('d',0,'a',0.05,'alpha',0,'qlim',[-pi pi]);
+L2 = Link('d',0,'a',0.05,'alpha',0,'qlim',[-pi pi]);
+L3 = Link('d',0,'a',0.05,'alpha',0,'qlim',[-pi pi]);       
+robot = SerialLink([L1 L2 L3],'name','myRobot');                     
+q = zeros(1,3);                                                     % Create a vector of initial joint angles        
+scale = 0.5;
+robot.base = transl(0.0,0.0,0.3);
+robot.plot(q,'workspace',workspace,'scale',scale);                  % Plot the robot
 
+test = PLY_Collision_Detection(2, 0.0,0.0,0.4,0.3,0.75,robot, [pi/2,0,0], 0.0, 0.0, 0.5, 0.94);
+display(test);
 %% Place Hans Cute Robot
 % hansCute_base = [0.275 0.0 0.2];
 % q = [0,0,0,0,0,0,0];
 % hansCute = HansCute("sup",workspace);
 % myRobot = hansCute.model;
-% hansCute.plotModel();
+% %hansCute.plotModel();
 % myRobot.base = transl(hansCute_base(1), hansCute_base(2), hansCute_base(3))*trotx(0)*troty(0)*trotz(0);
 % myRobot.plot(q, 'workspace', workspace, 'scale', 0.5);
 

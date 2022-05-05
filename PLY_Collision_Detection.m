@@ -1,14 +1,43 @@
-%% Collision Detection Code
-%   Create the workspace area
-function [collision] = plottingCollisionDetection(robot,q1,q2,c1,c2,c3,side_length)
-    collision = false;
+%% PLY Collision Detection
+function [collision] = PLY_Collision_Detection(state, LocationX,LocationY, objectLength, objectWidth,workspaceHeight, robot, q1,c1,c2,c3,side_length)
+    switch state
+        case 1 %Tests whether a PLY File shaped as a rectangle will interact with the area covered by the safety barriers
+            % Create the workspace boundary
+            Corner1 = [-0.47, -0.45, 0.0];
+            Corner2 = [-0.47, 0.5, 0.0];
+            Corner3 = [0.35, -0.45, 0.0];
+            Corner4 = [0.35, 0.5, 0.0];
+            IntersectX = false;
+            IntersectY = false;
+            %display(Corner1(1,2));
+            % Check for Object Intersecting the X of the workspace boundary
+            if ((LocationX+objectLength/2) <= Corner3(1,1)) && ((LocationX-objectLength/2) >= Corner1(1,1))
+                IntersectX = true;
+            end
+            if ((LocationY+objectWidth/2) <= Corner2(1,2)) && ((LocationY-objectWidth/2) >= Corner3(1,2))
+                IntersectY = true;
+            end
+            if IntersectX == true && IntersectY == true
+                collision = true;
+            else
+                collision = false;
+            end
+        case 2 %Test whether the hans cute robot will collide with a ply file shaped as a rectangle            
+            %plottingCollisionDetection(robot,q1,q1,c1,c2,c3,side_length);
+            collision = plottingCollisionDetection(robot,q1,c1,c2,c3,side_length);
+            %display(collision);
+    end
+
+end
+%% Check for collisions between Hans Cute and 
+function [output] = plottingCollisionDetection(robot,q1,c1,c2,c3,side_length)
+    output = false;
     q = zeros(1,3); 
     centerpnt = [c1,c2,c3];
-    length = side_length;
     plotOptions.plotFaces = true;
-    [vertex,faces,faceNormals] = RectangularPrism(centerpnt-length/2, centerpnt+length/2,plotOptions);
+    [vertex,faces,faceNormals] = RectangularPrism(centerpnt-side_length/2, centerpnt+side_length/2,plotOptions);
     axis equal
-    
+
     % Get the transform of every joint (i.e. start and end of every link)
     tr = zeros(4,4,robot.n+1);
     tr(:,:,1) = robot.base;
@@ -16,24 +45,13 @@ function [collision] = plottingCollisionDetection(robot,q1,q2,c1,c2,c3,side_leng
     for i = 1 : robot.n
         tr(:,:,i+1) = tr(:,:,i) * trotz(q(i)+L(i).offset) * transl(0,0,L(i).d) * transl(L(i).a,0,0) * trotx(L(i).alpha);
     end
-    
-    %Go through until there are no step sizes larger than 1 degree
-    steps = 2;
-    while ~isempty(find(1 < abs(diff(rad2deg(jtraj(q1,q2,steps)))),1))
-        steps = steps + 1;
-    end
-    qMatrix = jtraj(q1,q2,steps);
-    
-    % 2.7
-    result = true(steps,1);
-    for i = 1: steps
-        result(i) = IsCollision(robot,qMatrix(i,:),faces,vertex,faceNormals,true);
-        if result(i) == true
-            collision = true;
-            break
-        end
-        robot.animate(qMatrix(i,:));
-    end
+
+    qMatrix = jtraj(q1,q1,1);
+    result = true(1,1);
+    result(1) = IsCollision(robot,qMatrix(1,:),faces,vertex,faceNormals,false);
+    if result(1) == true
+        output = true;
+    end          
 end
 
 %% IsIntersectionPointInsideTriangle
@@ -93,7 +111,7 @@ function result = IsCollision(robot,qMatrix,faces,vertex,faceNormals,returnOnceF
                 [intersectP,check] = LinePlaneIntersection(faceNormals(faceIndex,:),vertOnPlane,tr(1:3,4,i)',tr(1:3,4,i+1)'); 
                 if check == 1 && IsIntersectionPointInsideTriangle(intersectP,vertex(faces(faceIndex,:)',:))
                     plot3(intersectP(1),intersectP(2),intersectP(3),'g*');
-                    %display('Intersection');
+                    display('Intersection');
                     result = true;
                     if returnOnceFound
                         return
