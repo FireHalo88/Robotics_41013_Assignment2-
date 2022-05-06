@@ -122,11 +122,6 @@ classdef RobotMovement < handle
             funcName = 'MoveRobotToObject2';
             self.L.mlog = {self.L.DEBUG,funcName,['RUNNING FUNCTION: ', ...
                 funcName, char(13)]};
-            
-            % Getting the transform above the desired end location.
-            % Define a rotation of PI/2 about X to face End Effector
-            % sidewards.
-            loc_T = loc_T*trotx(pi/2)*trotz(pi);
 
             % Moving to Location
             % Getting required Joint Angles to reach position above using ...
@@ -279,11 +274,6 @@ classdef RobotMovement < handle
             self.L.mlog = {self.L.DEBUG,funcName,['RUNNING FUNCTION: ', ...
                 funcName, char(13)]};
             
-            % Getting the transform above the desired end location.
-            % Define a rotation of PI/2 about X to face End Effector
-            % sidewards.
-            loc_T = loc_T*trotx(pi/2)*trotz(pi);
-
             % Moving to Location
             % Getting required Joint Angles to reach position above using ...
             % Inverse Kinematics
@@ -359,8 +349,8 @@ classdef RobotMovement < handle
             deltaT = 0.02;          % Control Freq. (Around 50Hz)
             steps = time/deltaT;    % No. of Steps
             delta = 2*pi/steps;     % Small angle change
-            epsilon = 0.01;         % Threshold value for manipulability/Damped Least Squares
-            lambda_max = 0.05;      % Set Lambda_Max when attenuating the Damping Factor for DLS Method
+            epsilon = 0.0045;         % Threshold value for manipulability/Damped Least Squares
+            lambda_max = 0.01;      % Set Lambda_Max when attenuating the Damping Factor for DLS Method
             W = diag([1 1 1 0.1 0.1 0.1]);     % Weighting matrix for the velocity vector
             
             % Pre-allocating memory for required data/arrays
@@ -541,22 +531,29 @@ classdef RobotMovement < handle
             end     
         end
         
-        function [qOut] = RMRC_7DOF_OBJ(self, robot, start_T, end_T, ...
-                objMesh_h, objVertices, time, plotTrail, plotData)
+        function [qOut, trailPlot_h] = RMRC_7DOF_OBJ(self, robot, start_T, ...
+                end_T, objMesh_h, objVertices, time, drawType, onCanvas, ...
+                plotTrail, plotData)
             % This function is modified from the exercise completed in the
             % Lab 9 Tutorial Questions for a 7DOF Robot (Hans Cute). It is
             % the version which includes moving around a specified object
             % attached to the manipulator End Effector.
             
+            % If no 'onCanvas' value input, set 'onCanvas' to 0 (not drawing ...
+            % on canvas).
+            if nargin < 8
+                onCanvas = 0;
+            end
+            
             % If no 'plotTrail' value input, set 'plotTrail' to 0 (do not ...
             % show trajectory trail).
-            if nargin < 7
+            if nargin < 9
                 plotTrail = 0;
             end
             
             % If no 'plotData' value input, set 'plotData' to 0 (do not ...
             % show plot data).
-            if nargin < 8
+            if nargin < 10
                 plotData = 0;
             end
             
@@ -569,8 +566,8 @@ classdef RobotMovement < handle
             deltaT = 0.02;          % Control Freq. (Around 50Hz)
             steps = time/deltaT;    % No. of Steps
             delta = 2*pi/steps;     % Small angle change
-            epsilon = 0.0015;         % Threshold value for manipulability/Damped Least Squares
-            lambda_max = 0.05;      % Set Lambda_Max when attenuating the Damping Factor for DLS Method
+            epsilon = 0.0045;         % Threshold value for manipulability/Damped Least Squares
+            lambda_max = 0.01;      % Set Lambda_Max when attenuating the Damping Factor for DLS Method
             W = diag([1 1 1 0.1 0.1 0.1]);     % Weighting matrix for the velocity vector
             
             % Pre-allocating memory for required data/arrays
@@ -674,6 +671,8 @@ classdef RobotMovement < handle
             
             % Animate through calculated joint states
             trail = nan(3, steps);
+            trailPlot_h = [];
+            
             for i = 1:steps
                 % Get FK
                 FK = robot.fkine(qMatrix(i, :));
@@ -686,14 +685,20 @@ classdef RobotMovement < handle
                 objTransformVertices = [objVertices,ones(size(objVertices,1),1)] ...
                    * editedFK';
                 set(objMesh_h, 'Vertices', objTransformVertices(:,1:3));
+                
+                % Plot trail data if option set to 1 (TRUE)
+                if plotTrail == 1
+                    if onCanvas == 1 && FK(3,4) < 0.31
+                        trailPlot_h(end+1) = plot3(FK(1,4), FK(2,4), 0.26, ...
+                            drawType, 'linewidth',2);  
+                    else
+                        trailPlot_h(end+1) = plot3(FK(1,4), FK(2,4), FK(3,4), ...
+                            drawType);                 
+                    end                 
+                end
+                
                 drawnow();
                 pause(0.01);
-            end
-            
-            % Plot trail data
-            if plotTrail == 1
-                trailData_h = plot3(trail(1,:), trail(2,:), trail(3,:), 'c*');
-                drawnow();
             end
             
             % Check we have reached the desired final pose

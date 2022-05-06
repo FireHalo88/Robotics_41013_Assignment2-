@@ -1105,15 +1105,15 @@ currentQ = handles.myRobot.getpos();
 ee_TR = handles.myRobot.fkine(currentQ);
 
 if handles.cartKeepCurrentRPY == 1
+    ee_TR(2,4) = ee_TR(2,4) + handles.cartInc;
+    % Use IK to get joint state for new desired EE pose
+    newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+else 
     XYZ = [ee_TR(1,4), ee_TR(2,4)+handles.cartInc, ee_TR(3,4)];
     TR = [eye(3)    XYZ';
           zeros(1,3) 1]
     % Use IK to get joint state for new desired EE pose
     newQ = handles.myRobot.ikcon(TR, currentQ);
-else
-    ee_TR(2,4) = ee_TR(2,4) + handles.cartInc;
-    % Use IK to get joint state for new desired EE pose
-    newQ = handles.myRobot.ikcon(ee_TR, currentQ);
 end
 
 % Update sliders with new joint states
@@ -1384,18 +1384,22 @@ switch handles.colour
         pen_T = handles.blackPen_T;
         penMesh_h = handles.blackPen_h;
         penVertices = handles.blackPenVertices;
+        drawType = 'k.';
     case 'redPen'
         pen_T = handles.redPen_T;
         penMesh_h = handles.redPen_h;
         penVertices = handles.redPenVertices;
+        drawType = 'r.';
     case 'greenPen'
         pen_T = handles.greenPen_T;
         penMesh_h = handles.greenPen_h;
         penVertices = handles.greenPenVertices;
+        drawType = 'g.';
     case 'bluePen'
         pen_T = handles.bluePen_T;
         penMesh_h = handles.bluePen_h;
         penVertices = handles.bluePenVertices;
+        drawType = 'b.';
 end
 
 % Move the Hans Cute to pick up the pen!
@@ -1405,11 +1409,12 @@ hold on
 
 usingRMRC = 1;
 if usingRMRC == 0
-    pen_T = pen_T*transl(-0.01, 0, 0); % Shifting target transform slightly so pen is centred in gripper
+    pen_T = pen_T*transl(-0.01, 0, 0);
+    pen_TR = pen_T*trotx(pi/2)*trotz(pi); % Shifting target transform slightly so pen is centred in gripper
     %qGuess_Pen = [25 90 0 0 -65 0 90]*pi/180;
     %qGuess_Pen = [60 45 0 105 0 -60 90]*pi/180;
 
-    qOut = handles.rMove.MoveRobotToObject(handles.myRobot, pen_T, 0.1, ...
+    qOut = handles.rMove.MoveRobotToObject(handles.myRobot, pen_TR, 0.1, ...
         qGuess_Pen, steps);
     % Use RMRC to move the Hans Cute back up 10cm
     % Define starting and desired end transform
@@ -1423,7 +1428,8 @@ if usingRMRC == 0
 else
     % Move above the target point
     pen_T = pen_T*transl(-0.01, 0, 0.1);
-    qOut = handles.rMove.MoveRobotToObject2(handles.myRobot, pen_T, ...
+    pen_TR = pen_T*trotx(pi/2)*trotz(pi);
+    qOut = handles.rMove.MoveRobotToObject2(handles.myRobot, pen_TR, ...
         qGuess_Pen, steps);
     updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
     
@@ -1437,14 +1443,51 @@ else
     updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
     
     % RMRC (with object) Parameters: Robot, Start 4x4, End 4x4, Object Mesh, ...
-    % Object Vertices, Time of Traj, Plot Traj Trail?, Plot Traj Data?
+    % Object Vertices, Time of Traj, Colour for Plot, Plot Traj Trail?, Plot Traj Data?
     % Moving up:
     start_T = handles.myRobot.fkine(qOut);
     end_T = pen_T;
     qOut = handles.rMove.RMRC_7DOF_OBJ(handles.myRobot, start_T, end_T, ...
-        penMesh_h, penVertices, 1, 0, 0);
+        penMesh_h, penVertices, 1, 'c*', 0, 0, 0);
     updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
 end
+
+% Move above Canvas
+% Define EE Canvas Translation Matrices
+pointCanvas = transl(-0.05, -0.05, handles.canvas_T(3,4)+0.08);
+aboveCanvas = pointCanvas*transl(0, 0, 0.07);
+% Define EE Canvas Rotation Matrix
+%canvas_Rot = troty(-pi/2)*trotz(pi/2);
+canvas_Rot = trotx(-pi/2);
+% Define full Canvas 4x4 Homogenous Matrices
+pointCanvas_T = pointCanvas*canvas_Rot;
+aboveCanvas_T = aboveCanvas*canvas_Rot;
+
+% Move to a point above the Canvas
+%qGuess_Canvas = [0 60 0 85 0 -55 90]*pi/180;
+%qGuess_Canvas = [130 -90 -90 40 0 65 0]*pi/180;
+%qGuess_Canvas = [-90 -90 -90 -55 0 -85 0]*pi/180;
+qGuess_Canvas = [-120 -90 -90 -55 0 -55 0]*pi/180;
+%qGuess_Canvas = [125 -90 -90 75 0 70 0]*pi/180;
+%qGuess_Canvas = [119 -85 -79 51 32 84 -21]*pi/180;
+%qGuess_Canvas = [-20*pi/180 qOut(2:7)];
+qOut = handles.rMove.MoveRobotWithObject2(handles.myRobot, aboveCanvas_T, ...
+    penMesh_h, penVertices, qGuess_Canvas, steps);
+updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
+
+% Move to point at canvas with RMRC -> EE Pose needs to be Canvas Thickness + Pen
+start_T = handles.myRobot.fkine(qOut);
+end_T = pointCanvas_T;
+qOut = handles.rMove.RMRC_7DOF_OBJ(handles.myRobot, start_T, end_T, ...
+        penMesh_h, penVertices, 1, drawType, 0, 0, 0);
+updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
+
+% Draw a straight line across
+start_T = handles.myRobot.fkine(qOut);
+end_T = transl(start_T(1,4), start_T(2,4)+0.1, handles.canvas_T(3,4)+0.08)*canvas_Rot;
+qOut = handles.rMove.RMRC_7DOF_OBJ(handles.myRobot, start_T, end_T, ...
+        penMesh_h, penVertices, 2, drawType, 1, 1, 1);
+updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
     
         
 
