@@ -52,8 +52,27 @@ scale = 0.5;
 robot.base = transl(0.0,0.0,0.3);
 robot.plot(q,'workspace',workspace,'scale',scale);                  % Plot the robot
 
-test = PLY_Collision_Detection(2, 0.0,0.0,0.4,0.3,0.75,robot, [pi/2,0,0], 0.0, 0.0, 0.5, 0.94);
-display(test);
+security = PlaceObject('boy8.ply');
+securityVertices = get(security,'Vertices'); % Extracting vertices data
+transformedVertices = [securityVertices,ones(size(securityVertices,1),1)] * transl(0.0, 0.0, 0.0)'; % Transforming vertices
+set(security,'Vertices',transformedVertices(:,1:3)); % Updating token location
+drawnow; % Update simulation
+%pause(0.001); % Wait before execution 
+for i = 0.1:0.05:1
+    transformedVertices = [securityVertices,ones(size(securityVertices,1),1)] * transl(i, 0.0, 0.0)'; % Transforming vertices
+    set(security,'Vertices',transformedVertices(:,1:3)); % Updating token location
+    test = PLY_Collision_Detection(2, 0.0,0.0,0.4,0.3,0.75,robot, [pi/2,0,0], 0.0, 0.0, 0.5, 0.94);
+    if test == false
+        drawnow; % Update simulation
+        pause(0.2); % Wait before execution
+    else
+        display("Collision between robot and object");
+        break;
+    end
+     
+end
+% test = PLY_Collision_Detection(2, 0.0,0.0,0.4,0.3,0.75,robot, [pi/2,0,0], 0.0, 0.0, 0.5, 0.94);
+% display(test);
 %% Place Hans Cute Robot
 % hansCute_base = [0.275 0.0 0.2];
 % q = [0,0,0,0,0,0,0];
