@@ -404,7 +404,7 @@ classdef RobotMovement < handle
                 % Knowing that Rdot = (R(t+1) - R(t))/delta_t, and R(t) = R_Curr:
                 S = Rdot*R_Curr';
                 % OR we can also define the Skew Symmetric Matrix as:
-                S_M = (1/deltaT)*(R_Next*R_Curr' - eye(3)); % By expanding and simplifying the equation in Line 276
+                S_M = (1/deltaT)*(R_Next*R_Curr' - eye(3)); % By expanding and simplifying the equation in Line 276 [to be updated]
                 
                 % Calculate required linear and angular velocities to get
                 % to next point in the trajectory
