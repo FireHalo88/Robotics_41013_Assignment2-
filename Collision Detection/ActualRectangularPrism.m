@@ -1,4 +1,4 @@
-function [vertex,face,faceNormals] = RectangularPrism(lower,upper,plotOptions,axis_h)
+function [vertex,face,faceNormals] = ActualRectangularPrism(centerpnt, translation, width, depth, height ,plotOptions,axis_h)
 if nargin<4
         axis_h=gca;
     if nargin<3
@@ -8,15 +8,23 @@ if nargin<4
     end
 end
 
+vertex(1,:) = [centerpnt(1)-width+translation(1), centerpnt(2)-depth+translation(2), translation(3)];
+vertex(2,:) = [centerpnt(1)+width+translation(1), centerpnt(2)-depth+translation(2), translation(3)]; %?
+vertex(3,:) = [centerpnt(1)+width+translation(1), centerpnt(2)+depth+translation(2), translation(3)];
+vertex(4,:) = [centerpnt(1)+width+translation(1), centerpnt(2)-depth+translation(2), height+translation(3)];
+vertex(5,:) = [centerpnt(1)-width+translation(1), centerpnt(2)+depth+translation(2), height+translation(3)];
+vertex(6,:) = [centerpnt(1)-width+translation(1), centerpnt(2)-depth+translation(2), height+translation(3)];
+vertex(7,:) = [centerpnt(1)-width+translation(1), centerpnt(2)+depth+translation(2), translation(3)];
+vertex(8,:) = [centerpnt(1)+width+translation(1), centerpnt(2)+depth+translation(2), height+translation(3)];
 
-vertex(1,:)=lower;
-vertex(2,:)=[upper(1),lower(2:3)];
-vertex(3,:)=[upper(1:2),lower(3)];
-vertex(4,:)=[upper(1),lower(2),upper(3)];
-vertex(5,:)=[lower(1),upper(2:3)];
-vertex(6,:)=[lower(1:2),upper(3)];
-vertex(7,:)=[lower(1),upper(2),lower(3)];
-vertex(8,:)=upper;
+% vertex(1,:)=[-0.2 0 0];
+% vertex(2,:)=[0.14 0 0];
+% vertex(3,:)=[0.14 0.2 0];
+% vertex(4,:)=[0.14 0 0.48];
+% vertex(5,:)=[-0.2 0.2 0.48];
+% vertex(6,:)=[-0.2 0 0.48];
+% vertex(7,:)=[-0.2 0.2 0];
+% vertex(8,:)=[0.14 0.2 0.48];
 
 face=[1,2,3;1,3,7;
      1,6,5;1,7,5;
@@ -70,10 +78,11 @@ end
 %% If you want to plot the edges
 if isfield(plotOptions,'plotFaces') && plotOptions.plotFaces
     hold on
-    tcolor = [.2 .2 .8];
+    tcolor = [ 0.3 1.44 2.55];
     plot = patch('Faces',face,'Vertices',vertex,'FaceVertexCData',tcolor,'FaceColor','flat','lineStyle','none');
-    plot.FaceVertexAlphaData = 0.02;
-    plot.FaceAlpha = 'flat';
+    plot.FaceVertexAlphaData = 0.00002;
+    plot.FaceAlpha = 0.05;
+    delete(plot);
 end
 
 end
