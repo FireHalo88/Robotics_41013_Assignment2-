@@ -55,7 +55,8 @@ function TracerGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 % Populate the Drop-Down Menu with the Shapes
-shapes = ["Circle", "Square", "Triangle", "Star", "Crescent"];
+shapes = ["Circle", "Square", "Triangle", "Star", "Crescent", "Car", ...
+    "Bridge"];
 set(handles.chooseShapeDDM, 'String', shapes');
 
 % Creation of the Cyton/Hans Cute Robot Class
@@ -1457,22 +1458,28 @@ end
 
 % Move above Canvas
 % Define EE Canvas Translation Matrices
-pointCanvas = transl(-0.05, 0, handles.canvas_T(3,4)+0.08);
+pointCanvas = transl(-0.15, 0, handles.canvas_T(3,4)+0.08);
 aboveCanvas = pointCanvas*transl(0, 0, 0.07);
 % Define EE Canvas Rotation Matrix
-%canvas_Rot = troty(-pi/2)*trotz(pi/2);
-canvas_Rot = trotx(-pi/2);
+canvas_Rot = troty(-pi/2)*trotz(pi/2); % __/-\_ config
+%canvas_Rot = trotx(pi/2)*trotz(pi);    % Right-Hand config
+%canvas_Rot = trotx(-pi/2);             % Left-Hand config
+%canvas_Rot = trotx(-pi/2)*troty(-pi/2);
 % Define full Canvas 4x4 Homogenous Matrices
 pointCanvas_T = pointCanvas*canvas_Rot;
 aboveCanvas_T = aboveCanvas*canvas_Rot;
 
 % Move to a point above the Canvas
-%qGuess_Canvas = [0 60 0 85 0 -55 90]*pi/180;
-%qGuess_Canvas = [130 -90 -90 40 0 65 0]*pi/180;
-%qGuess_Canvas = [-90 -90 -90 -55 0 -85 0]*pi/180;
-qGuess_Canvas = [-120 -90 -90 -55 0 -55 0]*pi/180;
-%qGuess_Canvas = [125 -90 -90 75 0 70 0]*pi/180;
-%qGuess_Canvas = [119 -85 -79 51 32 84 -21]*pi/180;
+qGuess_Canvas = [0 60 0 85 0 -55 90]*pi/180;       % __/-\_ config
+qGuess_1_Lower = [0 61 0 104 0 -75 0]*pi/180;
+%qGuess_Canvas = [130 -90 -90 40 0 65 0]*pi/180;     % RH CONFIG trotx(pi/2)*trotz(pi) OR trotx(pi/2)*troty(-7*pi/36)*trotz(pi)
+%qGuess_2_Lower = [142 -104 -90 12 6 81 -20]*pi/180;
+%qGuess_Canvas = [-90 -90 -90 -55 0 -85 0]*pi/180;  % LH CONFIG CANVAS BOTTOM LEFT
+%qGuess_Canvas = [-120 -90 -90 -55 0 -55 0]*pi/180; % Best of the worst -> LH CONFIG
+%qGuess_4_Lower = [-126 -104 -97 -41 22 -61 32]*pi/180;
+%qGuess_Canvas = [-140 -85 -85 -40 0 -40 0]*pi/180; % LH CONFIG (not perfect)
+%qGuess_Canvas = [125 -90 -90 75 0 70 0]*pi/180;    % RH CONFIG 90 DEG <-
+%qGuess_Canvas = [119 -85 -79 51 32 84 -21]*pi/180; % RH CONFIG (in-between qGuess 2 and qGuess 6)
 %qGuess_Canvas = [-20*pi/180 qOut(2:7)];
 qOut = handles.rMove.MoveRobotWithObject2(handles.myRobot, aboveCanvas_T, ...
     penMesh_h, penVertices, qGuess_Canvas, steps);
@@ -1484,31 +1491,42 @@ sItems = handles.chooseShapeDDM.String;
 sIndex = handles.chooseShapeDDM.Value;
 handles.shape = sItems{sIndex};
 
+qGuess_Lower = qGuess_1_Lower;
 switch handles.shape
     case 'Circle'
         % Drawing a Circle centred at 0,0
         qOut = handles.rMove.drawCircle(handles.myRobot, pointCanvas_T, 0.05, ...
-            qOut, penMesh_h, penVertices, 3, drawType);
+            canvas_Rot, qGuess_Lower, penMesh_h, penVertices, 3, drawType);
         
     case 'Square'
         % Drawing a Square centred at 0, 0
         qOut = handles.rMove.drawSquare(handles.myRobot, pointCanvas_T, canvas_Rot, ...
-            qOut, penMesh_h, penVertices, 2, drawType);
+            qGuess_Lower, penMesh_h, penVertices, 2, drawType);
         
     case 'Triangle'
         % Drawing a Triangle centred at 0,0
         qOut = handles.rMove.drawTriangle(handles.myRobot, pointCanvas_T, canvas_Rot, ...
-            qOut, penMesh_h, penVertices, 2, drawType);
+            qGuess_Lower, penMesh_h, penVertices, 2, drawType);
         
     case 'Star'
         % Drawing a Star centred at -0.05, 0
         qOut = handles.rMove.drawStar(handles.myRobot, pointCanvas_T, canvas_Rot, ...
-            qOut, penMesh_h, penVertices, 2, drawType);
+            qGuess_Lower, penMesh_h, penVertices, 2, drawType);
         
     case 'Crescent'
         % Drawing a Crescent centred at 0, 0
-        qOut = handles.rMove.drawCrescent(handles.myRobot, pointCanvas_T, 0.1, ...
-            canvas_Rot, qOut, penMesh_h, penVertices, 2, drawType);
+        qOut = handles.rMove.drawCrescent(handles.myRobot, pointCanvas_T, 0.05, ...
+            canvas_Rot, qGuess_Lower, penMesh_h, penVertices, 2, drawType);
+        
+    case 'Car'
+        % Drawing a Car centred at -0.15, 0
+        qOut = handles.rMove.drawCar(handles.myRobot, pointCanvas_T, canvas_Rot, ...
+                qGuess_Lower, penMesh_h, penVertices, 2, drawType);
+            
+    case 'Bridge'
+        % Drawing a Bridge centred at -0.15, 0
+        qOut = handles.rMove.drawBridge(handles.myRobot, pointCanvas_T, canvas_Rot, ...
+                qGuess_Lower, penMesh_h, penVertices, 2, drawType);
         
 end
 
