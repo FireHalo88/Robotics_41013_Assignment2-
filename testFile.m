@@ -33,53 +33,82 @@ L3 = Link('d',0,'a',0.05,'alpha',0,'qlim',[-pi pi]);
 robot = SerialLink([L1 L2 L3],'name','myRobot');                     
 q = zeros(1,3);                                                     % Create a vector of initial joint angles        
 scale = 0.5;
-robot.base = transl(0.55,0.0,0.3);
+robot.base = transl(0.0,0.0,0.3);
 robot.plot(q,'workspace',workspace,'scale',scale);                  % Plot the robot
+   
+translation = [0.2 0.5 0];
+[centerpnt, width, depth, height] = PLY_Obstacle_Dimensions(2,1);
+
+security = PlaceObject('guard.ply');
+securityVertices = get(security,'Vertices'); % Extracting vertices data
+%(transl(translation(1), translation(2), translation(3))*trotx(pi)*troty(pi)
+transformedVertices = [securityVertices,ones(size(securityVertices,1),1)] * (transl(translation(1), translation(2), translation(3)))'; % Transforming vertices
+set(security,'Vertices',transformedVertices(:,1:3)); % Updating token location
+drawnow; % Update simulation
+
 % Checks for collision between multi-linked robot and workspace zone
-collision = plottingCollisionDetection(robot, [pi/2,0,0], [pi/2,0,0], 0.0, 0.0, 0.5, 0.94);
+collision = plottingCollisionDetection(robot, [pi,0,0], [0,0,0],centerpnt, translation, width, depth, height);
 if collision == true
     %Change for your own use
     display("um");
 end
-%%
-% Create a 3-Link Robot
-L1 = Link('d',0,'a',0.05,'alpha',0,'qlim',[-pi pi]);
-L2 = Link('d',0,'a',0.05,'alpha',0,'qlim',[-pi pi]);
-L3 = Link('d',0,'a',0.05,'alpha',0,'qlim',[-pi pi]);       
-robot = SerialLink([L1 L2 L3],'name','myRobot');                     
-q = zeros(1,3);                                                     % Create a vector of initial joint angles        
-scale = 0.5;
-robot.base = transl(0.0,0.0,0.3);
-robot.plot(q,'workspace',workspace,'scale',scale);                  % Plot the robot
+%% Testing Collision between Hans Cute and PLY Obstacle within Hans Cute Workspace [Robot Moving]
+% Create the Hans Cute in workspace
+hansCute_base = [0.2 0.0 0.22];
+hansCute = HansCute("sup",workspace);
+myRobot = hansCute.model;
+myRobot.base = transl(hansCute_base(1), hansCute_base(2), hansCute_base(3));
+hansCute.plotModel();
 
 security = PlaceObject('boy8.ply');
 securityVertices = get(security,'Vertices'); % Extracting vertices data
-transformedVertices = [securityVertices,ones(size(securityVertices,1),1)] * transl(0.0, 0.0, 0.0)'; % Transforming vertices
+transformedVertices = [securityVertices,ones(size(securityVertices,1),1)] * (transl(0, -0.19, 0.145))'; % Transforming vertices
 set(security,'Vertices',transformedVertices(:,1:3)); % Updating token location
 drawnow; % Update simulation
-%pause(0.001); % Wait before execution 
-for i = 0.1:0.05:1
-    transformedVertices = [securityVertices,ones(size(securityVertices,1),1)] * transl(i, 0.0, 0.0)'; % Transforming vertices
-    set(security,'Vertices',transformedVertices(:,1:3)); % Updating token location
-    test = PLY_Collision_Detection(2, 0.0,0.0,0.4,0.3,0.75,robot, [pi/2,0,0], 0.0, 0.0, 0.5, 0.94);
+%hansCute.teach
+
+translation = [0, -0.19, 0.145];
+[centerpnt, width, depth, height] = PLY_Obstacle_Dimensions(1,1);
+%Allow time for user to adjust camera to view collision setup
+pause(2);
+% Checks for collision between multi-linked robot and workspace zone
+collision = plottingCollisionDetection(myRobot, [-0.5*pi,0.5*pi,0,0,0,0,0], [pi,0.5*pi,0,0,0,0,0],centerpnt, translation, width, depth, height);
+if collision == true
+    %Change for your own use
+    display("Collision with a boy!");
+end
+%% Testing Collision between Hans Cute and PLY Obstacle within Hans Cute Workspace [PLY Moving]
+hansCute_base = [0.2 0.0 0.22];
+hansCute = HansCute("sup",workspace);
+myRobot = hansCute.model;
+myRobot.base = transl(hansCute_base(1), hansCute_base(2), hansCute_base(3));
+hansCute.plotModel();
+%hansCute.teach
+
+security = PlaceObject('boy8.ply');
+securityVertices = get(security,'Vertices'); % Extracting vertices data
+transformedVertices = [securityVertices,ones(size(securityVertices,1),1)] * transl(0.6, 0.35, -0.05)'; % Transforming vertices
+set(security,'Vertices',transformedVertices(:,1:3)); % Updating token location
+drawnow; % Update simulation
+
+%Allow time for user to adjust camera to view collision setup
+pause(2);
+[centerpnt, width, depth, height] = PLY_Obstacle_Dimensions(1,1);
+for i = 0.35:-0.025:-0.5
+    transformedVertices = [securityVertices,ones(size(securityVertices,1),1)] * transl(0.6, i, -0.05)'; % Transforming vertices
+    set(security,'Vertices',transformedVertices(:,1:3)); % Updating token location    
+    translation = [0.6 i -0.1];       
+    %test = PLY_Collision_Detection(2, 0.0,0.0,0.4,0.3,0.75,robot, [pi,0,0], centerpnt, translation, width, depth, height);
+    test = plottingCollisionDetection(myRobot, [0,-0.5*pi,0,0,0,0,0], [0,-0.5*pi,0,0,0,0,0],centerpnt, translation, width, depth, height);
     if test == false
-        drawnow; % Update simulation
-        pause(0.2); % Wait before execution
+       drawnow; % Update simulation
+       pause(0.2); % Wait before execution
     else
         display("Collision between robot and object");
-        break;
+        break;       
+       %break;
     end
      
 end
-% test = PLY_Collision_Detection(2, 0.0,0.0,0.4,0.3,0.75,robot, [pi/2,0,0], 0.0, 0.0, 0.5, 0.94);
-% display(test);
-%% Place Hans Cute Robot
-% hansCute_base = [0.275 0.0 0.2];
-% q = [0,0,0,0,0,0,0];
-% hansCute = HansCute("sup",workspace);
-% myRobot = hansCute.model;
-% %hansCute.plotModel();
-% myRobot.base = transl(hansCute_base(1), hansCute_base(2), hansCute_base(3))*trotx(0)*troty(0)*trotz(0);
-% myRobot.plot(q, 'workspace', workspace, 'scale', 0.5);
-
+%%
 

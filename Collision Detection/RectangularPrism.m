@@ -1,4 +1,4 @@
-function [vertex,face,faceNormals] = RectangularPrism(centerpnt, translation, width, depth, height ,plotOptions,axis_h)
+function [vertex,face,faceNormals] = RectangularPrism(lower,upper,plotOptions,axis_h)
 if nargin<4
         axis_h=gca;
     if nargin<3
@@ -8,14 +8,15 @@ if nargin<4
     end
 end
 
-vertex(1,:) = [centerpnt(1)-width+translation(1), centerpnt(2)-depth+translation(2), translation(3)];
-vertex(2,:) = [centerpnt(1)+width+translation(1), translation(2), translation(3)];
-vertex(3,:) = [centerpnt(1)+width+translation(1), centerpnt(2)+depth+translation(2), translation(3)];
-vertex(4,:) = [centerpnt(1)+width+translation(1), centerpnt(2)-depth+translation(2), height+translation(3)];
-vertex(5,:) = [centerpnt(1)-width+translation(1), centerpnt(2)+depth+translation(2), height+translation(3)];
-vertex(6,:) = [centerpnt(1)-width+translation(1), centerpnt(2)-depth+translation(2), height+translation(3)];
-vertex(7,:) = [centerpnt(1)-width+translation(1), centerpnt(2)+depth+translation(2), translation(3)];
-vertex(8,:) = [centerpnt(1)+width+translation(1), centerpnt(2)+depth+translation(2), height+translation(3)];
+
+vertex(1,:)=lower;
+vertex(2,:)=[upper(1),lower(2:3)];
+vertex(3,:)=[upper(1:2),lower(3)];
+vertex(4,:)=[upper(1),lower(2),upper(3)];
+vertex(5,:)=[lower(1),upper(2:3)];
+vertex(6,:)=[lower(1:2),upper(3)];
+vertex(7,:)=[lower(1),upper(2),lower(3)];
+vertex(8,:)=upper;
 
 % vertex(1,:)=[-0.2 0 0];
 % vertex(2,:)=[0.14 0 0];
