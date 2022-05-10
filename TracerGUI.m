@@ -56,7 +56,7 @@ handles.output = hObject;
 
 % Populate the Drop-Down Menu with the Shapes
 shapes = ["Circle", "Square", "Triangle", "Star", "Crescent", "Car", ...
-    "Bridge"];
+    "Bridge", "Boat"];
 set(handles.chooseShapeDDM, 'String', shapes');
 
 % Creation of the Cyton/Hans Cute Robot Class
@@ -1526,6 +1526,11 @@ switch handles.shape
     case 'Bridge'
         % Drawing a Bridge centred at -0.15, 0
         qOut = handles.rMove.drawBridge(handles.myRobot, pointCanvas_T, canvas_Rot, ...
+                qGuess_Lower, penMesh_h, penVertices, 2, drawType);
+            
+    case 'Boat'
+        % Drawing a Boat centred at -0.15+0.01, 0
+        qOut = handles.rMove.drawBoat(handles.myRobot, pointCanvas_T, canvas_Rot, ...
                 qGuess_Lower, penMesh_h, penVertices, 2, drawType);
         
 end

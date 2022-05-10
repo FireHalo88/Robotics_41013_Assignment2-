@@ -1910,25 +1910,25 @@ classdef RobotMovement < handle
                 funcName, char(13)]};
             
             % DEFINING DISTANCES AND POINT TRANSFORMS
-            length = 0.15;
-            depth = 0.03;
-            boatRadius = ((length/2)^2 + depth^2)/(2*depth);
+            length = 0.14;
+            depth = 0.04;
+            boatRadius = ((length/2)^2 + depth^2)/(2*depth)
             mastHeight = 0.07;
             sailHeightR = 0.06;
-            sailHeightL = 0.05;
+            sailHeightL = 0.04;
             sailWidthR = sailHeightR*2/3;
             sailWidthL = sailHeightL*2/3;
             
             centreXYZ = centre_T(1:3, 4);
-            centreXYZ(1) = centreXYZ(1)+0.03;   % Adding slight X offset for better dimensions
+            centreXYZ(1) = centreXYZ(1)+0.01;   % Adding slight X offset for better dimensions
             
             % DEFINE DECK OF BOAT
             % Define Left 4x4 Transform
             left_T = transl(centreXYZ(1), centreXYZ(2)-length/2, ...
-                centreXYZ(3))*canvas_Rot;
+                centreXYZ(3))*canvas_Rot
             % Define Right 4x4 Transform
             right_T = transl(centreXYZ(1), centreXYZ(2)+length/2, ...
-                centreXYZ(3))*canvas_Rot;
+                centreXYZ(3))*canvas_Rot
             
             % DEFINE MAST
             % Define Mast Bottom
@@ -1942,9 +1942,75 @@ classdef RobotMovement < handle
             sailRight_T = transl(centreXYZ(1)-(mastHeight-sailHeightR), ...
                 centreXYZ(2)+sailWidthR, centreXYZ(3))*canvas_Rot;
             % Define Sail/Mast Intersection Point
+            mastSail_T = transl(centreXYZ(1)-(mastHeight-sailHeightR), ...
+                centreXYZ(2), centreXYZ(3))*canvas_Rot;
             
+            % DEFINE LEFT SAIL
+            sailLeft_T = transl(mastSail_T(1,4), centreXYZ(2)-sailWidthL, ...
+                centreXYZ(3))*canvas_Rot;
+            % Define Top of Left Sail
+            sailLeftTop_T = transl(mastSail_T(1,4)-sailHeightL, centreXYZ(2), ...
+                centreXYZ(3))*canvas_Rot;
             
+            % DEFINE CIRCLE CENTRE DEFINING ARC FOR BOAT HULL
+            hullCentre_T = transl(centreXYZ(1)-(boatRadius-depth), ...
+                centreXYZ(2), centreXYZ(3))*canvas_Rot
             
+            % DEFINE THETA VALUES TO MAKE ARC OF BOAT HULL
+            % Knowing x, and calculating radius:
+            y = -sqrt(boatRadius^2 - (length/2)^2)
+            startTheta = atan2(y, -(length/2))
+            endTheta = atan2(y, (length/2))
+            
+            % Accounting for rotated axes (rotating the points by pi/2 to
+            % account for the fact that the working axes are rotated by
+            % -pi/2 compared to standard XY axes).
+            sTheta_R = startTheta + pi/2;
+            eTheta_R = endTheta + pi/2;
+            
+            % DRAWING BOAT DECK + HULL
+            % Move to Left Point of Boat w/ JTRAJ
+            qOut = self.MoveRobotWithObject2(robot, left_T, objMesh_h, ...
+                    objVertices, qGuess, 20);
+            
+            % RMRC ARC to draw BOAT HULL
+            actualLeft_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_ARC_OBJ(robot, hullCentre_T, sTheta_R, ...
+                eTheta_R, boatRadius, objMesh_h, objVertices, time, drawType, ...
+                "ccw", 0, 1, 1, 0);
+            
+            % RMRC to draw BOAT DECK
+            actualRight_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualRight_T, actualLeft_T, ...
+                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            
+            % LIFT PEN TO MOVE TO BOTTOM OF MAST
+            qOut = self.moveViaWaypoint_UP(robot, 0.05, mastBottom_T, objMesh_h, ...
+                objVertices, qOut, qGuess, 20);
+            
+            % RMRC UP MAST
+            actualMastB_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualMastB_T, mastTop_T, ...
+                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            
+            % RMRC to SAIL RIGHT
+            actualMastT_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualMastT_T, sailRight_T, ...
+                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            
+            % RMRC to SAIL LEFT
+            actualSailR_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualSailR_T, sailLeft_T, ...
+                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            
+            % RMRC to LEFT SAIL TOP
+            actualSailL_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualSailL_T, sailLeftTop_T, ...
+                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            
+
+            self.L.mlog = {self.L.DEBUG,funcName,['END FUNCTION: ', ...
+                funcName, char(13)]};         
         end
         
         function [qOut] = moveViaWaypoint_UP(self, robot, upDist, dest_TR, ...
