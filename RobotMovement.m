@@ -404,7 +404,7 @@ classdef RobotMovement < handle
                 % Knowing that Rdot = (R(t+1) - R(t))/delta_t, and R(t) = R_Curr:
                 S = Rdot*R_Curr';
                 % OR we can also define the Skew Symmetric Matrix as:
-                S_M = (1/deltaT)*(R_Next*R_Curr' - eye(3)); % By expanding and simplifying the equation in Line 276
+                S_M = (1/deltaT)*(R_Next*R_Curr' - eye(3)); % By expanding and simplifying the equation in Line 276 [to be updated]
                 
                 % Calculate required linear and angular velocities to get
                 % to next point in the trajectory
@@ -691,7 +691,7 @@ classdef RobotMovement < handle
                     if onCanvas == 1 && FK(3,4) < 0.31
                         trailPlot_h(end+1) = plot3(FK(1,4), FK(2,4), 0.26, ...
                             drawType, 'linewidth',1);  
-                    else
+                    elseif onCanvas == 0
                         trailPlot_h(end+1) = plot3(FK(1,4), FK(2,4), FK(3,4), ...
                             drawType);                 
                     end                 
@@ -765,30 +765,36 @@ classdef RobotMovement < handle
         
         function [qOut] = RMRC_7DOF_ARC_OBJ(self, robot, centre_T, startTheta, ...
                 endTheta, radius, objMesh_h, objVertices, time, drawType, ...
-                moveToStart, onCanvas, plotTrail, plotData)
+                direction, moveToStart, onCanvas, plotTrail, plotData)
+            
+            % If no 'direction' value input, set 'direction' to 'CW' 
+            % (assume arc will be drawn in a CCW orientation).
+            if nargin < 10
+                direction = "ccw";
+            end
             
             % If no 'moveToStart' value input, set 'moveToStart' to 1 
             % (assume we need to move to the first point before drawing on 
             % canvas).
-            if nargin < 10
+            if nargin < 11
                 moveToStart = 1;
             end
             
             % If no 'onCanvas' value input, set 'onCanvas' to 0 (not drawing ...
             % on canvas).
-            if nargin < 11
+            if nargin < 12
                 onCanvas = 0;
             end
             
             % If no 'plotTrail' value input, set 'plotTrail' to 0 (do not ...
             % show trajectory trail).
-            if nargin < 12
+            if nargin < 13
                 plotTrail = 0;
             end
             
             % If no 'plotData' value input, set 'plotData' to 0 (do not ...
             % show plot data).
-            if nargin < 13
+            if nargin < 14
                 plotData = 0;
             end
             
@@ -800,9 +806,22 @@ classdef RobotMovement < handle
             % Setting Parameters
             deltaT = 0.02;          % Control Freq. (Around 50Hz)
             steps = time/deltaT;    % No. of Steps
-            delta = (endTheta-startTheta)/steps;     % Small angle change
-            epsilon = 0.0035;         % Threshold value for manipulability/Damped Least Squares
-            lambda_max = 0.01;      % Set Lambda_Max when attenuating the Damping Factor for DLS Method
+            
+            % We need to account for the problem of going from < 360 to > 0
+            % when moving CCW, and going from > 0 to < 360 when moving CW
+            if endTheta < startTheta && direction == "ccw"
+                endTheta = endTheta + 2*pi;
+            elseif endTheta > startTheta && direction == "cw"
+                startTheta = startTheta + 2*pi;
+            end    
+            delta = abs(endTheta-startTheta)/steps;     % Small angle change
+            % If user wants to move around CW, steps must be negative
+            if direction == "cw"
+                delta = -delta;
+            end
+                     
+            epsilon = 0.003;         % Threshold value for manipulability/Damped Least Squares
+            lambda_max = 0.02;      % Set Lambda_Max when attenuating the Damping Factor for DLS Method
             W = diag([1 1 1 0.1 0.1 0.1]);     % Weighting matrix for the velocity vector
             
             % Pre-allocating memory for required data/arrays
@@ -838,10 +857,12 @@ classdef RobotMovement < handle
             % Animate to the first joint state with RMRC (if boolean is
             % set in function input parameters)
             current_T = robot.fkine(robot.getpos());
-            start_T = centre_T*transl(radius*cos(startTheta), ...
-                radius*sin(startTheta), 0); 
-            end_T = centre_T*transl(radius*cos(endTheta), ...
-                radius*sin(endTheta), 0);
+            
+            rotation_T = rpy2tr(RPY(1), RPY(2), RPY(3));
+            start_T = transl(centre_T(1,4)+(radius*cos(startTheta)), ...
+                 centre_T(2,4)+(radius*sin(startTheta)), centre_T(3,4))*rotation_T;
+            end_T = transl(centre_T(1,4)+(radius*cos(endTheta)), ...
+                 centre_T(2,4)+(radius*sin(endTheta)), centre_T(3,4))*rotation_T;
             
             if moveToStart == 1
                 qOut = self.RMRC_7DOF_OBJ(robot, current_T, start_T, objMesh_h, ...
@@ -943,7 +964,7 @@ classdef RobotMovement < handle
                     if onCanvas == 1 && FK(3,4) < 0.31
                         trailPlot_h(end+1) = plot3(FK(1,4), FK(2,4), 0.26, ...
                             drawType, 'linewidth',1);  
-                    else
+                    elseif onCanvas == 0
                         trailPlot_h(end+1) = plot3(FK(1,4), FK(2,4), FK(3,4), ...
                             drawType);                 
                     end                 
@@ -1039,15 +1060,15 @@ classdef RobotMovement < handle
             % Define Top 4x4 Transform
             top_T = transl(centreXYZ(1)-0.0366, centreXYZ(2), centreXYZ(3))*canvas_Rot; 
             
-%             % Moving to the BOTTOM LEFT POINT - JTRAJ
-%             qOut = self.MoveRobotWithObject2(robot, bottomLeft_T, objMesh_h, ...
-%                     objVertices, qGuess, 30);
+            % Moving to the BOTTOM LEFT POINT - JTRAJ
+            qOut = self.MoveRobotWithObject2(robot, bottomLeft_T, objMesh_h, ...
+                    objVertices, qGuess, 20);
                 
-            % Moving to the BOTTOM LEFT POINT - RMRC
-            start_T = robot.fkine(robot.getpos());
-            end_T = bottomLeft_T;
-            qOut = self.RMRC_7DOF_OBJ(robot, start_T, end_T, ...
-                     objMesh_h, objVertices, 1, drawType, 0, 0, 0);
+%             % Moving to the BOTTOM LEFT POINT - RMRC
+%             start_T = robot.fkine(robot.getpos());
+%             end_T = bottomLeft_T;
+%             qOut = self.RMRC_7DOF_OBJ(robot, start_T, end_T, ...
+%                      objMesh_h, objVertices, 1, drawType, 0, 0, 0);
                 
             % Moving from this point to the BOTTOM RIGHT POINT
             actualBL_T = robot.fkine(qOut);
@@ -1095,15 +1116,15 @@ classdef RobotMovement < handle
             topLeft_T = transl(centreXYZ(1)-0.05, centreXYZ(2)-0.05, ...
                 centreXYZ(3))*canvas_Rot;
             
-%             % Moving to the BOTTOM LEFT POINT - JTRAJ
-%             qOut = self.MoveRobotWithObject2(robot, bottomLeft_T, objMesh_h, ...
-%                     objVertices, qGuess, 30);
+            % Moving to the BOTTOM LEFT POINT - JTRAJ
+            qOut = self.MoveRobotWithObject2(robot, bottomLeft_T, objMesh_h, ...
+                    objVertices, qGuess, 20);
                 
-            % Moving to the BOTTOM LEFT POINT - RMRC
-            start_T = robot.fkine(robot.getpos());
-            end_T = bottomLeft_T;
-            qOut = self.RMRC_7DOF_OBJ(robot, start_T, end_T, ...
-                     objMesh_h, objVertices, 1, drawType, 0, 0, 0);
+%             % Moving to the BOTTOM LEFT POINT - RMRC
+%             start_T = robot.fkine(robot.getpos());
+%             end_T = bottomLeft_T;
+%             qOut = self.RMRC_7DOF_OBJ(robot, start_T, end_T, ...
+%                      objMesh_h, objVertices, 1, drawType, 0, 0, 0);
                 
             % Moving from this point to the BOTTOM RIGHT POINT
             actualBL_T = robot.fkine(qOut);
@@ -1160,15 +1181,15 @@ classdef RobotMovement < handle
             right_T = transl(centreXYZ(1)-0.02, centreXYZ(2)+0.05, ...
                 centreXYZ(3))*canvas_Rot;
             
-%             % Moving to the BOTTOM LEFT POINT - JTRAJ
-%             qOut = self.MoveRobotWithObject2(robot, bottomLeft_T, objMesh_h, ...
-%                     objVertices, qGuess, 30);
+            % Moving to the BOTTOM LEFT POINT - JTRAJ
+            qOut = self.MoveRobotWithObject2(robot, bottomLeft_T, objMesh_h, ...
+                    objVertices, qGuess, 20);
                 
-            % Moving to the BOTTOM LEFT POINT - RMRC
-            start_T = robot.fkine(robot.getpos());
-            end_T = bottomLeft_T;
-            qOut = self.RMRC_7DOF_OBJ(robot, start_T, end_T, ...
-                     objMesh_h, objVertices, 1, drawType, 0, 0, 0);
+%             % Moving to the BOTTOM LEFT POINT - RMRC
+%             start_T = robot.fkine(robot.getpos());
+%             end_T = bottomLeft_T;
+%             qOut = self.RMRC_7DOF_OBJ(robot, start_T, end_T, ...
+%                      objMesh_h, objVertices, 1, drawType, 0, 0, 0);
                 
             % Moving from this point to the TOP POINT
             actualBL_T = robot.fkine(qOut);
@@ -1200,7 +1221,7 @@ classdef RobotMovement < handle
         end
         
         function [qOut] = drawCircle(self, robot, centre_T, radius, ...
-                qGuess, objMesh_h, objVertices, time, drawType)
+                canvas_Rot, qGuess, objMesh_h, objVertices, time, drawType)
             % This function will draw a circle about a given centre
             % 4x4 transform.
             
@@ -1209,9 +1230,16 @@ classdef RobotMovement < handle
             self.L.mlog = {self.L.DEBUG,funcName,['RUNNING FUNCTION: ', ...
                 funcName, char(13)]};
             
+            % Defining BOTTOM POINT
+            bottom_T = transl(centre_T(1,4)+radius, centre_T(2,4), ...
+                centre_T(3,4))*canvas_Rot;           
+            % Moving to the BOTTOM POINT - JTRAJ
+            qOut = self.MoveRobotWithObject2(robot, bottom_T, objMesh_h, ...
+                    objVertices, qGuess, 20);
+            
             % Draw Circle
             qOut = self.RMRC_7DOF_ARC_OBJ(robot, centre_T, 0, 2*pi, radius, ...
-                objMesh_h, objVertices, time, drawType, 1, 1, 1, 0);
+                objMesh_h, objVertices, time, drawType, "ccw", 0, 1, 1, 0);
             
             self.L.mlog = {self.L.DEBUG,funcName,['END FUNCTION: ', ...
                 funcName, char(13)]};                       
@@ -1237,30 +1265,40 @@ classdef RobotMovement < handle
             eTheta_Out = 28*pi/45;
             sTheta_Out = 2*pi - eTheta_Out;
             % Rotating Axes
-            eTheta_OutR = eTheta_Out + pi/2;
-            sTheta_OutR = sTheta_Out + pi/2;
+            eTheta_OutR = eTheta_Out + pi/2
+            sTheta_OutR = sTheta_Out + pi/2
             
             % Define startTheta and endTheta for inside of crescent
             sTheta_In = pi - eTheta_Out;
             eTheta_In = 2*pi - sTheta_In;
             % Rotating Axes
-            sTheta_InR = sTheta_In + pi/2;
-            eTheta_InR = eTheta_In + pi/2;
+            sTheta_InR = sTheta_In + pi/2
+            eTheta_InR = eTheta_In + pi/2
+            
+            % Define start point 4x4 Matrix of Crescent (Bottom)
+            bottom_T = transl(centreXYZ(1)+(radius*cos(sTheta_OutR)), ...
+                centreXYZ(2)+(radius*sin(sTheta_OutR)), centreXYZ(3))*canvas_Rot
+            top_T = transl(centreXYZ(1)+(radius*cos(eTheta_OutR)), ...
+                centreXYZ(2)+(radius*sin(eTheta_OutR)), centreXYZ(3))*canvas_Rot
+            
+            % Move to Bottom Point (start point) with JTRAJ
+            qOut = self.MoveRobotWithObject2(robot, bottom_T, objMesh_h, ...
+                    objVertices, qGuess, 20);
             
             % PARAMETERS FOR RMRC ARC FUNCTION
             % robot, centre_T, startTheta, endTheta, radius, objMesh_h, 
-            % objVertices, time, drawType, moveToStart, onCanvas, 
+            % objVertices, time, drawType, direction, moveToStart, onCanvas, 
             % plotTrail, plotData
             
             % Draw outside arc of crescent
             qOut = self.RMRC_7DOF_ARC_OBJ(robot, centre_T, sTheta_OutR, ...
                 eTheta_OutR, radius, objMesh_h, objVertices, time, drawType, ...
-                1, 1, 1, 0);
+                "ccw", 0, 1, 1, 0);
             
             % Draw inside arc of crescent
             qOut = self.RMRC_7DOF_ARC_OBJ(robot, insideCrescent_T, sTheta_InR, ...
                 eTheta_InR, radius, objMesh_h, objVertices, time, drawType, ...
-                0, 1, 1, 0);
+                "cw", 0, 1, 1, 0);
             
             self.L.mlog = {self.L.DEBUG,funcName,['END FUNCTION: ', ...
                 funcName, char(13)]}; 
