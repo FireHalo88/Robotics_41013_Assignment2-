@@ -1651,7 +1651,7 @@ axes(handles.axes3)
 % disp('Test before delete')
 % disp(['Length of shape_h: ', num2str(length(handles.shape_h))])
 for i = 1:length(handles.shape_h)
-    disp('Checking if in deletion loop');
+    %disp('Checking if in deletion loop');
     try delete(handles.shape_h(i)); end
 end
 % disp('Test after delete')
@@ -1790,6 +1790,189 @@ switch handles.shape
         % Plot arcs for Crescent
         handles.shape_h(end+1) = plot(xPoints_Out, yPoints_Out, drawType);
         handles.shape_h(end+1) = plot(xPoints_In, yPoints_In, drawType);
+        
+    case 'Car'
+        % Define Centre
+        centreX = 0.5;
+        centreY = 0.5;
+        % Define Lengths
+        carLength = 0.15;
+        height = 0.05;
+        wheelRadius = height/3;
+        roofRadius = carLength/6;
+
+        % Define Corner Coordinates
+        bottomLeft = [centreX-carLength/2, centreY-height/2];
+        bottomRight = [centreX+carLength/2, centreY-height/2];
+        topRight = [centreX+carLength/2, centreY+height/2];
+        topLeft = [centreX-carLength/2, centreY+height/2];
+        
+        % Roof and Wheel Coords
+        roofCentre = [centreX, centreY+height/2];
+        roof_Theta = 0:pi/180:pi;
+        leftWheelCentre = [centreX-carLength/4, centreY-height/2];
+        rightWheelCentre = [centreX+carLength/4, centreY-height/2];
+        wheel_Theta = 0:pi/180:2*pi;
+        % Define X, Y Points
+        xRoof = roofCentre(1) + roofRadius*cos(roof_Theta);
+        yRoof = roofCentre(2) + roofRadius*sin(roof_Theta);
+        x_lWheel = leftWheelCentre(1) + wheelRadius*cos(wheel_Theta);
+        y_lWheel = leftWheelCentre(2) + wheelRadius*sin(wheel_Theta);
+        x_rWheel = rightWheelCentre(1) + wheelRadius*cos(wheel_Theta);
+        y_rWheel = rightWheelCentre(2) + wheelRadius*sin(wheel_Theta);
+        
+        % Plot Arcs
+        handles.shape_h(end+1) = plot(xRoof, yRoof, drawType);
+        handles.shape_h(end+1) = plot(x_lWheel, y_lWheel, drawType);
+        handles.shape_h(end+1) = plot(x_rWheel, y_rWheel, drawType);
+        % Plot Straight Lines
+        handles.shape_h(end+1) = plot([bottomLeft(1), bottomRight(1)], ...
+                                 [bottomLeft(2), bottomRight(2)], colour, ...
+                                 'LineWidth', 2);
+        handles.shape_h(end+1) = plot([bottomLeft(1), topLeft(1)], ...
+                                 [bottomLeft(2), topLeft(2)], colour, ...
+                                 'LineWidth', 2);
+        handles.shape_h(end+1) = plot([topLeft(1), topRight(1)], ...
+                                 [topLeft(2), topRight(2)], colour, ...
+                                 'LineWidth', 2);
+        handles.shape_h(end+1) = plot([bottomRight(1), topRight(1)], ...
+                                 [bottomRight(2), topRight(2)], colour, ...
+                                 'LineWidth', 2);  
+        
+    case 'Bridge'
+        % Define Centre
+        centreX = 0.5;
+        centreY = 0.5;
+        % Define Lengths
+        bridgeLength = 0.15;
+        height = 0.1;
+        archRadius = height/2;
+        pylonHeight = 3*height/4;
+        pylonWidth = pylonHeight/3;
+        
+        % Define Corner Coordinates
+        % Left Pylon
+        bottomLL = [centreX-bridgeLength/2, centreY-height/2];
+        bottomRL = [centreX-bridgeLength/2+pylonWidth, centreY-height/2];
+        topRL = [centreX-bridgeLength/2+pylonWidth, centreY-height/2+pylonHeight];
+        topLL = [centreX-bridgeLength/2, centreY-height/2+pylonHeight];
+        % Right Pylon
+        bottomLR = [centreX+bridgeLength/2-pylonWidth, centreY-height/2];
+        bottomRR = [centreX+bridgeLength/2, centreY-height/2];
+        topRR = [centreX+bridgeLength/2, centreY-height/2+pylonHeight];
+        topLR = [centreX+bridgeLength/2-pylonWidth, centreY-height/2+pylonHeight];
+        % Road Coords
+        roadRight = [centreX+archRadius, centreY];
+        roadLeft= [centreX-archRadius, centreY];
+        % Beam Coords
+        beam1S = [centreX-archRadius/2, centreY];
+        beam2S = [centreX, centreY];
+        beam3S = [centreX+archRadius/2, centreY];
+        beam1E = [centreX-archRadius/2, centreY+sqrt(3)*archRadius/2;];
+        beam2E = [centreX, centreY+archRadius];
+        beam3E = [centreX+archRadius/2, centreY+sqrt(3)*archRadius/2;];
+        % Arch
+        archTheta = 0:pi/180:pi;
+        xArch = centreX + archRadius*cos(archTheta);
+        yArch = centreY + archRadius*sin(archTheta);
+        
+        % Plot Arcs
+        handles.shape_h(end+1) = plot(xArch, yArch, drawType);
+        % Plot Straight Lines
+        % Left Pylon
+        handles.shape_h(end+1) = plot([bottomLL(1), bottomRL(1)], ...
+                                 [bottomLL(2), bottomRL(2)], colour, ...
+                                 'LineWidth', 2);
+        handles.shape_h(end+1) = plot([bottomLL(1), topLL(1)], ...
+                                 [bottomLL(2), topLL(2)], colour, ...
+                                 'LineWidth', 2);
+        handles.shape_h(end+1) = plot([topLL(1), topRL(1)], ...
+                                 [topLL(2), topRL(2)], colour, ...
+                                 'LineWidth', 2);
+        handles.shape_h(end+1) = plot([bottomRL(1), topRL(1)], ...
+                                 [bottomRL(2), topRL(2)], colour, ...
+                                 'LineWidth', 2);  
+        % Right Pylon
+        handles.shape_h(end+1) = plot([bottomLR(1), bottomRR(1)], ...
+                                 [bottomLR(2), bottomRR(2)], colour, ...
+                                 'LineWidth', 2);
+        handles.shape_h(end+1) = plot([bottomLR(1), topLR(1)], ...
+                                 [bottomLR(2), topLR(2)], colour, ...
+                                 'LineWidth', 2);
+        handles.shape_h(end+1) = plot([topLR(1), topRR(1)], ...
+                                 [topLR(2), topRR(2)], colour, ...
+                                 'LineWidth', 2);
+        handles.shape_h(end+1) = plot([bottomRR(1), topRR(1)], ...
+                                 [bottomRR(2), topRR(2)], colour, ...
+                                 'LineWidth', 2);  
+        % Road
+        handles.shape_h(end+1) = plot([roadLeft(1), roadRight(1)], ...
+                                 [roadLeft(2), roadRight(2)], colour, ...
+                                 'LineWidth', 2); 
+        % Beams
+        handles.shape_h(end+1) = plot([beam1S(1), beam1E(1)], ...
+                                 [beam1S(2), beam1E(2)], colour, ...
+                                 'LineWidth', 2); 
+        handles.shape_h(end+1) = plot([beam2S(1), beam2E(1)], ...
+                                 [beam2S(2), beam2E(2)], colour, ...
+                                 'LineWidth', 2); 
+        handles.shape_h(end+1) = plot([beam3S(1), beam3E(1)], ...
+                                 [beam3S(2), beam3E(2)], colour, ...
+                                 'LineWidth', 2); 
+        
+    case 'Boat'
+        % Define Centre
+        centreX = 0.5;
+        centreY = 0.5;
+        % Define Lengths
+        boatLength = 0.14;
+        depth = 0.04;
+        hullRadius = ((boatLength/2)^2 + depth^2)/(2*depth);
+        mastHeight = 0.07;
+        sailHeightR = 0.06;
+        sailHeightL = 0.04;
+        sailWidthR = sailHeightR*2/3;
+        sailWidthL = sailHeightL*2/3;
+        
+        % Define Corner Coordinates
+        % Deck
+        deckLeft = [centreX-boatLength/2, centreY];
+        deckRight = [centreX+boatLength/2, centreY];
+        % Mast
+        mastB = [centreX, centreY];
+        mastT = [centreX, centreY+mastHeight];
+        % Sails
+        rightSail = [centreX+sailWidthR, centreY+mastHeight-sailHeightR];
+        leftSail = [centreX-sailWidthL, centreY+mastHeight-sailHeightR];
+        leftSailT = [centreX, centreY+mastHeight-sailHeightR+sailHeightL];
+        % Define Hull Theta
+        y = -sqrt(hullRadius^2 - (boatLength/2)^2);
+        startTheta = atan2(y, -(boatLength/2));
+        endTheta = atan2(y, (boatLength/2));
+        hullTheta = startTheta:pi/180:endTheta;
+        hullCentre = [centreX, centreY-depth+hullRadius];
+        xHull = hullCentre(1) + hullRadius*cos(hullTheta);
+        yHull = hullCentre(2) + hullRadius*sin(hullTheta);
+        
+        % Plot Arcs
+        handles.shape_h(end+1) = plot(xHull, yHull, drawType);
+        % Plot Straight Lines
+        handles.shape_h(end+1) = plot([deckLeft(1), deckRight(1)], ...
+                                 [deckLeft(2), deckRight(2)], colour, ...
+                                 'LineWidth', 2);
+        handles.shape_h(end+1) = plot([mastB(1), mastT(1)], ...
+                                 [mastB(2), mastT(2)], colour, ...
+                                 'LineWidth', 2);
+        handles.shape_h(end+1) = plot([rightSail(1), leftSail(1)], ...
+                                 [rightSail(2), leftSail(2)], colour, ...
+                                 'LineWidth', 2);
+        handles.shape_h(end+1) = plot([mastT(1), rightSail(1)], ...
+                                 [mastT(2), rightSail(2)], colour, ...
+                                 'LineWidth', 2);
+        handles.shape_h(end+1) = plot([leftSail(1), leftSailT(1)], ...
+                                 [leftSail(2), leftSailT(2)], colour, ...
+                                 'LineWidth', 2);  
+        
 end
     
 hold off

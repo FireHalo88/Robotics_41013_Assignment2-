@@ -1912,7 +1912,7 @@ classdef RobotMovement < handle
             % DEFINING DISTANCES AND POINT TRANSFORMS
             length = 0.14;
             depth = 0.04;
-            boatRadius = ((length/2)^2 + depth^2)/(2*depth)
+            boatRadius = ((length/2)^2 + depth^2)/(2*depth);
             mastHeight = 0.07;
             sailHeightR = 0.06;
             sailHeightL = 0.04;
@@ -1925,10 +1925,10 @@ classdef RobotMovement < handle
             % DEFINE DECK OF BOAT
             % Define Left 4x4 Transform
             left_T = transl(centreXYZ(1), centreXYZ(2)-length/2, ...
-                centreXYZ(3))*canvas_Rot
+                centreXYZ(3))*canvas_Rot;
             % Define Right 4x4 Transform
             right_T = transl(centreXYZ(1), centreXYZ(2)+length/2, ...
-                centreXYZ(3))*canvas_Rot
+                centreXYZ(3))*canvas_Rot;
             
             % DEFINE MAST
             % Define Mast Bottom
@@ -1954,13 +1954,13 @@ classdef RobotMovement < handle
             
             % DEFINE CIRCLE CENTRE DEFINING ARC FOR BOAT HULL
             hullCentre_T = transl(centreXYZ(1)-(boatRadius-depth), ...
-                centreXYZ(2), centreXYZ(3))*canvas_Rot
+                centreXYZ(2), centreXYZ(3))*canvas_Rot;
             
             % DEFINE THETA VALUES TO MAKE ARC OF BOAT HULL
             % Knowing x, and calculating radius:
-            y = -sqrt(boatRadius^2 - (length/2)^2)
-            startTheta = atan2(y, -(length/2))
-            endTheta = atan2(y, (length/2))
+            y = -sqrt(boatRadius^2 - (length/2)^2);
+            startTheta = atan2(y, -(length/2));
+            endTheta = atan2(y, (length/2));
             
             % Accounting for rotated axes (rotating the points by pi/2 to
             % account for the fact that the working axes are rotated by
