@@ -1,4 +1,4 @@
- PlaceObject('boy8.ply')
+ PlaceObject('canvas2.ply')
  axis equal
  camlight
 

@@ -70,7 +70,7 @@ drawnow; % Update simulation
 translation = [0, -0.19, 0.145];
 [centerpnt, width, depth, height] = PLY_Obstacle_Dimensions(1,1);
 %Allow time for user to adjust camera to view collision setup
-pause(2);
+pause(5);
 % Checks for collision between multi-linked robot and workspace zone
 collision = plottingCollisionDetection(myRobot, [-0.5*pi,0.5*pi,0,0,0,0,0], [pi,0.5*pi,0,0,0,0,0],centerpnt, translation, width, depth, height);
 if collision == true
@@ -107,8 +107,41 @@ for i = 0.35:-0.025:-0.5
         display("Collision between robot and object");
         break;       
        %break;
+    end    
+end
+%% Testing Collision between Hans Cute and PLY Obstacle within Hans Cute Workspace [PLY Moving]
+hansCute_base = [0.2 0.0 0.22];
+hansCute = HansCute("sup",workspace);
+myRobot = hansCute.model;
+myRobot.base = transl(hansCute_base(1), hansCute_base(2), hansCute_base(3));
+hansCute.plotModel();
+%hansCute.teach
+
+security = PlaceObject('boy8.ply');
+securityVertices = get(security,'Vertices'); % Extracting vertices data
+transformedVertices = [securityVertices,ones(size(securityVertices,1),1)] * (transl(0.6, 0, -0.05)*trotz(-pi/2))'; % Transforming vertices
+set(security,'Vertices',transformedVertices(:,1:3)); % Updating token location
+drawnow; % Update simulation
+
+%Allow time for user to adjust camera to view collision setup
+pause(3);
+for i = 0.6:-0.005:-0.5
+    transformedVertices = [securityVertices,ones(size(securityVertices,1),1)] * (transl(i, 0, -0.05)*trotz(-pi/2))'; % Transforming vertices
+    set(security,'Vertices',transformedVertices(:,1:3)); % Updating token location    
+    translation = [i 0 -0.05];       
+    %test = PLY_Collision_Detection(2, 0.0,0.0,0.4,0.3,0.75,robot, [pi,0,0], centerpnt, translation, width, depth, height);
+    %test = plottingCollisionDetection(myRobot, [0,-0.5*pi,0,0,0,0,0], [0,-0.5*pi,0,0,0,0,0],centerpnt, translation, width, depth, height);
+    test = lightCurtainCode(translation, 1);
+    if test == false
+       drawnow; % Update simulation
+       pause(0.2); % Wait before execution
+    else
+        display("Collision between robot and object");
+        display(translation);
+        line([0.42 0.42],[-0.52 0.46],'color','b', 'LineWidth', 10) 
+        break;       
+       %break;
     end
      
 end
-%%
 

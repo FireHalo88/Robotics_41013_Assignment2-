@@ -1,0 +1,12 @@
+function [collision] = lightCurtain(translation,object)
+    safetyBarrierPoint1 = [-0.47, -0.45, 0.0];
+    safetyBarrierPoint2 = [-0.47, 0.5, 0.0];    
+    safetyBarrierPoint3 = [0.35, -0.45, 0.0];
+    safetyBarrierPoint4 = [0.35, 0.5, 0.0];
+
+    switch object
+        case 1 %For Boy entering workspace
+            
+
+    end
+end
