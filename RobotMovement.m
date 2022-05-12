@@ -5,6 +5,8 @@ classdef RobotMovement < handle
     
     properties
         L;      % LogFile
+        eStopState=0; %Emergency stop flag/toggle 0=Normal operation, 1=Emergency stopped
+        goSignal=1; %Flag for resuming process after Estop. 0=disabled, 1=signaled to go
     end
     
     methods
@@ -138,6 +140,14 @@ classdef RobotMovement < handle
                % Plot Robot Moving
                robot.animate(qpMatrix(i, :));
                drawnow();
+               %Check if eStop is active, and lock in while loop if it
+               %is, also regress one "frame"
+               if self.eStopState==1
+                   i= i-1; 
+               end
+               while (self.eStopState==1||self.goSignal==0)
+                   pause(0.1);
+               end
             end
 
             % Debugging pose above desired position
@@ -296,6 +306,14 @@ classdef RobotMovement < handle
                    * edited_TR';
                set(objMesh_h, 'Vertices', objTransformVertices(:,1:3));
                drawnow();
+               %Check if eStop is active, and lock in while loop if it
+               %is, also regress one "frame"
+               if self.eStopState==1
+                   i= i-1; 
+               end
+               while (self.eStopState==1||self.goSignal==0)
+                   pause(0.1);
+               end
             end
 
             % Debugging pose above desired position
@@ -460,6 +478,14 @@ classdef RobotMovement < handle
                 trail(:, i) = FK(1:3, 4);
                 robot.animate(qMatrix(i, :));
                 drawnow();
+                %Check if eStop is active, and lock in while loop if it
+                %is, also regress one "frame"
+                if self.eStopState==1
+                   i= i-1; 
+                end
+                while (self.eStopState==1||self.goSignal==0)
+                   pause(0.1);
+                end
                 pause(0.01);
             end
             
@@ -698,6 +724,14 @@ classdef RobotMovement < handle
                 end
                 
                 drawnow();
+                %Check if eStop is active, and lock in while loop if it
+                %is, also regress one "frame"
+                if self.eStopState==1
+                   i= i-1; 
+                end
+                while (self.eStopState==1||self.goSignal==0)
+                   pause(0.1);
+                end
                 pause(0.01);
             end
             
@@ -971,6 +1005,14 @@ classdef RobotMovement < handle
                 end
                 
                 drawnow();
+                %Check if eStop is active, and lock in while loop if it
+                %is, also regress one "frame"
+                if self.eStopState==1
+                   i= i-1; 
+                end
+                while (self.eStopState==1||self.goSignal==0)
+                   pause(0.1);
+                end
                 pause(0.01);
             end
             
@@ -1514,7 +1556,7 @@ classdef RobotMovement < handle
             
             % Draw Circle
             qOut = self.RMRC_7DOF_ARC_OBJ(robot, centre_T, 0, 2*pi, radius, ...
-                objMesh_h, objVertices, time, drawType, "ccw", 0, 1, 1, 1);
+                objMesh_h, objVertices, time, drawType, "ccw", 0, 1, 1, 0);
             
             % Test no Yaw RMRC
 %             qOut = self.RMRC_7DOF_ARC_OBJ_NY(robot, centre_T, 0, 2*pi, radius, ...

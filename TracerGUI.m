@@ -992,6 +992,20 @@ function eStop_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 
+%Updates estop flag of the movement class
+if handles.rMove.eStopState == 0
+    handles.rMove.eStopState = 1;
+    set(handles.status, 'BackgroundColor','red');
+    set(handles.status, 'String','S');
+else
+    handles.rMove.eStopState = 0;
+    set(handles.status, 'BackgroundColor','yellow');
+    set(handles.status, 'String','I');
+end
+handles.rMove.goSignal=0;
+
+
+
 % --- Executes on button press in up_X.
 function up_X_Callback(hObject, eventdata, handles)
 % hObject    handle to up_X (see GCBO)
@@ -1565,6 +1579,13 @@ function resumeBtn_Callback(hObject, eventdata, handles)
 % hObject    handle to resumeBtn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+%Updates estop flag of the movement class
+if handles.rMove.eStopState == 0
+    handles.rMove.goSignal = 1;
+    set(handles.status, 'BackgroundColor','green');
+    set(handles.status, 'String','G');
+end
 
 
 % --- Executes when selected object is changed in uibuttongroup4.
