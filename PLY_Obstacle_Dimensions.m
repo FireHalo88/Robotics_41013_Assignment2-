@@ -22,7 +22,7 @@ function [centerpnt, width, depth, height] = PLY_Obstacle_Dimensions(type, facin
             height = 0.22;
         case 4 %For canvas file dimensions
             centerpnt = [0.22 0.2];
-            width = 0.5;
+            width = 0.2;
             depth = 0.2;
             height = 0.032;
         otherwise

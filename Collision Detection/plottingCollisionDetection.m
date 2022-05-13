@@ -28,11 +28,11 @@ function [collision] = plottingCollisionDetection(robot,q1,q2,centerpnt, transla
         result(i) = IsCollision(robot,qMatrix(i,:),faces,vertex,faceNormals,true);
         if result(i) == true
             collision = true;
-            robot.animate(qMatrix(i,:));
+            %robot.animate(qMatrix(i,:));
             break
         end
-        robot.animate(qMatrix(i,:));
-        pause(0.02);
+        %robot.animate(qMatrix(i,:));
+        %pause(0.02);
     end
 
 end

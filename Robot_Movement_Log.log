@@ -1,86 +1,114 @@
-2022-05-13 00:58:18,529 DEBUG MoveRobotToObject2 - RUNNING FUNCTION: MoveRobotToObject2
-2022-05-13 00:58:26,688 DEBUG MoveRobotToObject2 - The robot transform above input location is: 
+2022-05-13 18:03:37,766 DEBUG MoveRobotToObject2 - RUNNING FUNCTION: MoveRobotToObject2
+2022-05-13 18:03:40,638 DEBUG MoveRobotToObject2 - The robot transform above input location is: 
    -1.0000      -0.0000       0.0000       0.0100   
    -0.0000       0.0000      -1.0000      -0.3000   
     0.0000      -1.0000      -0.0000       0.3730   
     0.0000       0.0000       0.0000       1.0000   
 
-2022-05-13 00:58:26,692 DEBUG MoveRobotToObject2 - The robot has reached its goal position (within 0.01m)
-2022-05-13 00:58:26,692 DEBUG MoveRobotToObject2 - The desired transform was: 
+2022-05-13 18:03:40,640 DEBUG MoveRobotToObject2 - The robot has reached its goal position (within 0.01m)
+2022-05-13 18:03:40,642 DEBUG MoveRobotToObject2 - The desired transform was: 
    -1.0000      -0.0000       0.0000       0.0100   
     0.0000      -0.0000      -1.0000      -0.3000   
     0.0000      -1.0000       0.0000       0.3730   
     0.0000       0.0000       0.0000       1.0000   
 
-2022-05-13 00:58:26,712 DEBUG RMRC_7DOF - RUNNING FUNCTION: RMRC_7DOF
-2022-05-13 00:58:28,358 DEBUG RMRC_7DOF - The robot transform at the goal pose is: 
+2022-05-13 18:03:40,666 DEBUG RMRC_7DOF - RUNNING FUNCTION: RMRC_7DOF
+2022-05-13 18:03:43,107 DEBUG RMRC_7DOF - The robot transform at the goal pose is: 
    -1.0000      -0.0003      -0.0038       0.0123   
     0.0038       0.0013      -1.0000      -0.2986   
     0.0003      -1.0000      -0.0013       0.2937   
     0.0000       0.0000       0.0000       1.0000   
 
-2022-05-13 00:58:28,358 DEBUG RMRC_7DOF - The robot has reached its goal position (within 0.01m)
-2022-05-13 00:58:28,358 DEBUG RMRC_7DOF - The desired transform was: 
+2022-05-13 18:03:43,109 DEBUG RMRC_7DOF - The robot has reached its goal position (within 0.01m)
+2022-05-13 18:03:43,110 DEBUG RMRC_7DOF - The desired transform was: 
     1.0000       0.0000       0.0000       0.0100   
     0.0000       1.0000       0.0000      -0.3000   
     0.0000       0.0000       1.0000       0.2930   
     0.0000       0.0000       0.0000       1.0000   
 
-2022-05-13 00:58:28,373 DEBUG RMRC_7DOF_OBJ - RUNNING FUNCTION: RMRC_7DOF_OBJ
-2022-05-13 00:58:31,743 DEBUG RMRC_7DOF_OBJ - The robot transform at the goal pose is: 
+2022-05-13 18:03:43,133 DEBUG RMRC_7DOF_OBJ - RUNNING FUNCTION: RMRC_7DOF_OBJ
+2022-05-13 18:03:46,590 DEBUG RMRC_7DOF_OBJ - The robot transform at the goal pose is: 
    -1.0000      -0.0005      -0.0032       0.0102   
     0.0032       0.0008      -1.0000      -0.2999   
     0.0005      -1.0000      -0.0008       0.3730   
     0.0000       0.0000       0.0000       1.0000   
 
-2022-05-13 00:58:31,743 DEBUG RMRC_7DOF_OBJ - The robot has reached its goal position (within 0.01m)
-2022-05-13 00:58:31,743 DEBUG RMRC_7DOF_OBJ - The desired transform was: 
+2022-05-13 18:03:46,592 DEBUG RMRC_7DOF_OBJ - The robot has reached its goal position (within 0.01m)
+2022-05-13 18:03:46,593 DEBUG RMRC_7DOF_OBJ - The desired transform was: 
     1.0000       0.0000       0.0000       0.0100   
     0.0000       1.0000       0.0000      -0.3000   
     0.0000       0.0000       1.0000       0.3730   
     0.0000       0.0000       0.0000       1.0000   
 
-2022-05-13 00:58:31,759 DEBUG MoveRobotWithObject2 - RUNNING FUNCTION: MoveRobotWithObject2
-2022-05-13 00:58:33,346 DEBUG MoveRobotWithObject2 - The robot transform above input location is: 
+2022-05-13 18:03:46,648 DEBUG MoveRobotWithObject2 - RUNNING FUNCTION: MoveRobotWithObject2
+2022-05-13 18:03:50,084 DEBUG MoveRobotWithObject2 - The robot transform above input location is: 
    -0.0001      -0.0001      -1.0000      -0.1499   
     1.0000       0.0000      -0.0001      -0.0000   
     0.0000      -1.0000       0.0001       0.3701   
     0.0000       0.0000       0.0000       1.0000   
 
-2022-05-13 00:58:33,346 DEBUG MoveRobotWithObject2 - The robot has reached its goal position (within 0.01m)
-2022-05-13 00:58:33,361 DEBUG MoveRobotWithObject2 - The desired transform was: 
+2022-05-13 18:03:50,086 DEBUG MoveRobotWithObject2 - The robot has reached its goal position (within 0.01m)
+2022-05-13 18:03:50,088 DEBUG MoveRobotWithObject2 - The desired transform was: 
     0.0000      -0.0000      -1.0000      -0.1500   
     1.0000       0.0000       0.0000       0.0000   
     0.0000      -1.0000       0.0000       0.3700   
     0.0000       0.0000       0.0000       1.0000   
 
-2022-05-13 00:58:33,377 DEBUG DRAW TRIANGLE - RUNNING FUNCTION: DRAW TRIANGLE
-2022-05-13 00:58:33,377 DEBUG MoveRobotWithObject2 - RUNNING FUNCTION: MoveRobotWithObject2
-2022-05-13 00:58:34,101 DEBUG MoveRobotWithObject2 - The robot transform above input location is: 
+2022-05-13 18:03:50,116 DEBUG DRAW TRIANGLE - RUNNING FUNCTION: DRAW TRIANGLE
+2022-05-13 18:03:50,152 DEBUG MoveRobotWithObject2 - RUNNING FUNCTION: MoveRobotWithObject2
+2022-05-13 18:03:52,260 DEBUG MoveRobotWithObject2 - The robot transform above input location is: 
    -0.0001      -0.0000      -1.0000      -0.1000   
     1.0000      -0.0000      -0.0001      -0.0500   
    -0.0000      -1.0000       0.0000       0.3000   
     0.0000       0.0000       0.0000       1.0000   
 
-2022-05-13 00:58:34,104 DEBUG MoveRobotWithObject2 - The robot has reached its goal position (within 0.01m)
-2022-05-13 00:58:34,109 DEBUG MoveRobotWithObject2 - The desired transform was: 
+2022-05-13 18:03:52,262 DEBUG MoveRobotWithObject2 - The robot has reached its goal position (within 0.01m)
+2022-05-13 18:03:52,264 DEBUG MoveRobotWithObject2 - The desired transform was: 
     0.0000      -0.0000      -1.0000      -0.1000   
     1.0000       0.0000       0.0000      -0.0500   
     0.0000      -1.0000       0.0000       0.3000   
     0.0000       0.0000       0.0000       1.0000   
 
-2022-05-13 00:58:34,112 DEBUG RMRC_7DOF_OBJ - RUNNING FUNCTION: RMRC_7DOF_OBJ
-2022-05-13 00:58:38,914 DEBUG RMRC_7DOF_OBJ - The robot transform at the goal pose is: 
+2022-05-13 18:03:52,268 DEBUG RMRC_7DOF_OBJ - RUNNING FUNCTION: RMRC_7DOF_OBJ
+2022-05-13 18:04:01,218 DEBUG RMRC_7DOF_OBJ - The robot transform at the goal pose is: 
     0.0034      -0.0011      -1.0000      -0.1004   
     1.0000       0.0005       0.0034       0.0497   
     0.0005      -1.0000       0.0011       0.2997   
     0.0000       0.0000       0.0000       1.0000   
 
-2022-05-13 00:58:38,914 DEBUG RMRC_7DOF_OBJ - The robot has reached its goal position (within 0.01m)
-2022-05-13 00:58:38,914 DEBUG RMRC_7DOF_OBJ - The desired transform was: 
+2022-05-13 18:04:01,220 DEBUG RMRC_7DOF_OBJ - The robot has reached its goal position (within 0.01m)
+2022-05-13 18:04:01,222 DEBUG RMRC_7DOF_OBJ - The desired transform was: 
     0.0000      -0.0000      -1.0000      -0.1000   
     1.0000       0.0000       0.0000       0.0500   
     0.0000      -1.0000       0.0000       0.3000   
     0.0000       0.0000       0.0000       1.0000   
 
-2022-05-13 00:58:38,914 DEBUG RMRC_7DOF_OBJ - RUNNING FUNCTION: RMRC_7DOF_OBJ
+2022-05-13 18:04:01,225 DEBUG RMRC_7DOF_OBJ - RUNNING FUNCTION: RMRC_7DOF_OBJ
+2022-05-13 18:04:14,997 DEBUG RMRC_7DOF_OBJ - The robot transform at the goal pose is: 
+    0.0033      -0.0009      -1.0000      -0.1865   
+    1.0000       0.0004       0.0033       0.0000   
+    0.0004      -1.0000       0.0009       0.3000   
+    0.0000       0.0000       0.0000       1.0000   
+
+2022-05-13 18:04:14,999 DEBUG RMRC_7DOF_OBJ - The robot has reached its goal position (within 0.01m)
+2022-05-13 18:04:15,001 DEBUG RMRC_7DOF_OBJ - The desired transform was: 
+    0.0000      -0.0000      -1.0000      -0.1866   
+    1.0000       0.0000       0.0000       0.0000   
+    0.0000      -1.0000       0.0000       0.3000   
+    0.0000       0.0000       0.0000       1.0000   
+
+2022-05-13 18:04:15,003 DEBUG RMRC_7DOF_OBJ - RUNNING FUNCTION: RMRC_7DOF_OBJ
+2022-05-13 18:04:31,909 DEBUG RMRC_7DOF_OBJ - The robot transform at the goal pose is: 
+    0.0002      -0.0024      -1.0000      -0.1005   
+    1.0000       0.0000       0.0002      -0.0497   
+    0.0000      -1.0000       0.0024       0.2997   
+    0.0000       0.0000       0.0000       1.0000   
+
+2022-05-13 18:04:31,911 DEBUG RMRC_7DOF_OBJ - The robot has reached its goal position (within 0.01m)
+2022-05-13 18:04:31,914 DEBUG RMRC_7DOF_OBJ - The desired transform was: 
+   -0.0001      -0.0000      -1.0000      -0.1000   
+    1.0000      -0.0000      -0.0001      -0.0500   
+   -0.0000      -1.0000       0.0000       0.3000   
+    0.0000       0.0000       0.0000       1.0000   
+
+2022-05-13 18:04:33,461 DEBUG DRAW TRIANGLE - END FUNCTION: DRAW TRIANGLE
