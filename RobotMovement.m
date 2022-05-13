@@ -112,7 +112,7 @@ classdef RobotMovement < handle
 
         end
         
-        function [qOut] = MoveRobotToObject2(self, robot, loc_T, qGuess, ...
+        function [qOut, qpMatrix] = MoveRobotToObject2(self, robot, loc_T, qGuess, ...
                 steps)
             %This function takes a SerialLink robot, a desired 4x4 Transformation ...
             %Matrix to reach, and animates a calculated minimum jerk trajectory
@@ -270,7 +270,7 @@ classdef RobotMovement < handle
             qOut = qpMatrix(end, :);                    
         end
         
-        function [qOut] = MoveRobotWithObject2(self, robot, loc_T, ...
+        function [qOut, qpMatrix] = MoveRobotWithObject2(self, robot, loc_T, ...
                 objMesh_h, objVertices, qGuess, steps)
             %This function takes a SerialLink robot, a desired 4x4 Transformation ...
             %Matrix to reach, and animates a calculated minimum jerk trajectory
@@ -341,7 +341,7 @@ classdef RobotMovement < handle
             
         end
         
-        function [qOut] = RMRC_7DOF(self, robot, start_T, end_T, time, ...
+        function [qOut, qMatrix] = RMRC_7DOF(self, robot, start_T, end_T, time, ...
                 plotTrail, plotData)
             % This function is modified from the exercise completed in the
             % Lab 9 Tutorial Questions for a 7DOF Robot (Hans Cute).
@@ -557,7 +557,7 @@ classdef RobotMovement < handle
             end     
         end
         
-        function [qOut, trailPlot_h] = RMRC_7DOF_OBJ(self, robot, start_T, ...
+        function [qOut, qMatrix, trailPlot_h] = RMRC_7DOF_OBJ(self, robot, start_T, ...
                 end_T, objMesh_h, objVertices, time, drawType, onCanvas, ...
                 plotTrail, plotData)
             % This function is modified from the exercise completed in the
@@ -797,7 +797,7 @@ classdef RobotMovement < handle
             end          
         end
         
-        function [qOut] = RMRC_7DOF_ARC_OBJ(self, robot, centre_T, startTheta, ...
+        function [qOut, qMatrix] = RMRC_7DOF_ARC_OBJ(self, robot, centre_T, startTheta, ...
                 endTheta, radius, objMesh_h, objVertices, time, drawType, ...
                 direction, moveToStart, onCanvas, plotTrail, plotData)
             
@@ -1355,7 +1355,7 @@ classdef RobotMovement < handle
         end
         
         
-        function [qOut] = drawTriangle(self, robot, centre_T, ...
+        function [qOut, big_qMatrix] = drawTriangle(self, robot, centre_T, ...
                 canvas_Rot, qGuess, objMesh_h, objVertices, time, drawType)
             % This function will draw a triangle about a given centre
             % 4x4 transform.
@@ -1378,7 +1378,7 @@ classdef RobotMovement < handle
             top_T = transl(centreXYZ(1)-0.0366, centreXYZ(2), centreXYZ(3))*canvas_Rot; 
             
             % Moving to the BOTTOM LEFT POINT - JTRAJ
-            qOut = self.MoveRobotWithObject2(robot, bottomLeft_T, objMesh_h, ...
+            [qOut, qMatrix_1] = self.MoveRobotWithObject2(robot, bottomLeft_T, objMesh_h, ...
                     objVertices, qGuess, 20);
                 
 %             % Moving to the BOTTOM LEFT POINT - RMRC
@@ -1389,21 +1389,23 @@ classdef RobotMovement < handle
                 
             % Moving from this point to the BOTTOM RIGHT POINT
             actualBL_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualBL_T, bottomRight_T, ...
+            [qOut, qMatrix_2] = self.RMRC_7DOF_OBJ(robot, actualBL_T, bottomRight_T, ...
                 objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % Moving from BOTTOM RIGHT to TOP
             actualBR_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualBR_T, top_T, objMesh_h, ...
+            [qOut, qMatrix_3] = self.RMRC_7DOF_OBJ(robot, actualBR_T, top_T, objMesh_h, ...
                 objVertices, time, drawType, 1, 1, 0);
             
             % Moving from TOP to BOTTOM LEFT
             actualTop_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualTop_T, actualBL_T, ...
-                objMesh_h, objVertices, time, drawType, 1, 1, 1);
+            [qOut, qMatrix_4] = self.RMRC_7DOF_OBJ(robot, actualTop_T, actualBL_T, ...
+                objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             self.L.mlog = {self.L.DEBUG,funcName,['END FUNCTION: ', ...
                 funcName, char(13)]};
+            
+            big_qMatrix = [qMatrix_1; qMatrix_2; qMatrix_3; qMatrix_4];
         end
         
         function [qOut] = drawSquare(self, robot, centre_T, ...

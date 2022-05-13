@@ -22,7 +22,7 @@ function varargout = TracerGUI(varargin)
 
 % Edit the above text to modify the response to help TracerGUI
 
-% Last Modified by GUIDE v2.5 08-May-2022 17:34:51
+% Last Modified by GUIDE v2.5 13-May-2022 20:42:43
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -141,11 +141,12 @@ handles.ee_Yaw.String = num2str(round(RPY(3), 3));
 % Setting a cartesian increment
 cartInc = 0.01;
 % Adding handles
-handles.cartInc = cartInc;
-handles.cartKeepCurrentRPY = 1;
-handles.colour = 'blackPen';
-handles.shape = 'Circle';
-handles.shape_h = [];
+handles.cartInc = cartInc;      % Handles determining amount of movement for cartesian control
+handles.cartKeepCurrentRPY = 1; % Boolean specifying whether to aim for the same RPY in cartesian control
+handles.inJoystickMode = 0;     % Boolean to track whether or not the user is in Joystick Mode (0 = off, 1 = on)
+handles.colour = 'blackPen';    % Tracking colour chosen by user
+handles.shape = 'Circle';       % Tracking drawing chosen by user
+handles.shape_h = [];           % Handle holding visualisation plot
 handles.drawing = [];
 handles.drawingPath = '';
 % Handle for Robot Movement Class
@@ -1447,7 +1448,7 @@ else
     % Move above the target point
     pen_T = pen_T*transl(-0.01, 0, 0.1);
     pen_TR = pen_T*trotx(pi/2)*trotz(pi);
-    qOut = handles.rMove.MoveRobotToObject2(handles.myRobot, pen_TR, ...
+    [qOut, qMatrix_1] = handles.rMove.MoveRobotToObject2(handles.myRobot, pen_TR, ...
         qGuess_Pen, steps);
     updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
     
@@ -1457,7 +1458,7 @@ else
     % Moving down:
     start_T = handles.myRobot.fkine(qOut);
     end_T = pen_T*transl(0, 0, -0.08);  % Y-Axis pointing downwards
-    qOut = handles.rMove.RMRC_7DOF(handles.myRobot, start_T, end_T, 1, 0, 0);
+    [qOut, qMatrix_2] = handles.rMove.RMRC_7DOF(handles.myRobot, start_T, end_T, 1, 0, 0);
     updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
     
     % RMRC (with object) Parameters: Robot, Start 4x4, End 4x4, Object Mesh, ...
@@ -1465,7 +1466,7 @@ else
     % Moving up:
     start_T = handles.myRobot.fkine(qOut);
     end_T = pen_T;
-    qOut = handles.rMove.RMRC_7DOF_OBJ(handles.myRobot, start_T, end_T, ...
+    [qOut, qMatrix_3] = handles.rMove.RMRC_7DOF_OBJ(handles.myRobot, start_T, end_T, ...
         penMesh_h, penVertices, 1, 'c*', 0, 0, 0);
     updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
 end
@@ -1495,7 +1496,7 @@ qGuess_1_Lower = [0 61 0 104 0 -75 0]*pi/180;
 %qGuess_Canvas = [125 -90 -90 75 0 70 0]*pi/180;    % RH CONFIG 90 DEG <-
 %qGuess_Canvas = [119 -85 -79 51 32 84 -21]*pi/180; % RH CONFIG (in-between qGuess 2 and qGuess 6)
 %qGuess_Canvas = [-20*pi/180 qOut(2:7)];
-qOut = handles.rMove.MoveRobotWithObject2(handles.myRobot, aboveCanvas_T, ...
+[qOut, qMatrix_4] = handles.rMove.MoveRobotWithObject2(handles.myRobot, aboveCanvas_T, ...
     penMesh_h, penVertices, qGuess_Canvas, steps);
 updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
 
@@ -1519,8 +1520,10 @@ switch handles.shape
         
     case 'Triangle'
         % Drawing a Triangle centred at 0,0
-        qOut = handles.rMove.drawTriangle(handles.myRobot, pointCanvas_T, canvas_Rot, ...
+        [qOut, big_qMatrix] = handles.rMove.drawTriangle(handles.myRobot, pointCanvas_T, canvas_Rot, ...
             qGuess_Lower, penMesh_h, penVertices, 2, drawType);
+        % Save qMatrices to a MAT File (maybe for playback on real robot)
+        save('drawTriangleTraj', 'qMatrix_1', 'qMatrix_2', 'qMatrix_3', 'qMatrix_4', 'big_qMatrix');
         
     case 'Star'
         % Drawing a Star centred at -0.05, 0
@@ -2023,4 +2026,147 @@ function chooseShapeDDM_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in rcBtn.
+function rcBtn_Callback(hObject, eventdata, handles)
+% hObject    handle to rcBtn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Setup Controller
+handles.id = 1; 
+handles.controller = vrjoystick(handles.id);    % Joystick Object Initialisation
+
+buttonPressed = 0;
+
+usingRealRobot = 0;     % Boolean to descibe if the Real Robot is being used
+disp('RC BUTTON CALLBACK TRIGGER');
+
+if handles.inJoystickMode == 0
+    buttonPressed = 1;
+    handles.inJoystickMode = 1;     % Boolean to track whether or not the user is in Joystick Mode
+    disp('Scenario 1');
+else
+    buttonPressed = 1;
+    handles.inJoystickMode = 0;     % Boolean to track whether or not the user is in Joystick Mode
+    disp('Scenario 2');
+end
+
+% Update handles structure
+guidata(hObject, handles); 
+
+if buttonPressed == 1
+    % If using the real robot, run this loop
+    if usingRealRobot == 1
+        if handles.inJoystickMode == 1
+            % When this button is pressed, go into RC Mode
+            % Setup Installation
+            rosinit('http://10.42.0.1:11311')   % For Raspberry PI
+            %rosinit('http://localhost:11311')   % For native linux PC
+
+            % Setup Variables
+            cute_enable_robot_client = rossvcclient('enableCyton');
+            cute_enable_robot_msg = rosmessage(cute_enable_robot_client);
+
+            % To enable the Robot
+            cute_enable_robot_msg.TorqueEnable = true;  % false to disable (hold on to arm when disabling
+            cute_enable_robot_client.call(cute_enable_robot_msg);
+
+            % Create a Subscriber to see current state of each joint
+            stateSub = rossubscriber('/joint_states');
+        end
+
+        dt = 0.1;
+        count = 0;
+        tic;    % recording simulation start time
+        while(1)
+
+            % If not meant to be in joystick mode anymore, break out of loop.
+            if(handles.inJoystickMode == 0)
+                buttonPressed = 0;
+                break;
+            end
+
+            count = count+1;
+
+            % Query the Hans Cute for its Joint State
+            receive(stateSub,2)
+            msg = stateSub.LatestMessage;
+            % Animate Robot
+            handles.myRobot.animate(msg);
+            % Update GUI
+            updateTeachGUI(handles);
+
+            while (toc < dt*n); % wait until loop time (dt) has elapsed 
+            end
+        end
+
+    % If not using the real robot (using a controller), run this loop
+    elseif usingRealRobot == 0
+        dt = 0.15;      % Set time step for simulation (seconds)   
+        count = 0;          % Initialise step count to zero 
+        tic;            % recording simulation start time
+        while(1)
+            % If Joystick Control turned off, break out of loop.
+            if handles.inJoystickMode == 0
+                close(handles.controller);
+                disp('Scenario 6');
+                break;
+            end
+
+            count = count+1; % Increment Step Count
+
+            % Read Controller
+            [axes, buttons, povs] = read(handles.controller);
+
+            % Define Scalars for Linear and Angular Velocity
+            K_ROT = 0.8;
+            K_LIN = 0.3;
+
+            % Map Linear Velocity
+            vx = K_LIN*axes(1); % Left Thumbstick L(-) R(+)
+            vy = -K_LIN*axes(2); % Left Thumbstick U(-) D(+)
+            vz = K_LIN*(buttons(5)-buttons(7));    % Btn 5 = L1, Btn 7 = L2
+
+            % Map Angular Velocity
+            wx = K_ROT*axes(3);    % Right Thumbstick L(-) R(+)
+            wy = K_ROT*axes(6);    % Right Thumbstick U(-) D(+)
+            wz = K_ROT*(buttons(6)-buttons(8));    % Btn 6 = R1, Btn 8 = R2
+
+            xDot = [vx vy vz wx wy wz]';    % Define Column Vector of EE velocities
+
+            % Get Jacobian
+            q = handles.myRobot.getpos();
+            J = handles.myRobot.jacob0(q);
+
+            % Calc joint velocities using DLS
+            lambda = 0.1;   % Scalar for DLS
+            pInvJ = inv((J'*J) + lambda^2*eye(7))*J';   % Pseudoinverse for better movement around singularities
+            qDot = pInvJ*xDot;  % Calculate joint velocities from EE velocities
+
+            newQ = q + qDot'*dt;    % Calc new joint states after one timestep with calced joint velocities
+
+            % Ensure Joints are Within Limits
+            for i = 1:length(newQ)
+                if newQ(i) < handles.myRobot.qlim(i,1)
+                    newQ(i) = handles.myRobot.qlim(i,1);
+                elseif newQ(i) > handles.myRobot.qlim(i,2)
+                    newQ(i) = handles.myRobot.qlim(i,2);
+                end           
+            end
+
+            % Update plot
+            handles.myRobot.animate(newQ);
+            drawnow();
+            pause(0.01);
+
+            % Update GUI
+            updateTeachGUI(handles);
+
+            while(toc < dt*count) % Wait until loop time (dt) has elapsed 
+            end
+        end     
+    end
 end
