@@ -22,7 +22,7 @@ function varargout = TracerGUI(varargin)
 
 % Edit the above text to modify the response to help TracerGUI
 
-% Last Modified by GUIDE v2.5 13-May-2022 20:42:43
+% Last Modified by GUIDE v2.5 13-May-2022 23:37:39
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -152,6 +152,8 @@ handles.drawingPath = '';
 % Handle for Robot Movement Class
 rMove = RobotMovement;
 handles.rMove = rMove;
+% Create instance of VisualServoing Class
+handles.visualServo = VisualServoing;
 
 % Update handles structure
 guidata(hObject, handles);
@@ -1012,107 +1014,147 @@ function up_X_Callback(hObject, eventdata, handles)
 % hObject    handle to up_X (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% Increase X value by 0.05m;
-% Create a 4x4 Matrix to define new transform (Get FK, add 0.05 to X
-% translation)
-currentQ = handles.myRobot.getpos();
-ee_TR = handles.myRobot.fkine(currentQ);
 
-if handles.cartKeepCurrentRPY == 1
-    ee_TR(1,4) = ee_TR(1,4) + handles.cartInc;
-    % Use IK to get joint state for new desired EE pose
-    newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+% GET STATE OF VISUAL SERVOING BUTTON
+vsState = get(handles.vsBtn, 'Value');
+
+% If NOT in Visual Servoing Mode, buttons will control the robot EE
+if vsState == 0
+    % Increase X value by 0.05m;
+    % Create a 4x4 Matrix to define new transform (Get FK, add 0.05 to X
+    % translation)
+    currentQ = handles.myRobot.getpos();
+    ee_TR = handles.myRobot.fkine(currentQ);
+
+    if handles.cartKeepCurrentRPY == 1
+        ee_TR(1,4) = ee_TR(1,4) + handles.cartInc;
+        % Use IK to get joint state for new desired EE pose
+        newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+    else
+        XYZ = [ee_TR(1,4)+handles.cartInc, ee_TR(2,4), ee_TR(3,4)];
+        TR = [eye(3)    XYZ';
+              zeros(1,3) 1]
+        % Use IK to get joint state for new desired EE pose
+        newQ = handles.myRobot.ikcon(TR, currentQ);
+    end
+
+    % Update sliders with new joint states
+    handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
+    set(handles.slider1,'Value',round(rad2deg(newQ(1)),1));
+    handles.q2.String = num2str(round(rad2deg(newQ(2)),1));
+    set(handles.slider2,'Value',round(rad2deg(newQ(2)),1));
+    handles.q3.String = num2str(round(rad2deg(newQ(3)),1));
+    set(handles.slider3,'Value',round(rad2deg(newQ(3)),1));
+    handles.q4.String = num2str(round(rad2deg(newQ(4)),1));
+    set(handles.slider4,'Value',round(rad2deg(newQ(4)),1));
+    handles.q5.String = num2str(round(rad2deg(newQ(5)),1));
+    set(handles.slider5,'Value',round(rad2deg(newQ(5)),1));
+    handles.q6.String = num2str(round(rad2deg(newQ(6)),1));
+    set(handles.slider6,'Value',round(rad2deg(newQ(6)),1));
+    handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
+    set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
+    % Update robot pose
+    handles.myRobot.animate(newQ);
+    % Get new EE pose with FK and update XYZ, RPY values
+    myRobot_TR = handles.myRobot.fkine(newQ)
+    handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+    handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+    handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+    % Extract Rotation Portion of FK Matrix
+    rot = myRobot_TR(1:3, 1:3);
+    % Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+    RPY = tr2rpy(rot, 'deg');
+    handles.ee_Roll.String = num2str(round(RPY(1), 3));
+    handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+    handles.ee_Yaw.String = num2str(round(RPY(3), 3));
 else
-    XYZ = [ee_TR(1,4)+handles.cartInc, ee_TR(2,4), ee_TR(3,4)];
-    TR = [eye(3)    XYZ';
-          zeros(1,3) 1]
-    % Use IK to get joint state for new desired EE pose
-    newQ = handles.myRobot.ikcon(TR, currentQ);
+    % ELSE, the program is in Visual Servoing Mode -> Buttons will control
+    % position of Stop Sign
+    % Move in X 0.01cm (Positive X = Positive Z in Sign Reference Frame)
+    handles.sSign_T = handles.sSign_T*transl(0, 0, 0.01);
+    handles.visualServo.MoveSign(handles.sSign_h, handles.sSignVertices, ...
+        handles.sSign_T);  
+    
+    % CALC NEW P AND SAVE TO A HANDLE
+    
+    
 end
-
-% Update sliders with new joint states
-handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
-set(handles.slider1,'Value',round(rad2deg(newQ(1)),1));
-handles.q2.String = num2str(round(rad2deg(newQ(2)),1));
-set(handles.slider2,'Value',round(rad2deg(newQ(2)),1));
-handles.q3.String = num2str(round(rad2deg(newQ(3)),1));
-set(handles.slider3,'Value',round(rad2deg(newQ(3)),1));
-handles.q4.String = num2str(round(rad2deg(newQ(4)),1));
-set(handles.slider4,'Value',round(rad2deg(newQ(4)),1));
-handles.q5.String = num2str(round(rad2deg(newQ(5)),1));
-set(handles.slider5,'Value',round(rad2deg(newQ(5)),1));
-handles.q6.String = num2str(round(rad2deg(newQ(6)),1));
-set(handles.slider6,'Value',round(rad2deg(newQ(6)),1));
-handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
-set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
-% Update robot pose
-handles.myRobot.animate(newQ);
-% Get new EE pose with FK and update XYZ, RPY values
-myRobot_TR = handles.myRobot.fkine(newQ)
-handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
-handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
-handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
-% Extract Rotation Portion of FK Matrix
-rot = myRobot_TR(1:3, 1:3);
-% Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
-RPY = tr2rpy(rot, 'deg');
-handles.ee_Roll.String = num2str(round(RPY(1), 3));
-handles.ee_Pitch.String = num2str(round(RPY(2), 3));
-handles.ee_Yaw.String = num2str(round(RPY(3), 3));
-
+% Update handles structure
+guidata(hObject, handles); 
+   
 
 % --- Executes on button press in down_X.
 function down_X_Callback(hObject, eventdata, handles)
 % hObject    handle to down_X (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% Decrease X value by 0.05m
-% Create a 4x4 Matrix to define new transform (Get FK, sub 0.05 to X
-% translation)
-currentQ = handles.myRobot.getpos();
-ee_TR = handles.myRobot.fkine(currentQ);
 
-if handles.cartKeepCurrentRPY == 1
-    ee_TR(1,4) = ee_TR(1,4) - handles.cartInc;
-    % Use IK to get joint state for new desired EE pose
-    newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+% GET STATE OF VISUAL SERVOING BUTTON
+vsState = get(handles.vsBtn, 'Value');
+
+% If NOT in Visual Servoing Mode, buttons will control the robot EE
+if vsState == 0
+    % Decrease X value by 0.05m
+    % Create a 4x4 Matrix to define new transform (Get FK, sub 0.05 to X
+    % translation)
+    currentQ = handles.myRobot.getpos();
+    ee_TR = handles.myRobot.fkine(currentQ);
+
+    if handles.cartKeepCurrentRPY == 1
+        ee_TR(1,4) = ee_TR(1,4) - handles.cartInc;
+        % Use IK to get joint state for new desired EE pose
+        newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+    else
+        XYZ = [ee_TR(1,4)-handles.cartInc, ee_TR(2,4), ee_TR(3,4)];
+        TR = [eye(3)    XYZ';
+              zeros(1,3) 1]
+        % Use IK to get joint state for new desired EE pose
+        newQ = handles.myRobot.ikcon(TR, currentQ);
+    end
+
+    % Update sliders with new joint states
+    handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
+    set(handles.slider1,'Value',round(rad2deg(newQ(1)),1));
+    handles.q2.String = num2str(round(rad2deg(newQ(2)),1));
+    set(handles.slider2,'Value',round(rad2deg(newQ(2)),1));
+    handles.q3.String = num2str(round(rad2deg(newQ(3)),1));
+    set(handles.slider3,'Value',round(rad2deg(newQ(3)),1));
+    handles.q4.String = num2str(round(rad2deg(newQ(4)),1));
+    set(handles.slider4,'Value',round(rad2deg(newQ(4)),1));
+    handles.q5.String = num2str(round(rad2deg(newQ(5)),1));
+    set(handles.slider5,'Value',round(rad2deg(newQ(5)),1));
+    handles.q6.String = num2str(round(rad2deg(newQ(6)),1));
+    set(handles.slider6,'Value',round(rad2deg(newQ(6)),1));
+    handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
+    set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
+    % Update robot pose
+    handles.myRobot.animate(newQ);
+    % Get new EE pose with FK and update XYZ, RPY values
+    myRobot_TR = handles.myRobot.fkine(newQ)
+    handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+    handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+    handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+    % Extract Rotation Portion of FK Matrix
+    rot = myRobot_TR(1:3, 1:3);
+    % Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+    RPY = tr2rpy(rot, 'deg');
+    handles.ee_Roll.String = num2str(round(RPY(1), 3));
+    handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+    handles.ee_Yaw.String = num2str(round(RPY(3), 3));    
 else
-    XYZ = [ee_TR(1,4)-handles.cartInc, ee_TR(2,4), ee_TR(3,4)];
-    TR = [eye(3)    XYZ';
-          zeros(1,3) 1]
-    % Use IK to get joint state for new desired EE pose
-    newQ = handles.myRobot.ikcon(TR, currentQ);
+    % ELSE, the program is in Visual Servoing Mode -> Buttons will control
+    % position of Stop Sign
+    % Move in X -0.01cm (Negative X = Negative Z in Sign Reference Frame)
+    handles.sSign_T = handles.sSign_T*transl(0, 0, -0.01);
+    handles.visualServo.MoveSign(handles.sSign_h, handles.sSignVertices, ...
+        handles.sSign_T);  
+    
+    % CALC NEW P AND SAVE TO A HANDLE
+    
+    
 end
-
-% Update sliders with new joint states
-handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
-set(handles.slider1,'Value',round(rad2deg(newQ(1)),1));
-handles.q2.String = num2str(round(rad2deg(newQ(2)),1));
-set(handles.slider2,'Value',round(rad2deg(newQ(2)),1));
-handles.q3.String = num2str(round(rad2deg(newQ(3)),1));
-set(handles.slider3,'Value',round(rad2deg(newQ(3)),1));
-handles.q4.String = num2str(round(rad2deg(newQ(4)),1));
-set(handles.slider4,'Value',round(rad2deg(newQ(4)),1));
-handles.q5.String = num2str(round(rad2deg(newQ(5)),1));
-set(handles.slider5,'Value',round(rad2deg(newQ(5)),1));
-handles.q6.String = num2str(round(rad2deg(newQ(6)),1));
-set(handles.slider6,'Value',round(rad2deg(newQ(6)),1));
-handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
-set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
-% Update robot pose
-handles.myRobot.animate(newQ);
-% Get new EE pose with FK and update XYZ, RPY values
-myRobot_TR = handles.myRobot.fkine(newQ)
-handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
-handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
-handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
-% Extract Rotation Portion of FK Matrix
-rot = myRobot_TR(1:3, 1:3);
-% Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
-RPY = tr2rpy(rot, 'deg');
-handles.ee_Roll.String = num2str(round(RPY(1), 3));
-handles.ee_Pitch.String = num2str(round(RPY(2), 3));
-handles.ee_Yaw.String = num2str(round(RPY(3), 3));
+% Update handles structure
+guidata(hObject, handles); 
 
 
 % --- Executes on button press in up_Y.
@@ -1120,53 +1162,73 @@ function up_Y_Callback(hObject, eventdata, handles)
 % hObject    handle to up_Y (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% Increase Y value by 0.05m
-% Create a 4x4 Matrix to define new transform (Get FK, add 0.05 to Y
-% translation)
-currentQ = handles.myRobot.getpos();
-ee_TR = handles.myRobot.fkine(currentQ);
 
-if handles.cartKeepCurrentRPY == 1
-    ee_TR(2,4) = ee_TR(2,4) + handles.cartInc;
-    % Use IK to get joint state for new desired EE pose
-    newQ = handles.myRobot.ikcon(ee_TR, currentQ);
-else 
-    XYZ = [ee_TR(1,4), ee_TR(2,4)+handles.cartInc, ee_TR(3,4)];
-    TR = [eye(3)    XYZ';
-          zeros(1,3) 1]
-    % Use IK to get joint state for new desired EE pose
-    newQ = handles.myRobot.ikcon(TR, currentQ);
+% GET STATE OF VISUAL SERVOING BUTTON
+vsState = get(handles.vsBtn, 'Value');
+
+% If NOT in Visual Servoing Mode, buttons will control the robot EE
+if vsState == 0
+    % Increase Y value by 0.05m
+    % Create a 4x4 Matrix to define new transform (Get FK, add 0.05 to Y
+    % translation)
+    currentQ = handles.myRobot.getpos();
+    ee_TR = handles.myRobot.fkine(currentQ);
+
+    if handles.cartKeepCurrentRPY == 1
+        ee_TR(2,4) = ee_TR(2,4) + handles.cartInc;
+        % Use IK to get joint state for new desired EE pose
+        newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+    else 
+        XYZ = [ee_TR(1,4), ee_TR(2,4)+handles.cartInc, ee_TR(3,4)];
+        TR = [eye(3)    XYZ';
+              zeros(1,3) 1]
+        % Use IK to get joint state for new desired EE pose
+        newQ = handles.myRobot.ikcon(TR, currentQ);
+    end
+
+    % Update sliders with new joint states
+    handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
+    set(handles.slider1,'Value',round(rad2deg(newQ(1)),1));
+    handles.q2.String = num2str(round(rad2deg(newQ(2)),1));
+    set(handles.slider2,'Value',round(rad2deg(newQ(2)),1));
+    handles.q3.String = num2str(round(rad2deg(newQ(3)),1));
+    set(handles.slider3,'Value',round(rad2deg(newQ(3)),1));
+    handles.q4.String = num2str(round(rad2deg(newQ(4)),1));
+    set(handles.slider4,'Value',round(rad2deg(newQ(4)),1));
+    handles.q5.String = num2str(round(rad2deg(newQ(5)),1));
+    set(handles.slider5,'Value',round(rad2deg(newQ(5)),1));
+    handles.q6.String = num2str(round(rad2deg(newQ(6)),1));
+    set(handles.slider6,'Value',round(rad2deg(newQ(6)),1));
+    handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
+    set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
+    % Update robot pose
+    handles.myRobot.animate(newQ);
+    % Get new EE pose with FK and update XYZ, RPY values
+    myRobot_TR = handles.myRobot.fkine(newQ)
+    handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+    handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+    handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+    % Extract Rotation Portion of FK Matrix
+    rot = myRobot_TR(1:3, 1:3);
+    % Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+    RPY = tr2rpy(rot, 'deg');
+    handles.ee_Roll.String = num2str(round(RPY(1), 3));
+    handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+    handles.ee_Yaw.String = num2str(round(RPY(3), 3));
+else
+    % ELSE, the program is in Visual Servoing Mode -> Buttons will control
+    % position of Stop Sign
+    % Move in Y 0.01cm (Positive Y = Positive X in Sign Reference Frame)
+    handles.sSign_T = handles.sSign_T*transl(0.01, 0, 0);
+    handles.visualServo.MoveSign(handles.sSign_h, handles.sSignVertices, ...
+        handles.sSign_T);  
+    
+    % CALC NEW P AND SAVE TO A HANDLE
+    
+    
 end
-
-% Update sliders with new joint states
-handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
-set(handles.slider1,'Value',round(rad2deg(newQ(1)),1));
-handles.q2.String = num2str(round(rad2deg(newQ(2)),1));
-set(handles.slider2,'Value',round(rad2deg(newQ(2)),1));
-handles.q3.String = num2str(round(rad2deg(newQ(3)),1));
-set(handles.slider3,'Value',round(rad2deg(newQ(3)),1));
-handles.q4.String = num2str(round(rad2deg(newQ(4)),1));
-set(handles.slider4,'Value',round(rad2deg(newQ(4)),1));
-handles.q5.String = num2str(round(rad2deg(newQ(5)),1));
-set(handles.slider5,'Value',round(rad2deg(newQ(5)),1));
-handles.q6.String = num2str(round(rad2deg(newQ(6)),1));
-set(handles.slider6,'Value',round(rad2deg(newQ(6)),1));
-handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
-set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
-% Update robot pose
-handles.myRobot.animate(newQ);
-% Get new EE pose with FK and update XYZ, RPY values
-myRobot_TR = handles.myRobot.fkine(newQ)
-handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
-handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
-handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
-% Extract Rotation Portion of FK Matrix
-rot = myRobot_TR(1:3, 1:3);
-% Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
-RPY = tr2rpy(rot, 'deg');
-handles.ee_Roll.String = num2str(round(RPY(1), 3));
-handles.ee_Pitch.String = num2str(round(RPY(2), 3));
-handles.ee_Yaw.String = num2str(round(RPY(3), 3));
+% Update handles structure
+guidata(hObject, handles); 
 
 
 % --- Executes on button press in down_Y.
@@ -1174,107 +1236,146 @@ function down_Y_Callback(hObject, eventdata, handles)
 % hObject    handle to down_Y (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% Decrease Y value by 0.05m
-% Create a 4x4 Matrix to define new transform (Get FK, sub 0.05 to Y
-% translation)
-currentQ = handles.myRobot.getpos();
-ee_TR = handles.myRobot.fkine(currentQ);
 
-if handles.cartKeepCurrentRPY == 1
-    ee_TR(2,4) = ee_TR(2,4) - handles.cartInc;
-    % Use IK to get joint state for new desired EE pose
-    newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+% GET STATE OF VISUAL SERVOING BUTTON
+vsState = get(handles.vsBtn, 'Value');
+
+% If NOT in Visual Servoing Mode, buttons will control the robot EE
+if vsState == 0
+    % Decrease Y value by 0.05m
+    % Create a 4x4 Matrix to define new transform (Get FK, sub 0.05 to Y
+    % translation)
+    currentQ = handles.myRobot.getpos();
+    ee_TR = handles.myRobot.fkine(currentQ);
+
+    if handles.cartKeepCurrentRPY == 1
+        ee_TR(2,4) = ee_TR(2,4) - handles.cartInc;
+        % Use IK to get joint state for new desired EE pose
+        newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+    else
+        XYZ = [ee_TR(1,4), ee_TR(2,4)-handles.cartInc, ee_TR(3,4)];
+        TR = [eye(3)    XYZ';
+              zeros(1,3) 1]
+        % Use IK to get joint state for new desired EE pose
+        newQ = handles.myRobot.ikcon(TR, currentQ);
+    end
+
+    % Update sliders with new joint states
+    handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
+    set(handles.slider1,'Value',round(rad2deg(newQ(1)),1));
+    handles.q2.String = num2str(round(rad2deg(newQ(2)),1));
+    set(handles.slider2,'Value',round(rad2deg(newQ(2)),1));
+    handles.q3.String = num2str(round(rad2deg(newQ(3)),1));
+    set(handles.slider3,'Value',round(rad2deg(newQ(3)),1));
+    handles.q4.String = num2str(round(rad2deg(newQ(4)),1));
+    set(handles.slider4,'Value',round(rad2deg(newQ(4)),1));
+    handles.q5.String = num2str(round(rad2deg(newQ(5)),1));
+    set(handles.slider5,'Value',round(rad2deg(newQ(5)),1));
+    handles.q6.String = num2str(round(rad2deg(newQ(6)),1));
+    set(handles.slider6,'Value',round(rad2deg(newQ(6)),1));
+    handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
+    set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
+    % Update robot pose
+    handles.myRobot.animate(newQ);
+    % Get new EE pose with FK and update XYZ, RPY values
+    myRobot_TR = handles.myRobot.fkine(newQ)
+    handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+    handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+    handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+    % Extract Rotation Portion of FK Matrix
+    rot = myRobot_TR(1:3, 1:3);
+    % Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+    RPY = tr2rpy(rot, 'deg');
+    handles.ee_Roll.String = num2str(round(RPY(1), 3));
+    handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+    handles.ee_Yaw.String = num2str(round(RPY(3), 3));
 else
-    XYZ = [ee_TR(1,4), ee_TR(2,4)-handles.cartInc, ee_TR(3,4)];
-    TR = [eye(3)    XYZ';
-          zeros(1,3) 1]
-    % Use IK to get joint state for new desired EE pose
-    newQ = handles.myRobot.ikcon(TR, currentQ);
+    % ELSE, the program is in Visual Servoing Mode -> Buttons will control
+    % position of Stop Sign
+    % Move in Y -0.01cm (Negative Y = Negative X in Sign Reference Frame)
+    handles.sSign_T = handles.sSign_T*transl(-0.01, 0, 0);
+    handles.visualServo.MoveSign(handles.sSign_h, handles.sSignVertices, ...
+        handles.sSign_T);  
+    
+    % CALC NEW P AND SAVE TO A HANDLE
+    
+    
 end
-
-% Update sliders with new joint states
-handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
-set(handles.slider1,'Value',round(rad2deg(newQ(1)),1));
-handles.q2.String = num2str(round(rad2deg(newQ(2)),1));
-set(handles.slider2,'Value',round(rad2deg(newQ(2)),1));
-handles.q3.String = num2str(round(rad2deg(newQ(3)),1));
-set(handles.slider3,'Value',round(rad2deg(newQ(3)),1));
-handles.q4.String = num2str(round(rad2deg(newQ(4)),1));
-set(handles.slider4,'Value',round(rad2deg(newQ(4)),1));
-handles.q5.String = num2str(round(rad2deg(newQ(5)),1));
-set(handles.slider5,'Value',round(rad2deg(newQ(5)),1));
-handles.q6.String = num2str(round(rad2deg(newQ(6)),1));
-set(handles.slider6,'Value',round(rad2deg(newQ(6)),1));
-handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
-set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
-% Update robot pose
-handles.myRobot.animate(newQ);
-% Get new EE pose with FK and update XYZ, RPY values
-myRobot_TR = handles.myRobot.fkine(newQ)
-handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
-handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
-handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
-% Extract Rotation Portion of FK Matrix
-rot = myRobot_TR(1:3, 1:3);
-% Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
-RPY = tr2rpy(rot, 'deg');
-handles.ee_Roll.String = num2str(round(RPY(1), 3));
-handles.ee_Pitch.String = num2str(round(RPY(2), 3));
-handles.ee_Yaw.String = num2str(round(RPY(3), 3));
-
+% Update handles structure
+guidata(hObject, handles); 
 
 % --- Executes on button press in up_Z.
 function up_Z_Callback(hObject, eventdata, handles)
 % hObject    handle to up_Z (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% Increase Z value by 0.05m
-% Create a 4x4 Matrix to define new transform (Get FK, add 0.05 to Z
-% translation)
-currentQ = handles.myRobot.getpos();
-ee_TR = handles.myRobot.fkine(currentQ);
 
-if handles.cartKeepCurrentRPY == 1
-    ee_TR(3,4) = ee_TR(3,4) + handles.cartInc;
-    % Use IK to get joint state for new desired EE pose
-    newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+% GET STATE OF VISUAL SERVOING BUTTON
+vsState = get(handles.vsBtn, 'Value');
+
+% If NOT in Visual Servoing Mode, buttons will control the robot EE
+if vsState == 0
+    % Increase Z value by 0.05m
+    % Create a 4x4 Matrix to define new transform (Get FK, add 0.05 to Z
+    % translation)
+    currentQ = handles.myRobot.getpos();
+    ee_TR = handles.myRobot.fkine(currentQ);
+
+    if handles.cartKeepCurrentRPY == 1
+        ee_TR(3,4) = ee_TR(3,4) + handles.cartInc;
+        % Use IK to get joint state for new desired EE pose
+        newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+    else
+        XYZ = [ee_TR(1,4), ee_TR(2,4), ee_TR(3,4)+handles.cartInc];
+        TR = [eye(3)    XYZ';
+              zeros(1,3) 1]
+        % Use IK to get joint state for new desired EE pose
+        newQ = handles.myRobot.ikcon(TR, currentQ);
+    end
+
+    % Update sliders with new joint states
+    handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
+    set(handles.slider1,'Value',round(rad2deg(newQ(1)),1));
+    handles.q2.String = num2str(round(rad2deg(newQ(2)),1));
+    set(handles.slider2,'Value',round(rad2deg(newQ(2)),1));
+    handles.q3.String = num2str(round(rad2deg(newQ(3)),1));
+    set(handles.slider3,'Value',round(rad2deg(newQ(3)),1));
+    handles.q4.String = num2str(round(rad2deg(newQ(4)),1));
+    set(handles.slider4,'Value',round(rad2deg(newQ(4)),1));
+    handles.q5.String = num2str(round(rad2deg(newQ(5)),1));
+    set(handles.slider5,'Value',round(rad2deg(newQ(5)),1));
+    handles.q6.String = num2str(round(rad2deg(newQ(6)),1));
+    set(handles.slider6,'Value',round(rad2deg(newQ(6)),1));
+    handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
+    set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
+    % Update robot pose
+    handles.myRobot.animate(newQ);
+    % Get new EE pose with FK and update XYZ, RPY values
+    myRobot_TR = handles.myRobot.fkine(newQ)
+    handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+    handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+    handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+    % Extract Rotation Portion of FK Matrix
+    rot = myRobot_TR(1:3, 1:3);
+    % Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+    RPY = tr2rpy(rot, 'deg');
+    handles.ee_Roll.String = num2str(round(RPY(1), 3));
+    handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+    handles.ee_Yaw.String = num2str(round(RPY(3), 3));
 else
-    XYZ = [ee_TR(1,4), ee_TR(2,4), ee_TR(3,4)+handles.cartInc];
-    TR = [eye(3)    XYZ';
-          zeros(1,3) 1]
-    % Use IK to get joint state for new desired EE pose
-    newQ = handles.myRobot.ikcon(TR, currentQ);
+    % ELSE, the program is in Visual Servoing Mode -> Buttons will control
+    % position of Stop Sign
+    % Move in Z 0.01cm (Positive Z = Positive Y in Sign Reference Frame)
+    handles.sSign_T = handles.sSign_T*transl(0, 0.01, 0);
+    handles.visualServo.MoveSign(handles.sSign_h, handles.sSignVertices, ...
+        handles.sSign_T);  
+    
+    % CALC NEW P AND SAVE TO A HANDLE
+    
+    
 end
-
-% Update sliders with new joint states
-handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
-set(handles.slider1,'Value',round(rad2deg(newQ(1)),1));
-handles.q2.String = num2str(round(rad2deg(newQ(2)),1));
-set(handles.slider2,'Value',round(rad2deg(newQ(2)),1));
-handles.q3.String = num2str(round(rad2deg(newQ(3)),1));
-set(handles.slider3,'Value',round(rad2deg(newQ(3)),1));
-handles.q4.String = num2str(round(rad2deg(newQ(4)),1));
-set(handles.slider4,'Value',round(rad2deg(newQ(4)),1));
-handles.q5.String = num2str(round(rad2deg(newQ(5)),1));
-set(handles.slider5,'Value',round(rad2deg(newQ(5)),1));
-handles.q6.String = num2str(round(rad2deg(newQ(6)),1));
-set(handles.slider6,'Value',round(rad2deg(newQ(6)),1));
-handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
-set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
-% Update robot pose
-handles.myRobot.animate(newQ);
-% Get new EE pose with FK and update XYZ, RPY values
-myRobot_TR = handles.myRobot.fkine(newQ)
-handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
-handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
-handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
-% Extract Rotation Portion of FK Matrix
-rot = myRobot_TR(1:3, 1:3);
-% Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
-RPY = tr2rpy(rot, 'deg');
-handles.ee_Roll.String = num2str(round(RPY(1), 3));
-handles.ee_Pitch.String = num2str(round(RPY(2), 3));
-handles.ee_Yaw.String = num2str(round(RPY(3), 3));
+% Update handles structure
+guidata(hObject, handles); 
 
 
 % --- Executes on button press in down_Z.
@@ -1282,53 +1383,73 @@ function down_Z_Callback(hObject, eventdata, handles)
 % hObject    handle to down_Z (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% Decrease Z value by 0.05m
-% Create a 4x4 Matrix to define new transform (Get FK, sub 0.05 to Z
-% translation)
-currentQ = handles.myRobot.getpos();
-ee_TR = handles.myRobot.fkine(currentQ);
 
-if handles.cartKeepCurrentRPY == 1
-    ee_TR(3,4) = ee_TR(3,4) - handles.cartInc;
-    % Use IK to get joint state for new desired EE pose
-    newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+% GET STATE OF VISUAL SERVOING BUTTON
+vsState = get(handles.vsBtn, 'Value');
+
+% If NOT in Visual Servoing Mode, buttons will control the robot EE
+if vsState == 0
+    % Decrease Z value by 0.05m
+    % Create a 4x4 Matrix to define new transform (Get FK, sub 0.05 to Z
+    % translation)
+    currentQ = handles.myRobot.getpos();
+    ee_TR = handles.myRobot.fkine(currentQ);
+
+    if handles.cartKeepCurrentRPY == 1
+        ee_TR(3,4) = ee_TR(3,4) - handles.cartInc;
+        % Use IK to get joint state for new desired EE pose
+        newQ = handles.myRobot.ikcon(ee_TR, currentQ);
+    else
+        XYZ = [ee_TR(1,4), ee_TR(2,4), ee_TR(3,4)-handles.cartInc];
+        TR = [eye(3)    XYZ';
+              zeros(1,3) 1]
+        % Use IK to get joint state for new desired EE pose
+        newQ = handles.myRobot.ikcon(TR, currentQ);
+    end
+
+    % Update sliders with new joint states
+    handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
+    set(handles.slider1,'Value',round(rad2deg(newQ(1)),1));
+    handles.q2.String = num2str(round(rad2deg(newQ(2)),1));
+    set(handles.slider2,'Value',round(rad2deg(newQ(2)),1));
+    handles.q3.String = num2str(round(rad2deg(newQ(3)),1));
+    set(handles.slider3,'Value',round(rad2deg(newQ(3)),1));
+    handles.q4.String = num2str(round(rad2deg(newQ(4)),1));
+    set(handles.slider4,'Value',round(rad2deg(newQ(4)),1));
+    handles.q5.String = num2str(round(rad2deg(newQ(5)),1));
+    set(handles.slider5,'Value',round(rad2deg(newQ(5)),1));
+    handles.q6.String = num2str(round(rad2deg(newQ(6)),1));
+    set(handles.slider6,'Value',round(rad2deg(newQ(6)),1));
+    handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
+    set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
+    % Update robot pose
+    handles.myRobot.animate(newQ);
+    % Get new EE pose with FK and update XYZ, RPY values
+    myRobot_TR = handles.myRobot.fkine(newQ)
+    handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
+    handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
+    handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
+    % Extract Rotation Portion of FK Matrix
+    rot = myRobot_TR(1:3, 1:3);
+    % Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
+    RPY = tr2rpy(rot, 'deg');
+    handles.ee_Roll.String = num2str(round(RPY(1), 3));
+    handles.ee_Pitch.String = num2str(round(RPY(2), 3));
+    handles.ee_Yaw.String = num2str(round(RPY(3), 3));
 else
-    XYZ = [ee_TR(1,4), ee_TR(2,4), ee_TR(3,4)-handles.cartInc];
-    TR = [eye(3)    XYZ';
-          zeros(1,3) 1]
-    % Use IK to get joint state for new desired EE pose
-    newQ = handles.myRobot.ikcon(TR, currentQ);
+    % ELSE, the program is in Visual Servoing Mode -> Buttons will control
+    % position of Stop Sign
+    % Move in Z -0.01cm (Negative Z = Negative Y in Sign Reference Frame)
+    handles.sSign_T = handles.sSign_T*transl(0, -0.01, 0);
+    handles.visualServo.MoveSign(handles.sSign_h, handles.sSignVertices, ...
+        handles.sSign_T);  
+    
+    % CALC NEW P AND SAVE TO A HANDLE
+    
+    
 end
-
-% Update sliders with new joint states
-handles.q1.String = num2str(round(rad2deg(newQ(1)),1));
-set(handles.slider1,'Value',round(rad2deg(newQ(1)),1));
-handles.q2.String = num2str(round(rad2deg(newQ(2)),1));
-set(handles.slider2,'Value',round(rad2deg(newQ(2)),1));
-handles.q3.String = num2str(round(rad2deg(newQ(3)),1));
-set(handles.slider3,'Value',round(rad2deg(newQ(3)),1));
-handles.q4.String = num2str(round(rad2deg(newQ(4)),1));
-set(handles.slider4,'Value',round(rad2deg(newQ(4)),1));
-handles.q5.String = num2str(round(rad2deg(newQ(5)),1));
-set(handles.slider5,'Value',round(rad2deg(newQ(5)),1));
-handles.q6.String = num2str(round(rad2deg(newQ(6)),1));
-set(handles.slider6,'Value',round(rad2deg(newQ(6)),1));
-handles.q7.String = num2str(round(rad2deg(newQ(7)),1));
-set(handles.slider7,'Value',round(rad2deg(newQ(7)),1));
-% Update robot pose
-handles.myRobot.animate(newQ);
-% Get new EE pose with FK and update XYZ, RPY values
-myRobot_TR = handles.myRobot.fkine(newQ)
-handles.ee_X.String = num2str(round(myRobot_TR(1,4), 3));
-handles.ee_Y.String = num2str(round(myRobot_TR(2,4), 3));
-handles.ee_Z.String = num2str(round(myRobot_TR(3,4), 3));
-% Extract Rotation Portion of FK Matrix
-rot = myRobot_TR(1:3, 1:3);
-% Convert Rotation Matrix to Roll, Pitch, Yaw Values in Degrees
-RPY = tr2rpy(rot, 'deg');
-handles.ee_Roll.String = num2str(round(RPY(1), 3));
-handles.ee_Pitch.String = num2str(round(RPY(2), 3));
-handles.ee_Yaw.String = num2str(round(RPY(3), 3));
+% Update handles structure
+guidata(hObject, handles); 
 
 
 % --- Executes on button press in greenPen.
@@ -2169,4 +2290,50 @@ if buttonPressed == 1
             end
         end     
     end
+end
+
+
+% --- Executes on button press in vsBtn.
+function vsBtn_Callback(hObject, eventdata, handles)
+% hObject    handle to vsBtn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of vsBtn
+handles.vsState = get(hObject, 'Value');    % Get state of Visual Servoing Mode
+% Update handles structure
+guidata(hObject, handles);
+
+axes(handles.axes2)
+hold on
+
+if handles.vsState == 1
+    % Animate Robot into a Pose for Visual Servoing
+    qVS = [0 20 0 70 0 0 90]*pi/180;
+%     handles.myRobot.animate(qVS);
+    vs_T = transl(-0.13, 0, 0.45)*troty(-pi/2);
+    handles.rMove.MoveRobotToObject2(handles.myRobot, vs_T, qVS, 30);
+    updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
+    
+    % Plot Stop Sign 
+    % handles.stopSign_h = visualServo.plotSign(handles.myRobot, 1);
+    handles.sSign_T = transl(-0.3, 0, 0.5)*trotx(pi/2)*troty(pi/2);
+    [handles.sSign_h, handles.sSignVertices] = handles.visualServo.CreateSign(handles.sSign_T);
+    drawnow();
+    
+    % Update handles structure
+    guidata(hObject, handles);
+    
+    while(handles.vsState == 1)
+        % VS CODE GOES HERE
+        
+        
+        % Continously check each loop iteration if the vsState has been
+        % updated to break out of the loop.      
+        drawnow();
+        handles = guidata(hObject);  %# Get the newest GUI data
+    end
+   
+else
+    try delete(handles.sSign_h); end
 end
