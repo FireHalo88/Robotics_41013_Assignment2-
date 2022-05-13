@@ -15,8 +15,23 @@ function [centerpnt, width, depth, height] = PLY_Obstacle_Dimensions(type, facin
             width = 0.08;
             depth = 0.0455;
             height = 0.7;
+        case 3 %For table file dimensions
+            centerpnt = [0, 0];
+            width = 0.41;
+            depth = 0.365;
+            height = 0.22;
+        case 4 %For canvas file dimensions
+            centerpnt = [0.2 0.2];
+            width = 0.2;
+            depth = 0.2;
+            height = 0.032;
+        case 5 %For safety barrier area dimensions
+            centerpnt = [0.2 0.2];
+            width = 0.2;
+            depth = 0.2;
+            height = 0.032;
         otherwise
-            Display("Dimension Type Not Found")
+            display("Dimension Type Not Found")
             centerpnt = [0, 0];
             width = 0.0;
             depth = 0.0;
