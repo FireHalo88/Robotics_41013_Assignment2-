@@ -22,7 +22,7 @@ function varargout = TracerGUI(varargin)
 
 % Edit the above text to modify the response to help TracerGUI
 
-% Last Modified by GUIDE v2.5 14-May-2022 12:15:59
+% Last Modified by GUIDE v2.5 14-May-2022 18:47:25
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -2302,8 +2302,23 @@ if handles.vsState == 1
     [handles.sSign_h, handles.sSignVertices] = handles.visualServo.CreateSign(handles.sSign_T);
     drawnow();
     
+    % Create image target (points in the image plane) 
+    cenU = 512;
+    cenV = 512;
+    lenSignPixels = 120;
+    % Use order to define as 2 -> 1 -> 8 -> 7 -> ... -> 3 (From Book
+    % Drawing).
+    pStar = [cenU+lenSignPixels/4, cenU+-lenSignPixels/4, cenU-lenSignPixels/2, ...
+             cenU-lenSignPixels/2, cenU-lenSignPixels/4, cenU+lenSignPixels/4, ...
+             cenU+lenSignPixels/2, cenU+lenSignPixels/2;                            % U Coordinates
+             cenV-lenSignPixels/2, cenV-lenSignPixels/2, cenV-lenSignPixels/4, ...
+             cenV+lenSignPixels/4, cenV+lenSignPixels/2, cenV+lenSignPixels/2, ...
+             cen+lenSignPixels/4, cenV-lenSignPixels/4];                            % V Coordinates
+    
     % Update handles structure
     guidata(hObject, handles);
+    
+    signFromEE_T = handles.visualServo.signFromEE(handles.myRobot)
     
     while(handles.vsState == 1)
         % VS CODE GOES HERE
@@ -2318,3 +2333,21 @@ if handles.vsState == 1
 else
     try delete(handles.sSign_h); end
 end
+
+
+% --- Executes on button press in boyPoseBtn.
+function boyPoseBtn_Callback(hObject, eventdata, handles)
+% hObject    handle to boyPoseBtn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of boyPoseBtn
+
+
+% --- Executes on button press in lcdBtn.
+function lcdBtn_Callback(hObject, eventdata, handles)
+% hObject    handle to lcdBtn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of lcdBtn
