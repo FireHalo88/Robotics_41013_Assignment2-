@@ -22,7 +22,7 @@ function varargout = TracerGUI(varargin)
 
 % Edit the above text to modify the response to help TracerGUI
 
-% Last Modified by GUIDE v2.5 13-May-2022 23:37:39
+% Last Modified by GUIDE v2.5 14-May-2022 12:15:59
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -2156,60 +2156,42 @@ function rcBtn_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+% Hint: get(hObject,'Value') returns toggle state of vsBtn
+handles.rcState = get(hObject, 'Value');    % Get state of Joystick Control Mode
 % Setup Controller
 handles.id = 1; 
 handles.controller = vrjoystick(handles.id);    % Joystick Object Initialisation
 
-buttonPressed = 0;
+% Update Handles Structure
+guidata(hObject, handles);
 
 usingRealRobot = 0;     % Boolean to descibe if the Real Robot is being used
 disp('RC BUTTON CALLBACK TRIGGER');
 
-if handles.inJoystickMode == 0
-    buttonPressed = 1;
-    handles.inJoystickMode = 1;     % Boolean to track whether or not the user is in Joystick Mode
-    disp('Scenario 1');
-else
-    buttonPressed = 1;
-    handles.inJoystickMode = 0;     % Boolean to track whether or not the user is in Joystick Mode
-    disp('Scenario 2');
-end
-
-% Update handles structure
-guidata(hObject, handles); 
-
-if buttonPressed == 1
-    % If using the real robot, run this loop
+% If in RC (Remote Control) Mode
+if handles.rcState == 1
+    % If using the real robot as a controller
     if usingRealRobot == 1
-        if handles.inJoystickMode == 1
-            % When this button is pressed, go into RC Mode
-            % Setup Installation
-            rosinit('http://10.42.0.1:11311')   % For Raspberry PI
-            %rosinit('http://localhost:11311')   % For native linux PC
+        % When this button is pressed, go into RC Mode
+        % Setup Installation
+        rosinit('http://10.42.0.1:11311')   % For Raspberry PI
+        %rosinit('http://localhost:11311')   % For native linux PC
 
-            % Setup Variables
-            cute_enable_robot_client = rossvcclient('enableCyton');
-            cute_enable_robot_msg = rosmessage(cute_enable_robot_client);
+        % Setup Variables
+        cute_enable_robot_client = rossvcclient('enableCyton');
+        cute_enable_robot_msg = rosmessage(cute_enable_robot_client);
 
-            % To enable the Robot
-            cute_enable_robot_msg.TorqueEnable = true;  % false to disable (hold on to arm when disabling
-            cute_enable_robot_client.call(cute_enable_robot_msg);
+        % To enable the Robot
+        cute_enable_robot_msg.TorqueEnable = true;  % false to disable (hold on to arm when disabling
+        cute_enable_robot_client.call(cute_enable_robot_msg);
 
-            % Create a Subscriber to see current state of each joint
-            stateSub = rossubscriber('/joint_states');
-        end
-
-        dt = 0.1;
+        % Create a Subscriber to see current state of each joint
+        stateSub = rossubscriber('/joint_states');
+        
+        dt = 0.15;
         count = 0;
         tic;    % recording simulation start time
-        while(1)
-
-            % If not meant to be in joystick mode anymore, break out of loop.
-            if(handles.inJoystickMode == 0)
-                buttonPressed = 0;
-                break;
-            end
-
+        while(handles.rcState == 1)
             count = count+1;
 
             % Query the Hans Cute for its Joint State
@@ -2219,24 +2201,19 @@ if buttonPressed == 1
             handles.myRobot.animate(msg);
             % Update GUI
             updateTeachGUI(handles);
+            
+            drawnow();
+            handles = guidata(hObject);  %# Get the newest GUI data to break out of loop when triggered
 
             while (toc < dt*n); % wait until loop time (dt) has elapsed 
             end
         end
-
-    % If not using the real robot (using a controller), run this loop
-    elseif usingRealRobot == 0
+    % If using a joystick controller as a controller
+    else
         dt = 0.15;      % Set time step for simulation (seconds)   
         count = 0;          % Initialise step count to zero 
         tic;            % recording simulation start time
-        while(1)
-            % If Joystick Control turned off, break out of loop.
-            if handles.inJoystickMode == 0
-                close(handles.controller);
-                disp('Scenario 6');
-                break;
-            end
-
+        while(handles.rcState == 1)
             count = count+1; % Increment Step Count
 
             % Read Controller
@@ -2280,17 +2257,21 @@ if buttonPressed == 1
 
             % Update plot
             handles.myRobot.animate(newQ);
-            drawnow();
-            pause(0.01);
 
             % Update GUI
             updateTeachGUI(handles);
+            
+            drawnow();
+            handles = guidata(hObject);  %# Get the newest GUI data to break out of loop when triggered
 
+            pause(0.01);
+            
             while(toc < dt*count) % Wait until loop time (dt) has elapsed 
             end
         end     
     end
 end
+        
 
 
 % --- Executes on button press in vsBtn.
