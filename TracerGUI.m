@@ -2313,7 +2313,7 @@ if handles.vsState == 1
              cenU+lenSignPixels/2, cenU+lenSignPixels/2;                            % U Coordinates
              cenV-lenSignPixels/2, cenV-lenSignPixels/2, cenV-lenSignPixels/4, ...
              cenV+lenSignPixels/4, cenV+lenSignPixels/2, cenV+lenSignPixels/2, ...
-             cen+lenSignPixels/4, cenV-lenSignPixels/4];                            % V Coordinates
+             cenV+lenSignPixels/4, cenV-lenSignPixels/4];                            % V Coordinates
     
     % Update handles structure
     guidata(hObject, handles);
@@ -2342,7 +2342,16 @@ function boyPoseBtn_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of boyPoseBtn
+handles.TBP = get(hObject,'Value');
+% Update handles structure
+guidata(hObject, handles);
 
+if handles.TBP == 0
+    % Boy Pose = XYZ
+else
+    % Boy Pose = XYZ on Table
+    % Create Mesh for Boy
+end
 
 % --- Executes on button press in lcdBtn.
 function lcdBtn_Callback(hObject, eventdata, handles)

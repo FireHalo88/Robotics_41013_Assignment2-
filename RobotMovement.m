@@ -1204,7 +1204,7 @@ classdef RobotMovement < handle
             trail = nan(3, steps);
             trailPlot_h = [];
             
-            for i = 1:steps
+            for i = 1:steps          
                 % Get FK
                 FK = robot.fkine(qMatrix(i, :));
                 editedFK = FK*trotx(pi/2);
