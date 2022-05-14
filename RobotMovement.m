@@ -50,18 +50,24 @@ classdef RobotMovement < handle
             for i = 1:steps
                % Check whether there is collision with the robot and the
                % table/canvas
-               checkRemainder = mod(i,2);
+               checkRemainder = mod(i,3);
                if(checkRemainder == 1)
-                   if((i + 5) > (steps-1))
+                   if((i + 4) > (steps-1))
                         checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
                         checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);                  
                         checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);    
                    else
-                        checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i+5, :), qpMatrix(i+5, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
-                        checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i+5, :), qpMatrix(i+5, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
-                        checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i+5, :), qpMatrix(i+5, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
+                        checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
+                        checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
+                        checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
                    end
-
+                   
+                   %If any of them return true, TRIGGER THE ESTOP
+                   if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
+                        self.eStopState = 1;
+                        self.goSignal=0;
+                   end
+                   
                    if(checkCollisionCanvas == true)
                         display("Collision with Canvas 1");
                    end
@@ -112,18 +118,24 @@ classdef RobotMovement < handle
             for i = 1:steps
                % Check whether there is collision with the robot and the
                % table/canvas               
-                checkRemainder = mod(i,2);
+                checkRemainder = mod(i,3);
                if(checkRemainder == 1)
                    if((i + 5) > (steps-1))
                         checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
                         checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);                  
                         checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);    
                    else
-                        checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i+5, :), qpMatrix(i+5, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
-                        checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i+5, :), qpMatrix(i+5, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
-                        checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i+5, :), qpMatrix(i+5, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
+                        checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
+                        checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
+                        checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
                    end
 
+                   %If any of them return true, TRIGGER THE ESTOP
+                   if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
+                        self.eStopState = 1;
+                        self.goSignal=0;
+                   end
+                   
                    if(checkCollisionCanvas == true)
                         display("Collision with Canvas 1");
                    end
@@ -196,18 +208,24 @@ classdef RobotMovement < handle
             for i = 1:steps
                % Check whether there is collision with the robot and the
                % table/canvas               
-                checkRemainder = mod(i,2);
+                checkRemainder = mod(i,3);
                if(checkRemainder == 1)
                    if((i + 5) > (steps-1))
                         checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
                         checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);                  
                         checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);    
                    else
-                        checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i+5, :), qpMatrix(i+5, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
-                        checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i+5, :), qpMatrix(i+5, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
-                        checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i+5, :), qpMatrix(i+5, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
+                        checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
+                        checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
+                        checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
                    end
 
+                   %If any of them return true, TRIGGER THE ESTOP
+                   if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
+                        self.eStopState = 1;
+                        self.goSignal=0;
+                   end
+                   
                    if(checkCollisionCanvas == true)
                         display("Collision with Canvas 1");
                    end
@@ -292,18 +310,24 @@ classdef RobotMovement < handle
             for i = 1:steps
                % Check whether there is collision with the robot and the
                % table/canvas
-               checkRemainder = mod(i,2);
+               checkRemainder = mod(i,3);
                if(checkRemainder == 1)
                    if((i + 5) > (steps-1))
                         checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
                         checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);                  
                         checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);    
                    else
-                        checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i+5, :), qpMatrix(i+5, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
-                        checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i+5, :), qpMatrix(i+5, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
-                        checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i+5, :), qpMatrix(i+5, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
+                        checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
+                        checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
+                        checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
                    end
 
+                   %If any of them return true, TRIGGER THE ESTOP
+                   if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
+                        self.eStopState = 1;
+                        self.goSignal=0;
+                   end
+                   
                    if(checkCollisionCanvas == true)
                         display("Collision with Canvas 1");
                    end
@@ -412,18 +436,24 @@ classdef RobotMovement < handle
             for i = 1:steps
                % Check whether there is collision with the robot and the
                % table/canvas
-               checkRemainder = mod(i,2);
+               checkRemainder = mod(i,3);
                if(checkRemainder == 1)
                    if((i + 5) > (steps-1))
                         checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
                         checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);                  
                         checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);    
                    else
-                        checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i+5, :), qpMatrix(i+5, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
-                        checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i+5, :), qpMatrix(i+5, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
-                        checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i+5, :), qpMatrix(i+5, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
+                        checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
+                        checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
+                        checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
                    end
 
+                   %If any of them return true, TRIGGER THE ESTOP
+                   if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
+                        self.eStopState = 1;
+                        self.goSignal=0;
+                   end
+                   
                    if(checkCollisionCanvas == true)
                         display("Collision with Canvas 1");
                    end
@@ -541,29 +571,6 @@ classdef RobotMovement < handle
             
             % Perform RMRC
             for i = 1:steps-1
-               checkRemainder = mod(i,2);
-               if(checkRemainder == 1)
-                   if((i + 5) > (steps-1))
-                        checkCollisionTable = plottingCollisionDetection(robot, qMatrix(i, :), qMatrix(i, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
-                        checkCollisionCanvas = plottingCollisionDetection(robot, qMatrix(i, :), qMatrix(i, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);                  
-                        checkCollisionBoy = plottingCollisionDetection(robot, qMatrix(i, :),qMatrix(i, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);    
-                   else
-                        checkCollisionTable = plottingCollisionDetection(robot, qMatrix(i+5, :), qMatrix(i+5, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
-                        checkCollisionCanvas = plottingCollisionDetection(robot, qMatrix(i+5, :), qMatrix(i+5, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
-                        checkCollisionBoy = plottingCollisionDetection(robot, qMatrix(i+5, :), qMatrix(i+5, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
-                   end
-
-                   if(checkCollisionCanvas == true)
-                        display("Collision with Canvas 1");
-                   end
-                   if(checkCollisionTable == true)
-                        display("Collision with Table 1");
-                   end
-                   if(checkCollisionBoy == true)
-                        display("Collision with Boy");
-                   end
-               end 
-
                 T = robot.fkine(qMatrix(i,:));      % FK for current joint state
                 deltaX = X(:,i+1) - T(1:3, 4);     % Get position error from next waypoint
                 % Get next and current RPY angles as a 3x3 Rotation Matrix
@@ -633,6 +640,34 @@ classdef RobotMovement < handle
             % Animate through calculated joint states
             trail = nan(3, steps);
             for i = 1:steps
+               checkRemainder = mod(i,3);
+               if(checkRemainder == 1)
+                   if((i + 5) > (steps-1))
+                        checkCollisionTable = plottingCollisionDetection(robot, qMatrix(i, :), qMatrix(i, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
+                        checkCollisionCanvas = plottingCollisionDetection(robot, qMatrix(i, :), qMatrix(i, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);                  
+                        checkCollisionBoy = plottingCollisionDetection(robot, qMatrix(i, :),qMatrix(i, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);    
+                   else
+                        checkCollisionTable = plottingCollisionDetection(robot, qMatrix(i+4, :), qMatrix(i+4, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
+                        checkCollisionCanvas = plottingCollisionDetection(robot, qMatrix(i+4, :), qMatrix(i+4, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
+                        checkCollisionBoy = plottingCollisionDetection(robot, qMatrix(i+4, :), qMatrix(i+4, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
+                   end
+
+                   %If any of them return true, TRIGGER THE ESTOP
+                   if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
+                        self.eStopState = 1;
+                        self.goSignal=0;
+                   end
+                   
+                   if(checkCollisionCanvas == true)
+                        display("Collision with Canvas 1");
+                   end
+                   if(checkCollisionTable == true)
+                        display("Collision with Table 1");
+                   end
+                   if(checkCollisionBoy == true)
+                        display("Collision with Boy");
+                   end
+               end                 
                 % Get FK
                 FK = robot.fkine(qMatrix(i, :));
                 trail(:, i) = FK(1:3, 4);
@@ -798,29 +833,6 @@ classdef RobotMovement < handle
             
             % Perform RMRC
             for i = 1:steps-1
-               checkRemainder = mod(i,2);
-               if(checkRemainder == 1)
-                   if((i + 5) > (steps-1))
-                        checkCollisionTable = plottingCollisionDetection(robot, qMatrix(i, :), qMatrix(i, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
-                        checkCollisionCanvas = plottingCollisionDetection(robot, qMatrix(i, :), qMatrix(i, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);                  
-                        checkCollisionBoy = plottingCollisionDetection(robot, qMatrix(i, :), qMatrix(i, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);    
-                   else
-                        checkCollisionTable = plottingCollisionDetection(robot, qMatrix(i+5, :), qMatrix(i+5, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
-                        checkCollisionCanvas = plottingCollisionDetection(robot, qMatrix(i+5, :), qMatrix(i+5, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
-                        checkCollisionBoy = plottingCollisionDetection(robot, qMatrix(i+5, :), qMatrix(i+5, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
-                   end
-
-                   if(checkCollisionCanvas == true)
-                        display("Collision with Canvas 1");
-                   end
-                   if(checkCollisionTable == true)
-                        display("Collision with Table 1");
-                   end
-                   if(checkCollisionBoy == true)
-                        display("Collision with Boy");
-                   end
-               end 
-
                 T = robot.fkine(qMatrix(i,:));      % FK for current joint state
                 deltaX = X(:,i+1) - T(1:3, 4);     % Get position error from next waypoint
                 % Get next and current RPY angles as a 3x3 Rotation Matrix
@@ -892,6 +904,34 @@ classdef RobotMovement < handle
             trailPlot_h = [];
             
             for i = 1:steps
+               checkRemainder = mod(i,3);
+               if(checkRemainder == 1)
+                   if((i + 5) > (steps-1))
+                        checkCollisionTable = plottingCollisionDetection(robot, qMatrix(i, :), qMatrix(i, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
+                        checkCollisionCanvas = plottingCollisionDetection(robot, qMatrix(i, :), qMatrix(i, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);                  
+                        checkCollisionBoy = plottingCollisionDetection(robot, qMatrix(i, :), qMatrix(i, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);    
+                   else
+                        checkCollisionTable = plottingCollisionDetection(robot, qMatrix(i+4, :), qMatrix(i+4, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
+                        checkCollisionCanvas = plottingCollisionDetection(robot, qMatrix(i+4, :), qMatrix(i+4, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
+                        checkCollisionBoy = plottingCollisionDetection(robot, qMatrix(i+4, :), qMatrix(i+4, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
+                   end
+
+                   %If any of them return true, TRIGGER THE ESTOP
+                   if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
+                        self.eStopState = 1;
+                        self.goSignal=0;
+                   end
+                   
+                   if(checkCollisionCanvas == true)
+                        display("Collision with Canvas 1");
+                   end
+                   if(checkCollisionTable == true)
+                        display("Collision with Table 1");
+                   end
+                   if(checkCollisionBoy == true)
+                        display("Collision with Boy");
+                   end
+               end                 
                 % Get FK
                 FK = robot.fkine(qMatrix(i, :));
                 editedFK = FK*trotx(pi/2);
@@ -1111,29 +1151,6 @@ classdef RobotMovement < handle
             
             % Perform RMRC
             for i = 1:steps-1
-               checkRemainder = mod(i,2);
-               if(checkRemainder == 1)
-                   if((i + 5) > (steps-1))
-                        checkCollisionTable = plottingCollisionDetection(robot, qMatrix(i, :), qMatrix(i, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
-                        checkCollisionCanvas = plottingCollisionDetection(robot, qMatrix(i, :), qMatrix(i, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);                  
-                        checkCollisionBoy = plottingCollisionDetection(robot, qMatrix(i, :), qMatrix(i, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);    
-                   else
-                        checkCollisionTable = plottingCollisionDetection(robot, qMatrix(i+5, :), qMatrix(i+5, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
-                        checkCollisionCanvas = plottingCollisionDetection(robot, qMatrix(i+5, :), qMatrix(i+5, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
-                        checkCollisionBoy = plottingCollisionDetection(robot, qMatrix(i+5, :), qMatrix(i+5, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
-                   end
-
-                   if(checkCollisionCanvas == true)
-                        display("Collision with Canvas 1");
-                   end
-                   if(checkCollisionTable == true)
-                        display("Collision with Table 1");
-                   end
-                   if(checkCollisionBoy == true)
-                        display("Collision with Boy");
-                   end
-               end 
-
                 T = robot.fkine(qMatrix(i,:));      % FK for current joint state
                 deltaX = X(:,i+1) - T(1:3, 4);     % Get position error from next waypoint
                 % Get next and current RPY angles as a 3x3 Rotation Matrix
@@ -1204,7 +1221,36 @@ classdef RobotMovement < handle
             trail = nan(3, steps);
             trailPlot_h = [];
             
-            for i = 1:steps          
+            for i = 1:steps
+               checkRemainder = mod(i,3);
+               if(checkRemainder == 1)
+                   if((i + 5) > (steps-1))
+                        checkCollisionTable = plottingCollisionDetection(robot, qMatrix(i, :), qMatrix(i, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
+                        checkCollisionCanvas = plottingCollisionDetection(robot, qMatrix(i, :), qMatrix(i, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);                  
+                        checkCollisionBoy = plottingCollisionDetection(robot, qMatrix(i, :), qMatrix(i, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);    
+                   else
+                        checkCollisionTable = plottingCollisionDetection(robot, qMatrix(i+4, :), qMatrix(i+4, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
+                        checkCollisionCanvas = plottingCollisionDetection(robot, qMatrix(i+4, :), qMatrix(i+4, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
+                        checkCollisionBoy = plottingCollisionDetection(robot, qMatrix(i+4, :), qMatrix(i+4, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
+                   end
+
+                   %If any of them return true, TRIGGER THE ESTOP
+                   if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
+                        self.eStopState = 1;
+                        self.goSignal=0;
+                   end
+                   
+                   if(checkCollisionCanvas == true)
+                        display("Collision with Canvas 1");
+                   end
+                   if(checkCollisionTable == true)
+                        display("Collision with Table 1");
+                   end
+                   if(checkCollisionBoy == true)
+                        display("Collision with Boy");
+                   end
+               end                 
+
                 % Get FK
                 FK = robot.fkine(qMatrix(i, :));
                 editedFK = FK*trotx(pi/2);
@@ -1393,7 +1439,7 @@ classdef RobotMovement < handle
 %             % Moving to the BOTTOM LEFT POINT - RMRC
 %             start_T = robot.fkine(robot.getpos());
 %             end_T = bottomLeft_T;
-%             qOut = self.RMRC_7DOF_OBJ(robot, start_T, end_T, ...
+% %             qOut = self.RMRC_7DOF_OBJ(robot, start_T, end_T, ...
 %                      objMesh_h, objVertices, 1, drawType, 0, 0, 0);
                 
             % Moving from this point to the BOTTOM RIGHT POINT

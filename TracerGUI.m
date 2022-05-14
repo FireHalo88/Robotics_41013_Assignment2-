@@ -2342,6 +2342,7 @@ function boyPoseBtn_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of boyPoseBtn
+<<<<<<< HEAD
 handles.TBP = get(hObject,'Value');
 % Update handles structure
 guidata(hObject, handles);
@@ -2351,6 +2352,15 @@ if handles.TBP == 0
 else
     % Boy Pose = XYZ on Table
     % Create Mesh for Boy
+=======
+handles.TBP = get(hhObject,'Value');
+
+if handles.TBP == 0
+    %Boy Pose = XYZ
+else
+    %Boy Pose = XYZ on table
+    %Create Mesh for Boy
+>>>>>>> 46a5522cd021d881d5a85eea447b211ed7799c2d
 end
 
 % --- Executes on button press in lcdBtn.
