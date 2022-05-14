@@ -948,7 +948,7 @@ classdef RobotMovement < handle
                 if plotTrail == 1
                     if onCanvas == 1 && FK(3,4) < 0.31
                         trailPlot_h(end+1) = plot3(FK(1,4), FK(2,4), 0.26, ...
-                            drawType, 'linewidth',1);  
+                            drawType, 'MarkerSize', 3);  
                     elseif onCanvas == 0
                         trailPlot_h(end+1) = plot3(FK(1,4), FK(2,4), FK(3,4), ...
                             drawType);                 
@@ -1267,7 +1267,7 @@ classdef RobotMovement < handle
                 if plotTrail == 1
                     if onCanvas == 1 && FK(3,4) < 0.31
                         trailPlot_h(end+1) = plot3(FK(1,4), FK(2,4), 0.26, ...
-                            drawType, 'linewidth',1);  
+                            drawType, 'MarkerSize', 3);  
                     elseif onCanvas == 0
                         trailPlot_h(end+1) = plot3(FK(1,4), FK(2,4), FK(3,4), ...
                             drawType);                 
@@ -1581,21 +1581,21 @@ classdef RobotMovement < handle
             eTheta_Out = 28*pi/45;
             sTheta_Out = 2*pi - eTheta_Out;
             % Rotating Axes
-            eTheta_OutR = eTheta_Out + pi/2
-            sTheta_OutR = sTheta_Out + pi/2
+            eTheta_OutR = eTheta_Out + pi/2;
+            sTheta_OutR = sTheta_Out + pi/2;
             
             % Define startTheta and endTheta for inside of crescent
             sTheta_In = pi - eTheta_Out;
             eTheta_In = 2*pi - sTheta_In;
             % Rotating Axes
-            sTheta_InR = sTheta_In + pi/2
-            eTheta_InR = eTheta_In + pi/2
+            sTheta_InR = sTheta_In + pi/2;
+            eTheta_InR = eTheta_In + pi/2;
             
             % Define start point 4x4 Matrix of Crescent (Bottom)
             bottom_T = transl(centreXYZ(1)+(radius*cos(sTheta_OutR)), ...
-                centreXYZ(2)+(radius*sin(sTheta_OutR)), centreXYZ(3))*canvas_Rot
+                centreXYZ(2)+(radius*sin(sTheta_OutR)), centreXYZ(3))*canvas_Rot;
             top_T = transl(centreXYZ(1)+(radius*cos(eTheta_OutR)), ...
-                centreXYZ(2)+(radius*sin(eTheta_OutR)), centreXYZ(3))*canvas_Rot
+                centreXYZ(2)+(radius*sin(eTheta_OutR)), centreXYZ(3))*canvas_Rot;
             
             % Move to Bottom Point (start point) with JTRAJ
             qOut = self.MoveRobotWithObject2(robot, bottom_T, objMesh_h, ...
@@ -1619,6 +1619,487 @@ classdef RobotMovement < handle
             self.L.mlog = {self.L.DEBUG,funcName,['END FUNCTION: ', ...
                 funcName, char(13)]}; 
             
+        end
+        
+        function [qOut] = drawCar(self, robot, centre_T, canvas_Rot, ...
+                qGuess, objMesh_h, objVertices, time, drawType)
+            % This function will draw a car (not sponsored by Toyota
+            % unfortunately).
+            
+            % Defining and logging to log file for information
+            funcName = 'DRAW CAR';
+            self.L.mlog = {self.L.DEBUG,funcName,['RUNNING FUNCTION: ', ...
+                funcName, char(13)]};
+            
+            % DEFINING DISTANCES AND POINT TRANSFORMS
+            length = 0.15;
+            height = 0.05;
+            wheelRadius = height/3;
+            roofRadius = length/6;
+            
+            % Define Bottom Left 4x4 Transform
+            centreXYZ = centre_T(1:3, 4);
+            bottomLeft_T = transl(centreXYZ(1)+height/2, centreXYZ(2)-length/2, ...
+                centreXYZ(3))*canvas_Rot;
+                        
+            % Define Bottom Right 4x4 Transform
+            bottomRight_T = transl(centreXYZ(1)+height/2, centreXYZ(2)+length/2, ...
+                centreXYZ(3))*canvas_Rot;
+            
+            % Define Top Right 4x4 Transform
+            topRight_T = transl(centreXYZ(1)-height/2, centreXYZ(2)+length/2, ...
+                centreXYZ(3))*canvas_Rot;
+            
+            % Define Top Left 4x4 Transform
+            topLeft_T = transl(centreXYZ(1)-height/2, centreXYZ(2)-length/2, ...
+                centreXYZ(3))*canvas_Rot;
+            
+            % Define Roof Start 4x4 Transform
+            roofCentre_T = transl(centreXYZ(1)-height/2, centreXYZ(2), ...
+                centreXYZ(3))*canvas_Rot;
+            roofStart_T = transl(centreXYZ(1)-height/2, centreXYZ(2)+roofRadius, ...
+                centreXYZ(3))*canvas_Rot;
+            % Define Start and End Theta for Roof
+            startTheta = pi/2;
+            endTheta = 3*pi/2;
+            
+            % Define Wheel Start Transforms
+            wheelLeft_T = transl(centreXYZ(1)+height/2, centreXYZ(2)-length/4, ...
+                centreXYZ(3))*canvas_Rot;            
+            wheelRight_T = transl(centreXYZ(1)+height/2, centreXYZ(2)+length/4, ...
+                centreXYZ(3))*canvas_Rot;
+            
+            % Moving to the BOTTOM LEFT POINT - JTRAJ
+            qOut = self.MoveRobotWithObject2(robot, bottomLeft_T, objMesh_h, ...
+                    objVertices, qGuess, 20);
+            
+            % Straight Line RMRC Parameters
+            %robot, start_T, end_T, objMesh_h, objVertices, 
+            %time, drawType, onCanvas?, plotTrail?, plotData?
+            % RMRC from BOTTOM LEFT -> BOTTOM RIGHT
+            actualBL_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualBL_T, bottomRight_T, ...
+                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            
+            % RMRC from BOTTOM RIGHT -> TOP RIGHT
+            actualBR_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualBR_T, topRight_T, ...
+                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            
+            % RMRC from TOP RIGHT -> TOP LEFT
+            actualTR_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualTR_T, topLeft_T, ...
+                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            
+            % RMRC from TOP LEFT -> ACTUAL BOTTOM LEFT
+            actualTL_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualTL_T, actualBL_T, ...
+                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            
+            % LIFT PEN 5CM TO MOVE TO ROOF
+            % Y IS FACING DOWNWARDS
+            current_T = robot.fkine(robot.getpos());
+            up5CM_TR = current_T*transl(0, -0.05, 0);
+            qOut = self.MoveRobotWithObject2(robot, up5CM_TR, objMesh_h, ...
+                    objVertices, qOut, 20);
+            
+            % MOVE TO ROOF START
+            qOut = self.MoveRobotWithObject2(robot, roofStart_T, objMesh_h, ...
+                    objVertices, qGuess, 20);
+                
+            % RMRC ARC TO DRAW ROOF
+            qOut = self.RMRC_7DOF_ARC_OBJ(robot, roofCentre_T, startTheta, ...
+                endTheta, roofRadius, objMesh_h, objVertices, time, drawType, ...
+                "ccw", 0, 1, 1, 0);
+            
+            % LIFT PEN 5CM TO MOVE TO LEFT WHEEL
+            % Y IS FACING DOWNWARDS
+            current_T = robot.fkine(robot.getpos());
+            up5CM_TR = current_T*transl(0, -0.05, 0);
+            qOut = self.MoveRobotWithObject2(robot, up5CM_TR, objMesh_h, ...
+                    objVertices, qOut, 20);
+                
+            % PARAMETERS FOR DRAW CIRCLE FUNCTION
+            % robot, centre_T, radius, canvas_Rot, qGuess, objMesh_h, ...
+            % objVertices, time, drawType
+            % DRAW LEFT WHEEL
+            qOut = self.drawCircle(robot, wheelLeft_T, wheelRadius, canvas_Rot, ...
+                qGuess, objMesh_h, objVertices, time, drawType);
+            
+            % LIFT PEN 5CM TO MOVE TO RIGHT WHEEL
+            % Y IS FACING DOWNWARDS
+            current_T = robot.fkine(robot.getpos());
+            up5CM_TR = current_T*transl(0, -0.05, 0);
+            qOut = self.MoveRobotWithObject2(robot, up5CM_TR, objMesh_h, ...
+                    objVertices, qOut, 20);
+                
+            % DRAW RIGHT WHEEL
+            qOut = self.drawCircle(robot, wheelRight_T, wheelRadius, canvas_Rot, ...
+                qGuess, objMesh_h, objVertices, time, drawType);
+            
+            self.L.mlog = {self.L.DEBUG,funcName,['END FUNCTION: ', ...
+                funcName, char(13)]};                
+        end
+        
+        function [qOut] = drawBridge(self, robot, centre_T, canvas_Rot, ...
+                qGuess, objMesh_h, objVertices, time, drawType)
+            % This function will draw a bridge (meant to mimic the Harbour 
+            % Bridge).
+            
+            % Defining and logging to log file for information
+            funcName = 'DRAW BRIDGE';
+            self.L.mlog = {self.L.DEBUG,funcName,['RUNNING FUNCTION: ', ...
+                funcName, char(13)]};
+            
+            % DEFINING DISTANCES AND POINT TRANSFORMS
+            length = 0.15;
+            height = 0.1;
+            archRadius = height/2;
+            pylonHeight = 3*height/4;
+            pylonWidth = pylonHeight/3;
+            
+            centreXYZ = centre_T(1:3, 4);
+            
+            % LEFT PYLON
+            % Define Bottom Left 4x4 Transform
+            bottomLL_T = transl(centreXYZ(1)+height/2, centreXYZ(2)-length/2, ...
+                centreXYZ(3))*canvas_Rot;
+                                 
+            % Define Bottom Right 4x4 Transform
+            bottomRL_T = transl(centreXYZ(1)+height/2, centreXYZ(2)-length/2+pylonWidth, ...
+                centreXYZ(3))*canvas_Rot;
+            
+            % Define Top Right 4x4 Transform
+            topRL_T = transl(bottomRL_T(1,4)-pylonHeight, centreXYZ(2)-length/2+pylonWidth, ...
+                centreXYZ(3))*canvas_Rot;
+            
+            % Define Top Left 4x4 Transform
+            topLL_T = transl(bottomLL_T(1,4)-pylonHeight, centreXYZ(2)-length/2, ...
+                centreXYZ(3))*canvas_Rot;
+            
+            % RIGHT PYLON
+            % Define Bottom Left 4x4 Transform
+            bottomLR_T = transl(centreXYZ(1)+height/2, centreXYZ(2)+length/2-pylonWidth, ...
+                centreXYZ(3))*canvas_Rot;
+                                 
+            % Define Bottom Right 4x4 Transform
+            bottomRR_T = transl(centreXYZ(1)+height/2, centreXYZ(2)+length/2, ...
+                centreXYZ(3))*canvas_Rot;
+            
+            % Define Top Right 4x4 Transform
+            topRR_T = transl(bottomRR_T(1,4)-pylonHeight, centreXYZ(2)+length/2, ...
+                centreXYZ(3))*canvas_Rot;
+            
+            % Define Top Left 4x4 Transform
+            topLR_T = transl(bottomLR_T(1,4)-pylonHeight, centreXYZ(2)+length/2-pylonWidth, ...
+                centreXYZ(3))*canvas_Rot;
+            
+            % Define Start + End Point of Road
+            roadStart_T = transl(centreXYZ(1), centreXYZ(2)+archRadius, ...
+                centreXYZ(3))*canvas_Rot;
+            roadEnd_T = transl(centreXYZ(1), centreXYZ(2)-archRadius, ...
+                centreXYZ(3))*canvas_Rot;
+            
+            % Define Start and End Theta for Arch
+            startTheta = 3*pi/2;
+            endTheta = pi/2;
+            
+            % Define Start and End Transforms for Beams
+            x_Beam1 = sqrt(3)*archRadius/2;
+            x_Beam2 = archRadius;
+            
+            startBeam1_T = transl(centreXYZ(1), centreXYZ(2)+archRadius/2, ...
+                centreXYZ(3))*canvas_Rot;
+            endBeam1_T = transl(centreXYZ(1)-x_Beam1, centreXYZ(2)+archRadius/2, ...
+                centreXYZ(3))*canvas_Rot;
+            
+            startBeam2_T = transl(centreXYZ(1), centreXYZ(2), ...
+                centreXYZ(3))*canvas_Rot;
+            endBeam2_T = transl(centreXYZ(1)-x_Beam2, centreXYZ(2), ...
+                centreXYZ(3))*canvas_Rot;
+            
+            startBeam3_T = transl(centreXYZ(1), centreXYZ(2)-archRadius/2, ...
+                centreXYZ(3))*canvas_Rot;
+            endBeam3_T = transl(centreXYZ(1)-x_Beam1, centreXYZ(2)-archRadius/2, ...
+                centreXYZ(3))*canvas_Rot;
+            
+            % Moving to the BOTTOM LEFT POINT - JTRAJ
+            qOut = self.MoveRobotWithObject2(robot, bottomLL_T, objMesh_h, ...
+                    objVertices, qGuess, 20);
+            
+            % Straight Line RMRC Parameters
+            %robot, start_T, end_T, objMesh_h, objVertices, 
+            %time, drawType, onCanvas?, plotTrail?, plotData?
+            
+            % DRAWING LEFT PYLON
+            % RMRC from BOTTOM LEFT -> BOTTOM RIGHT
+            actualBLL_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualBLL_T, bottomRL_T, ...
+                objMesh_h, objVertices, time/4, drawType, 1, 1, 0);
+            
+            % RMRC from BOTTOM RIGHT -> TOP RIGHT
+            actualBRL_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualBRL_T, topRL_T, ...
+                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            
+            % RMRC from TOP RIGHT -> TOP LEFT
+            actualTRL_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualTRL_T, topLL_T, ...
+                objMesh_h, objVertices, time/4, drawType, 1, 1, 0);
+            
+            % RMRC from TOP LEFT -> BOTTOM LEFT
+            actualTLL_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualTLL_T, actualBLL_T, ...
+                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            
+            % PICK UP PEN 5CM TO MOVE TO RIGHT PYLON
+            % Y IS FACING DOWNWARDS
+            current_T = robot.fkine(robot.getpos());
+            up5CM_TR = current_T*transl(0, -0.05, 0);
+            qOut = self.MoveRobotWithObject2(robot, up5CM_TR, objMesh_h, ...
+                    objVertices, qOut, 20);
+                
+            % MOVE TO RIGHT PYLON START
+            qOut = self.MoveRobotWithObject2(robot, bottomLR_T, objMesh_h, ...
+                    objVertices, qGuess, 20);
+                
+            % DRAWING RIGHT PYLON
+            % RMRC from BOTTOM LEFT -> BOTTOM RIGHT
+            actualBLR_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualBLR_T, bottomRR_T, ...
+                objMesh_h, objVertices, time/4, drawType, 1, 1, 0);
+            
+            % RMRC from BOTTOM RIGHT -> TOP RIGHT
+            actualBRR_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualBRR_T, topRR_T, ...
+                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            
+            % RMRC from TOP RIGHT -> TOP LEFT
+            actualTRR_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualTRR_T, topLR_T, ...
+                objMesh_h, objVertices, time/4, drawType, 1, 1, 0);
+            
+            % RMRC from TOP LEFT -> BOTTOM LEFT
+            actualTLR_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualTLR_T, actualBLR_T, ...
+                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            
+            % PICK UP PEN 5CM TO MOVE TO ROAD START
+            % Y IS FACING DOWNWARDS
+            current_T = robot.fkine(robot.getpos());
+            up5CM_TR = current_T*transl(0, -0.05, 0);
+            qOut = self.MoveRobotWithObject2(robot, up5CM_TR, objMesh_h, ...
+                    objVertices, qOut, 20);
+                
+            % MOVE TO ROAD START
+            qOut = self.MoveRobotWithObject2(robot, roadStart_T, objMesh_h, ...
+                    objVertices, qGuess, 20);
+                
+            % DRAW ROAD
+            actualRS_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualRS_T, roadEnd_T, ...
+                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            
+            % DRAW ARCH
+            qOut = self.RMRC_7DOF_ARC_OBJ(robot, centre_T, startTheta, ...
+                endTheta, archRadius, objMesh_h, objVertices, time, drawType, ...
+                "cw", 0, 1, 1, 0);
+            
+            % PICK UP PEN 5CM TO MOVE TO BEAM 1 START
+            qOut = self.moveViaWaypoint_UP(robot, 0.05, startBeam1_T, objMesh_h, ...
+                objVertices, qOut, qGuess, 20);
+            
+            % Draw Beam 1
+            actualB1_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualB1_T, endBeam1_T, ...
+                objMesh_h, objVertices, time/2, drawType, 1, 1, 0);
+            
+            % PICK UP PEN 5CM TO MOVE TO BEAM 2 START
+            qOut = self.moveViaWaypoint_UP(robot, 0.05, startBeam2_T, objMesh_h, ...
+                objVertices, qOut, qGuess, 20);
+            
+            % Draw Beam 2
+            actualB2_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualB2_T, endBeam2_T, ...
+                objMesh_h, objVertices, time/2, drawType, 1, 1, 0);
+            
+            % PICK UP PEN 5CM TO MOVE TO BEAM 3 START
+            qOut = self.moveViaWaypoint_UP(robot, 0.05, startBeam3_T, objMesh_h, ...
+                objVertices, qOut, qGuess, 20);
+            
+            % Draw Beam 3
+            actualB3_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualB3_T, endBeam3_T, ...
+                objMesh_h, objVertices, time/2, drawType, 1, 1, 0);
+                
+            self.L.mlog = {self.L.DEBUG,funcName,['END FUNCTION: ', ...
+                funcName, char(13)]};                           
+        end
+        
+        function [qOut] = drawBoat(self, robot, centre_T, canvas_Rot, ...
+                qGuess, objMesh_h, objVertices, time, drawType)
+            % This function will draw a boat (kind of meant to mimic a 
+            % yacht).
+            
+            % Defining and logging to log file for information
+            funcName = 'DRAW BOAT';
+            self.L.mlog = {self.L.DEBUG,funcName,['RUNNING FUNCTION: ', ...
+                funcName, char(13)]};
+            
+            % DEFINING DISTANCES AND POINT TRANSFORMS
+            length = 0.14;
+            depth = 0.04;
+            boatRadius = ((length/2)^2 + depth^2)/(2*depth);
+            mastHeight = 0.07;
+            sailHeightR = 0.06;
+            sailHeightL = 0.04;
+            sailWidthR = sailHeightR*2/3;
+            sailWidthL = sailHeightL*2/3;
+            
+            centreXYZ = centre_T(1:3, 4);
+            centreXYZ(1) = centreXYZ(1)+0.01;   % Adding slight X offset for better dimensions
+            
+            % DEFINE DECK OF BOAT
+            % Define Left 4x4 Transform
+            left_T = transl(centreXYZ(1), centreXYZ(2)-length/2, ...
+                centreXYZ(3))*canvas_Rot;
+            % Define Right 4x4 Transform
+            right_T = transl(centreXYZ(1), centreXYZ(2)+length/2, ...
+                centreXYZ(3))*canvas_Rot;
+            
+            % DEFINE MAST
+            % Define Mast Bottom
+            mastBottom_T = transl(centreXYZ(1), centreXYZ(2), ...
+                centreXYZ(3))*canvas_Rot;
+            % Define Mast Top
+            mastTop_T = transl(centreXYZ(1)-mastHeight, centreXYZ(2), ...
+                centreXYZ(3))*canvas_Rot;
+            
+            % DEFINE RIGHT SAIL
+            sailRight_T = transl(centreXYZ(1)-(mastHeight-sailHeightR), ...
+                centreXYZ(2)+sailWidthR, centreXYZ(3))*canvas_Rot;
+            % Define Sail/Mast Intersection Point
+            mastSail_T = transl(centreXYZ(1)-(mastHeight-sailHeightR), ...
+                centreXYZ(2), centreXYZ(3))*canvas_Rot;
+            
+            % DEFINE LEFT SAIL
+            sailLeft_T = transl(mastSail_T(1,4), centreXYZ(2)-sailWidthL, ...
+                centreXYZ(3))*canvas_Rot;
+            % Define Top of Left Sail
+            sailLeftTop_T = transl(mastSail_T(1,4)-sailHeightL, centreXYZ(2), ...
+                centreXYZ(3))*canvas_Rot;
+            
+            % DEFINE CIRCLE CENTRE DEFINING ARC FOR BOAT HULL
+            hullCentre_T = transl(centreXYZ(1)-(boatRadius-depth), ...
+                centreXYZ(2), centreXYZ(3))*canvas_Rot;
+            
+            % DEFINE THETA VALUES TO MAKE ARC OF BOAT HULL
+            % Knowing x, and calculating radius:
+            y = -sqrt(boatRadius^2 - (length/2)^2);
+            startTheta = atan2(y, -(length/2));
+            endTheta = atan2(y, (length/2));
+            
+            % Accounting for rotated axes (rotating the points by pi/2 to
+            % account for the fact that the working axes are rotated by
+            % -pi/2 compared to standard XY axes).
+            sTheta_R = startTheta + pi/2;
+            eTheta_R = endTheta + pi/2;
+            
+            % DRAWING BOAT DECK + HULL
+            % Move to Left Point of Boat w/ JTRAJ
+            qOut = self.MoveRobotWithObject2(robot, left_T, objMesh_h, ...
+                    objVertices, qGuess, 20);
+            
+            % RMRC ARC to draw BOAT HULL
+            actualLeft_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_ARC_OBJ(robot, hullCentre_T, sTheta_R, ...
+                eTheta_R, boatRadius, objMesh_h, objVertices, time, drawType, ...
+                "ccw", 0, 1, 1, 0);
+            
+            % RMRC to draw BOAT DECK
+            actualRight_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualRight_T, actualLeft_T, ...
+                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            
+            % LIFT PEN TO MOVE TO BOTTOM OF MAST
+            qOut = self.moveViaWaypoint_UP(robot, 0.05, mastBottom_T, objMesh_h, ...
+                objVertices, qOut, qGuess, 20);
+            
+            % RMRC UP MAST
+            actualMastB_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualMastB_T, mastTop_T, ...
+                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            
+            % RMRC to SAIL RIGHT
+            actualMastT_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualMastT_T, sailRight_T, ...
+                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            
+            % RMRC to SAIL LEFT
+            actualSailR_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualSailR_T, sailLeft_T, ...
+                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            
+            % RMRC to LEFT SAIL TOP
+            actualSailL_T = robot.fkine(qOut);
+            qOut = self.RMRC_7DOF_OBJ(robot, actualSailL_T, sailLeftTop_T, ...
+                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            
+
+            self.L.mlog = {self.L.DEBUG,funcName,['END FUNCTION: ', ...
+                funcName, char(13)]};         
+        end
+        
+        function [qOut] = moveViaWaypoint_UP(self, robot, upDist, dest_TR, ...
+                objMesh_h, objVertices, qGuess_Waypoint, qGuess_Dest, steps)
+                %This function will move the End-Effector upwards when it
+                %is holding the pen towards the canvas a distance 'upDist',
+                %and then move the pen to its target destination 'dest_TR',
+                %using a JTRAJ (quintic polynomial) velocity profile.
+                
+                % PICK UP PEN WITH JTRAJ
+                % Y IS FACING DOWNWARDS
+                current_T = robot.fkine(robot.getpos());
+                up_TR = current_T*transl(0, -upDist, 0);
+                qOut = self.MoveRobotWithObject2(robot, up_TR, objMesh_h, ...
+                        objVertices, qGuess_Waypoint, steps);
+
+                % MOVE TO DEST
+                qOut = self.MoveRobotWithObject2(robot, dest_TR, objMesh_h, ...
+                        objVertices, qGuess_Dest, steps);
+                              
+        end
+        
+        function [qOut] = MoveRobot(self, robot, qIn, qDes, steps)
+            %This function takes a SerialLink robot, its starting joint
+            %configuration, a desired ending configuration, and animates a
+            %calculated minimum jerk trajectory between the two
+            %configurations.
+            
+            funcName = 'MoveRobot';
+            
+            %  Calculating Trajectory
+            qMatrix = jtraj(qIn, qDes, steps);
+            
+            % Animate Robot Moving
+            for i = 1:steps         
+                robot.animate(qMatrix(i, :));
+                drawnow();
+                pause(0.01);
+            end
+            
+            qOut = robot.getpos();
+            
+            % Check Robot 1 reached desired joint coordinates
+            if abs(qOut - qDes) < 0.01
+                self.L.mlog = {self.L.DEBUG,funcName,['Robot 1 has reached' ...
+                    ' its goal joint configuration (within 0.01 radians): ' ...
+                    self.L.MatrixToString(qOut)]};
+            else
+                self.L.mlog = {self.L.WARN,funcName,['Robot 1 has not reached' ...
+                    ' its goal joint configuration (within 0.01 radians): ' ...
+                    self.L.MatrixToString(qOut)]};
+            end
         end
         
         function [check, dist] = compareTwoPositions(~, T1, T2)
@@ -1666,7 +2147,7 @@ end
 %This creates the collision boxes for the canvas and the table    
 function [boy_translation, boy_centerpnt, boy_width, boy_depth, boy_height] = generateBoyCollision 
     plotOptions.plotFaces = true;
-    boy_translation = [-0.2, 0.0, 0.22];
+    boy_translation = [0.5, 0.0, 0.22]; % OG: [-0.2, 0.0, 0.22]
     %Places Collision Detection for Canvas
     [boy_centerpnt, boy_width, boy_depth, boy_height] = PLY_Obstacle_Dimensions(1,0);
     [boy_vertex,boy_faces,boy_faceNormals] = ActualRectangularPrism(boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height ,plotOptions);
