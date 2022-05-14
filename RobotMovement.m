@@ -52,7 +52,7 @@ classdef RobotMovement < handle
                % table/canvas
                checkRemainder = mod(i,3);
                if(checkRemainder == 1)
-                   if((i + 5) > (steps-1))
+                   if((i + 4) > (steps-1))
                         checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
                         checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);                  
                         checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);    
@@ -61,7 +61,13 @@ classdef RobotMovement < handle
                         checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
                         checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
                    end
-
+                   
+                   %If any of them return true, TRIGGER THE ESTOP
+                   if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
+                        self.eStopState = 1;
+                        self.goSignal=0;
+                   end
+                   
                    if(checkCollisionCanvas == true)
                         display("Collision with Canvas 1");
                    end
@@ -124,6 +130,12 @@ classdef RobotMovement < handle
                         checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
                    end
 
+                   %If any of them return true, TRIGGER THE ESTOP
+                   if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
+                        self.eStopState = 1;
+                        self.goSignal=0;
+                   end
+                   
                    if(checkCollisionCanvas == true)
                         display("Collision with Canvas 1");
                    end
@@ -208,6 +220,12 @@ classdef RobotMovement < handle
                         checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
                    end
 
+                   %If any of them return true, TRIGGER THE ESTOP
+                   if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
+                        self.eStopState = 1;
+                        self.goSignal=0;
+                   end
+                   
                    if(checkCollisionCanvas == true)
                         display("Collision with Canvas 1");
                    end
@@ -304,6 +322,12 @@ classdef RobotMovement < handle
                         checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
                    end
 
+                   %If any of them return true, TRIGGER THE ESTOP
+                   if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
+                        self.eStopState = 1;
+                        self.goSignal=0;
+                   end
+                   
                    if(checkCollisionCanvas == true)
                         display("Collision with Canvas 1");
                    end
@@ -424,6 +448,12 @@ classdef RobotMovement < handle
                         checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
                    end
 
+                   %If any of them return true, TRIGGER THE ESTOP
+                   if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
+                        self.eStopState = 1;
+                        self.goSignal=0;
+                   end
+                   
                    if(checkCollisionCanvas == true)
                         display("Collision with Canvas 1");
                    end
@@ -622,6 +652,12 @@ classdef RobotMovement < handle
                         checkCollisionBoy = plottingCollisionDetection(robot, qMatrix(i+4, :), qMatrix(i+4, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
                    end
 
+                   %If any of them return true, TRIGGER THE ESTOP
+                   if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
+                        self.eStopState = 1;
+                        self.goSignal=0;
+                   end
+                   
                    if(checkCollisionCanvas == true)
                         display("Collision with Canvas 1");
                    end
@@ -880,6 +916,12 @@ classdef RobotMovement < handle
                         checkCollisionBoy = plottingCollisionDetection(robot, qMatrix(i+4, :), qMatrix(i+4, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
                    end
 
+                   %If any of them return true, TRIGGER THE ESTOP
+                   if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
+                        self.eStopState = 1;
+                        self.goSignal=0;
+                   end
+                   
                    if(checkCollisionCanvas == true)
                         display("Collision with Canvas 1");
                    end
@@ -1192,6 +1234,12 @@ classdef RobotMovement < handle
                         checkCollisionBoy = plottingCollisionDetection(robot, qMatrix(i+4, :), qMatrix(i+4, :),boy_centerpnt, boy_translation, boy_width, boy_depth, boy_height);
                    end
 
+                   %If any of them return true, TRIGGER THE ESTOP
+                   if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
+                        self.eStopState = 1;
+                        self.goSignal=0;
+                   end
+                   
                    if(checkCollisionCanvas == true)
                         display("Collision with Canvas 1");
                    end
