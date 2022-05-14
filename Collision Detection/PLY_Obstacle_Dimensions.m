@@ -16,7 +16,7 @@ function [centerpnt, width, depth, height] = PLY_Obstacle_Dimensions(type, facin
             depth = 0.0455;
             height = 0.7;
         case 3 %For table file dimensions
-            centerpnt = [0, 0];
+            centerpnt = [0.0, 0];
             width = 0.41;
             depth = 0.365;
             height = 0.22;
