@@ -2470,16 +2470,17 @@ handles.TBP = get(hObject,'Value');
 if handles.TBP == 0
 	% Delete Mesh if it exists (it should)
 	try delete(handles.boyMesh_h); end
-
+    handles.rMove.boyTranslation = [-0.6, 0.6, 0];
 	% Replot boy at some position
 	[handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject("boy8.ply",transl(-0.6, 0.6, 0));
 
 else
 	% Delete Mesh if it exists (it should)
 	try delete(handles.boyMesh_h); end
-
+    handles.rMove.boyTranslation = [-0.15, 0.0, 0];
 	% Replot boy at some position
 	[handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject("boy8.ply",transl(-0.15, 0.0, 0)); 
+    
 end
 
 drawnow();

@@ -728,7 +728,7 @@ classdef RobotMovement < handle
                end                 
                 % Get FK
                 FK = robot.fkine(qMatrix(i, :));
-                display(FK);
+                %display(FK);
                 trail(:, i) = FK(1:3, 4);
                 robot.animate(qMatrix(i, :));
                 drawnow();
@@ -993,7 +993,7 @@ classdef RobotMovement < handle
                end                 
                 % Get FK
                 FK = robot.fkine(qMatrix(i, :));
-                display(FK);
+                %display(FK);
                 editedFK = FK*trotx(pi/2);
                 % Save FK value for trail
                 trail(:, i) = FK(1:3, 4);
@@ -1313,7 +1313,7 @@ classdef RobotMovement < handle
 
                 % Get FK
                 FK = robot.fkine(qMatrix(i, :));
-                display(FK);
+                %display(FK);
                 editedFK = FK*trotx(pi/2);
                 % Save FK value for trail
                 trail(:, i) = FK(1:3, 4);
@@ -2191,7 +2191,7 @@ function [table_translation, canvas_translation, table_centerpnt, table_width, t
     switch state
         case 0 %For Table and Canvas
             %Sets up collision rectangles for the canvas and table
-            table_translation = [0.0, 0.0, -0.005];    
+            table_translation = [0.1, 0.0, -0.005];    
             canvas_translation = [-0.3, -0.2, 0.215];                        
         
             %Places Collision Detection for Table            

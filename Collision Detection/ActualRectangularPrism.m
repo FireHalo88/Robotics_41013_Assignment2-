@@ -80,9 +80,9 @@ if isfield(plotOptions,'plotFaces') && plotOptions.plotFaces
     hold on
     tcolor = [ 0.3 1.44 2.55];
     plot = patch('Faces',face,'Vertices',vertex,'FaceVertexCData',tcolor,'FaceColor','flat','lineStyle','none');
-%     plot.FaceVertexAlphaData = 0.00002;
-%     plot.FaceAlpha = 0.05;
-%     delete(plot);
+    plot.FaceVertexAlphaData = 0.00002;
+    plot.FaceAlpha = 0.05;
+    delete(plot);
 end
 
 end
