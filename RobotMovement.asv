@@ -79,17 +79,6 @@ classdef RobotMovement < handle
                         display("Collision with Boy");
                    end
                end
-
-               FK = robot.fkine(qpMatrix(end, :));
-
-               % Check for the end-effector leaving the light curtain area
-               checkJointCollisionWithLigthCurtain = lightCurtainCode(robot,FK,2);               
-               %If true, TRIGGER THE ESTOP
-               if(checkJointCollisionWithLigthCurtain == true)
-                    self.eStopState = 1;
-                    self.goSignal=0;
-               end
-
                % Plot Robot Moving
                robot.animate(qpMatrix(i, :));
                drawnow();
@@ -159,15 +148,7 @@ classdef RobotMovement < handle
                    end
                end  
                FK = robot.fkine(qpMatrix(end, :));
-
-               % Check for the end-effector leaving the light curtain area
-               checkJointCollisionWithLigthCurtain = lightCurtainCode(robot,FK,2);               
-               %If true, TRIGGER THE ESTOP
-               if(checkJointCollisionWithLigthCurtain == true)
-                    self.eStopState = 1;
-                    self.goSignal=0;
-               end
-
+               display(FK);
                % Plot robot moving
                robot.animate(qpMatrix(i, :));
                drawnow();
@@ -258,15 +239,7 @@ classdef RobotMovement < handle
                    end
                end
                FK = robot.fkine(qpMatrix(end, :));
-                
-               % Check for the end-effector leaving the light curtain area
-               checkJointCollisionWithLigthCurtain = lightCurtainCode(robot,FK,2);               
-               %If true, TRIGGER THE ESTOP
-               if(checkJointCollisionWithLigthCurtain == true)
-                    self.eStopState = 1;
-                    self.goSignal=0;
-               end
-
+               display(FK);
                % Plot Robot Moving
                robot.animate(qpMatrix(i, :));
                drawnow();
@@ -374,15 +347,6 @@ classdef RobotMovement < handle
                % Get Robot Pose with Forward Kinematics
                robot_TR = robot.fkine(qpMatrix(i, :));
                edited_TR = robot_TR*trotx(pi/2);
-
-               % Check for the end-effector leaving the light curtain area
-               checkJointCollisionWithLigthCurtain = lightCurtainCode(robot,robot_TR,2);               
-               %If true, TRIGGER THE ESTOP
-               if(checkJointCollisionWithLigthCurtain == true)
-                    self.eStopState = 1;
-                    self.goSignal=0;
-               end
-
                % Transform Object to this Pose
                objTransformVertices = [objVertices,ones(size(objVertices,1),1)] ...
                    * edited_TR';
@@ -417,15 +381,6 @@ classdef RobotMovement < handle
                % Get Robot Pose with Forward Kinematics
                robot_TR = robot.fkine(qpMatrix(i, :));
                edited_TR = robot_TR*trotx(pi/2);
-
-               % Check for the end-effector leaving the light curtain area
-               checkJointCollisionWithLigthCurtain = lightCurtainCode(robot,robot_TR,2);               
-               %If true, TRIGGER THE ESTOP
-               if(checkJointCollisionWithLigthCurtain == true)
-                    self.eStopState = 1;
-                    self.goSignal=0;
-               end
-
                % Transform Object to this Pose
                objTransformVertices = [objVertices,ones(size(objVertices,1),1)] ...
                    * edited_TR';
@@ -518,15 +473,13 @@ classdef RobotMovement < handle
                % Get Robot Pose with Forward Kinematics
                robot_TR = robot.fkine(qpMatrix(i, :));               
                edited_TR = robot_TR*trotx(pi/2);
-               
                % Check for the end-effector leaving the light curtain area
-               checkJointCollisionWithLigthCurtain = lightCurtainCode(robot,robot_TR,2);               
-               %If true, TRIGGER THE ESTOP
-               if(checkJointCollisionWithLigthCurtain == true)
-                    self.eStopState = 1;
-                    self.goSignal=0;
-               end
-
+               checkJointCollisionWithLigthCurtain = lightCurtainCode(robot,robot_TR,2);
+                                  %If any of them return true, TRIGGER THE ESTOP
+                   if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
+                        self.eStopState = 1;
+                        self.goSignal=0;
+                   end
                % Transform Object to this Pose
                objTransformVertices = [objVertices,ones(size(objVertices,1),1)] ...
                    * edited_TR';

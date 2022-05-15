@@ -187,19 +187,34 @@ function[object_h, objectVertices] = placeObjectsBetter(~, canvas,table, ...
                     set(object_h{i},'Vertices',transformedVertices(:,1:3)); % Updating token location
                     drawnow; % Update simulation
                     pause(0.001); % Wait before execution  
-            end
-%             %objectVertices{i} = get(object_h{i},'Vertices'); % Extracting vertices data
-%             switch i
-%                 case 1
-%                     transformedVertices = [objectVertices{i},ones(size(objectVertices{i},1),1)] * canvas'; % Transforming vertices
-%                 case 2
-%                     transformedVertices = [objectVertices{i},ones(size(objectVertices{i},1),1)] * pen'; % Transforming vertices
-%             end
-% %             set(object_h{i},'Vertices',transformedVertices(:,1:3)); % Updating token location
-% %             drawnow; % Update simulation
-% %             pause(0.001); % Wait before execution            
+            end        
         end
         camlight
 end
+
+function [mesh_h, vertices] = CreateObject(~, name, T)
+            % This function will use the 'Brick.ply' file to create an instance ...
+            % of a brick mesh, and then get its vertices and place it in the 
+            % environment at a specified location.
+
+            % Add a Brick with the 'PlaceObject' function and using ...
+            % 'Brick.ply' as the input argument. Then get the vertices ...
+            % out of the mesh handle to use later on.
+            mesh_h = PlaceObject(name);
+            vertices = get(mesh_h,'Vertices');
+
+            % Translate the vertices that make up the Brick Mesh by ...
+            % a 4x4 Homogenous Matrix to place the Brick in a specific ...
+            % location. Note that as the vertices are an Nx3 Matrix, a ...
+            % column vector of ones needed to be placed onto the matrix ...
+            % to allow for multiplication of a 4x4 Matrix.
+            transformVertices = [vertices,ones(size(vertices,1),1)] * T';
+
+            % Set the Vertices property in the Brick Mesh using the ...
+            % first 3 columns (x,y,z values) of the transformed vertices.
+            % (:, 1:3) = All rows in columns 1-3.
+            set(mesh_h, 'Vertices', transformVertices(:, 1:3));
+end
+
     end
 end

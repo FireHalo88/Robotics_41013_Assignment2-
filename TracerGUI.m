@@ -123,6 +123,7 @@ handles.greenPenVertices = objectVertices{5};
 handles.bluePen_h = objectMeshes_h{6};
 handles.bluePenVertices = objectVertices{6};
 
+[handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject("boy8.ply",transl(-0.6, 0.6, 0.0));
 view(3);
 
 % Calculate the Robot EE Position with FK
@@ -2461,18 +2462,29 @@ function boyPoseBtn_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+% BoyPose = [-0.6, 0.6, 0]; 
+% BoyPose = [-0.15, 0.0, 0]; 
 % Hint: get(hObject,'Value') returns toggle state of boyPoseBtn
 handles.TBP = get(hObject,'Value');
-% Update handles structure
-guidata(hObject, handles);
-
+%display(handles.TBP)
 if handles.TBP == 0
-    % Boy Pose = XYZ
+	% Delete Mesh if it exists (it should)
+	try delete(handles.boyMesh_h); end
+
+	% Replot boy at some position
+	[handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject("boy8.ply",transl(-0.6, 0.6, 0));
+
 else
-    % Boy Pose = XYZ on Table
-    % Create Mesh for Boy
+	% Delete Mesh if it exists (it should)
+	try delete(handles.boyMesh_h); end
+
+	% Replot boy at some position
+	[handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject("boy8.ply",transl(-0.15, 0.0, 0)); 
 end
 
+drawnow();
+% Update handles structure
+guidata(hObject, handles);      
 
 % --- Executes on button press in lcdBtn.
 function lcdBtn_Callback(hObject, eventdata, handles)
