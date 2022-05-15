@@ -5,6 +5,7 @@ classdef RobotMovement < handle
     
     properties
         L;      % LogFile
+        trailPlot_h;
         eStopState=0; %Emergency stop flag/toggle 0=Normal operation, 1=Emergency stopped
         goSignal=1; %Flag for resuming process after Estop. 0=disabled, 1=signaled to go
         boyTranslation=[-0.6, 0.6, 0]; %Boy's Current Translation
@@ -526,6 +527,15 @@ classdef RobotMovement < handle
                     self.eStopState = 1;
                     self.goSignal=0;
                end
+               
+               %Check if eStop is active, and lock in while loop if it
+               %is, also regress one "frame"
+               if self.eStopState==1
+                   i= i-1; 
+               end
+               while (self.eStopState==1||self.goSignal==0)
+                   pause(0.1);
+               end
 
                % Transform Object to this Pose
                objTransformVertices = [objVertices,ones(size(objVertices,1),1)] ...
@@ -813,7 +823,7 @@ classdef RobotMovement < handle
             end     
         end
         
-        function [qOut, qMatrix, trailPlot_h] = RMRC_7DOF_OBJ(self, robot, start_T, ...
+        function [qOut, qMatrix] = RMRC_7DOF_OBJ(self, robot, start_T, ...
                 end_T, objMesh_h, objVertices, time, drawType, onCanvas, ...
                 plotTrail, plotData)
             % This function is modified from the exercise completed in the
@@ -960,7 +970,6 @@ classdef RobotMovement < handle
             
             % Animate through calculated joint states
             trail = nan(3, steps);
-            trailPlot_h = [];
             
             for i = 1:steps
                checkRemainder = mod(i,3);
@@ -1007,11 +1016,11 @@ classdef RobotMovement < handle
                 % Plot trail data if option set to 1 (TRUE)
                 if plotTrail == 1
                     if onCanvas == 1 && FK(3,4) < 0.31
-                        trailPlot_h(end+1) = plot3(FK(1,4), FK(2,4), 0.26, ...
-                            drawType, 'MarkerSize', 3);  
+                        self.trailPlot_h(end+1) = plot3(FK(1,4), FK(2,4), 0.26, ...
+                            drawType, 'MarkerSize', 3);
                     elseif onCanvas == 0
-                        trailPlot_h(end+1) = plot3(FK(1,4), FK(2,4), FK(3,4), ...
-                            drawType);                 
+                        self.trailPlot_h(end+1) = plot3(FK(1,4), FK(2,4), FK(3,4), ...
+                            drawType);              
                     end                 
                 end
                 
@@ -1091,9 +1100,10 @@ classdef RobotMovement < handle
             end          
         end
         
-        function [qOut, qMatrix] = RMRC_7DOF_ARC_OBJ(self, robot, centre_T, startTheta, ...
-                endTheta, radius, objMesh_h, objVertices, time, drawType, ...
-                direction, moveToStart, onCanvas, plotTrail, plotData)
+        function [qOut, qMatrix] = RMRC_7DOF_ARC_OBJ(self, robot, ...
+                centre_T, startTheta, endTheta, radius, objMesh_h, objVertices, ...
+                time, drawType, direction, moveToStart, onCanvas, plotTrail, ...
+                plotData)
             
             % If no 'direction' value input, set 'direction' to 'CW' 
             % (assume arc will be drawn in a CCW orientation).
@@ -1279,7 +1289,6 @@ classdef RobotMovement < handle
             
             % Animate through calculated joint states
             trail = nan(3, steps);
-            trailPlot_h = [];
             
             for i = 1:steps
                checkRemainder = mod(i,3);
@@ -1327,10 +1336,10 @@ classdef RobotMovement < handle
                 % Plot trail data if option set to 1 (TRUE)
                 if plotTrail == 1
                     if onCanvas == 1 && FK(3,4) < 0.31
-                        trailPlot_h(end+1) = plot3(FK(1,4), FK(2,4), 0.26, ...
+                        self.trailPlot_h(end+1) = plot3(FK(1,4), FK(2,4), 0.26, ...
                             drawType, 'MarkerSize', 3);  
                     elseif onCanvas == 0
-                        trailPlot_h(end+1) = plot3(FK(1,4), FK(2,4), FK(3,4), ...
+                        self.trailPlot_h(end+1) = plot3(FK(1,4), FK(2,4), FK(3,4), ...
                             drawType);                 
                     end                 
                 end
@@ -1413,8 +1422,8 @@ classdef RobotMovement < handle
         end
         
         
-        function [qOut, big_qMatrix] = drawTriangle(self, robot, centre_T, ...
-                canvas_Rot, qGuess, objMesh_h, objVertices, time, drawType)
+        function [qOut, big_qMatrix] = drawTriangle(self, robot, ...
+                centre_T, canvas_Rot, qGuess, objMesh_h, objVertices, time, drawType)
             % This function will draw a triangle about a given centre
             % 4x4 transform.
             
@@ -1447,18 +1456,18 @@ classdef RobotMovement < handle
                 
             % Moving from this point to the BOTTOM RIGHT POINT
             actualBL_T = robot.fkine(qOut);
-            [qOut, qMatrix_2] = self.RMRC_7DOF_OBJ(robot, actualBL_T, bottomRight_T, ...
-                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            [qOut, qMatrix_2] = self.RMRC_7DOF_OBJ(robot, actualBL_T, ...
+                bottomRight_T, objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % Moving from BOTTOM RIGHT to TOP
             actualBR_T = robot.fkine(qOut);
-            [qOut, qMatrix_3] = self.RMRC_7DOF_OBJ(robot, actualBR_T, top_T, objMesh_h, ...
-                objVertices, time, drawType, 1, 1, 0);
+            [qOut, qMatrix_3] = self.RMRC_7DOF_OBJ(robot, actualBR_T, ...
+                top_T, objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % Moving from TOP to BOTTOM LEFT
             actualTop_T = robot.fkine(qOut);
-            [qOut, qMatrix_4] = self.RMRC_7DOF_OBJ(robot, actualTop_T, actualBL_T, ...
-                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            [qOut, qMatrix_4] = self.RMRC_7DOF_OBJ(robot, actualTop_T, ...
+                actualBL_T, objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             self.L.mlog = {self.L.DEBUG,funcName,['END FUNCTION: ', ...
                 funcName, char(13)]};
@@ -1502,26 +1511,26 @@ classdef RobotMovement < handle
 %             end_T = bottomLeft_T;
 % %             qOut = self.RMRC_7DOF_OBJ(robot, start_T, end_T, ...
 %                      objMesh_h, objVertices, 1, drawType, 0, 0, 0);
-                
+
             % Moving from this point to the BOTTOM RIGHT POINT
             actualBL_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualBL_T, bottomRight_T, ...
-                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualBL_T, ...
+                bottomRight_T, objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % Moving from BOTTOM RIGHT to TOP RIGHT
             actualBR_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualBR_T, topRight_T, objMesh_h, ...
-                objVertices, time, drawType, 1, 1, 0);
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualBR_T, ...
+                topRight_T, objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % Moving from TOP RIGHT to TOP LEFT
             actualTR_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualTR_T, topLeft_T, ...
-                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualTR_T, ...
+                topLeft_T, objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % Moving from TOP LEFT to BOTTOM LEFT
             actualTL_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualTL_T, actualBL_T, ...
-                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualTL_T, ...
+                actualBL_T, objMesh_h, objVertices, time, drawType, 1, 1, 0);
                       
             self.L.mlog = {self.L.DEBUG,funcName,['END FUNCTION: ', ...
                 funcName, char(13)]};
@@ -1570,28 +1579,28 @@ classdef RobotMovement < handle
                 
             % Moving from this point to the TOP POINT
             actualBL_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualBL_T, top_T, ...
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualBL_T, top_T, ...
                 objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % Moving from TOP TO THE BOTTOM RIGHT
             actualTop_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualTop_T, bottomRight_T, objMesh_h, ...
-                objVertices, time, drawType, 1, 1, 0);
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualTop_T, ...
+                bottomRight_T, objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % Moving from BOTTOM RIGHT TO LEFT
             actualBR_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualBR_T, left_T, ...
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualBR_T, left_T, ...
                 objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % Moving from LEFT to RIGHT
             actualLeft_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualLeft_T, right_T, ...
-                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualLeft_T, ...
+                right_T, objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % Moving from RIGHT to BOTTOM LEFT
             actualRight_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualRight_T, actualBL_T, ...
-                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualRight_T, ...
+                actualBL_T, objMesh_h, objVertices, time, drawType, 1, 1, 0);
                       
             self.L.mlog = {self.L.DEBUG,funcName,['END FUNCTION: ', ...
                 funcName, char(13)]};
@@ -1615,15 +1624,16 @@ classdef RobotMovement < handle
                     objVertices, qGuess, 20);
             
             % Draw Circle
-            qOut = self.RMRC_7DOF_ARC_OBJ(robot, centre_T, 0, 2*pi, radius, ...
+            [qOut, ~] = self.RMRC_7DOF_ARC_OBJ(robot, centre_T, 0, 2*pi, radius, ...
                 objMesh_h, objVertices, time, drawType, "ccw", 0, 1, 1, 0);
             
             self.L.mlog = {self.L.DEBUG,funcName,['END FUNCTION: ', ...
                 funcName, char(13)]};                       
         end
         
-        function [qOut] = drawCrescent(self, robot, centre_T, radius, ...
-                canvas_Rot, qGuess, objMesh_h, objVertices, time, drawType)
+        function [qOut] = drawCrescent(self, robot, centre_T, ...
+                radius, canvas_Rot, qGuess, objMesh_h, objVertices, time, ...
+                drawType)
             % This function will draw a crescent about a given centre
             % 4x4 transform.
             
@@ -1668,12 +1678,12 @@ classdef RobotMovement < handle
             % plotTrail, plotData
             
             % Draw outside arc of crescent
-            qOut = self.RMRC_7DOF_ARC_OBJ(robot, centre_T, sTheta_OutR, ...
+            [qOut, ~] = self.RMRC_7DOF_ARC_OBJ(robot, centre_T, sTheta_OutR, ...
                 eTheta_OutR, radius, objMesh_h, objVertices, time, drawType, ...
                 "ccw", 0, 1, 1, 0);
             
             % Draw inside arc of crescent
-            qOut = self.RMRC_7DOF_ARC_OBJ(robot, insideCrescent_T, sTheta_InR, ...
+            [qOut, ~] = self.RMRC_7DOF_ARC_OBJ(robot, insideCrescent_T, sTheta_InR, ...
                 eTheta_InR, radius, objMesh_h, objVertices, time, drawType, ...
                 "cw", 0, 1, 1, 0);
             
@@ -1739,39 +1749,39 @@ classdef RobotMovement < handle
             %time, drawType, onCanvas?, plotTrail?, plotData?
             % RMRC from BOTTOM LEFT -> BOTTOM RIGHT
             actualBL_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualBL_T, bottomRight_T, ...
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualBL_T, bottomRight_T, ...
                 objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % RMRC from BOTTOM RIGHT -> TOP RIGHT
             actualBR_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualBR_T, topRight_T, ...
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualBR_T, topRight_T, ...
                 objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % RMRC from TOP RIGHT -> TOP LEFT
             actualTR_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualTR_T, topLeft_T, ...
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualTR_T, topLeft_T, ...
                 objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % RMRC from TOP LEFT -> ACTUAL BOTTOM LEFT
             actualTL_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualTL_T, actualBL_T, ...
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualTL_T, actualBL_T, ...
                 objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % LIFT PEN 5CM TO MOVE TO ROOF
             % Y IS FACING DOWNWARDS
             current_T = robot.fkine(robot.getpos());
             up5CM_TR = current_T*transl(0, -0.05, 0);
-            qOut = self.MoveRobotWithObject2(robot, up5CM_TR, objMesh_h, ...
-                    objVertices, qOut, 20);
+            [qOut, ~] = self.MoveRobotWithObject2(robot, up5CM_TR, ...
+                objMesh_h, objVertices, qOut, 20);
             
             % MOVE TO ROOF START
             qOut = self.MoveRobotWithObject2(robot, roofStart_T, objMesh_h, ...
                     objVertices, qGuess, 20);
                 
             % RMRC ARC TO DRAW ROOF
-            qOut = self.RMRC_7DOF_ARC_OBJ(robot, roofCentre_T, startTheta, ...
-                endTheta, roofRadius, objMesh_h, objVertices, time, drawType, ...
-                "ccw", 0, 1, 1, 0);
+            [qOut, ~] = self.RMRC_7DOF_ARC_OBJ(robot, roofCentre_T, ...
+                startTheta, endTheta, roofRadius, objMesh_h, objVertices, time, ...
+                drawType, "ccw", 0, 1, 1, 0);
             
             % LIFT PEN 5CM TO MOVE TO LEFT WHEEL
             % Y IS FACING DOWNWARDS
@@ -1784,8 +1794,8 @@ classdef RobotMovement < handle
             % robot, centre_T, radius, canvas_Rot, qGuess, objMesh_h, ...
             % objVertices, time, drawType
             % DRAW LEFT WHEEL
-            qOut = self.drawCircle(robot, wheelLeft_T, wheelRadius, canvas_Rot, ...
-                qGuess, objMesh_h, objVertices, time, drawType);
+            qOut = self.drawCircle(robot, wheelLeft_T, wheelRadius, ...
+                canvas_Rot, qGuess, objMesh_h, objVertices, time, drawType);
             
             % LIFT PEN 5CM TO MOVE TO RIGHT WHEEL
             % Y IS FACING DOWNWARDS
@@ -1795,8 +1805,8 @@ classdef RobotMovement < handle
                     objVertices, qOut, 20);
                 
             % DRAW RIGHT WHEEL
-            qOut = self.drawCircle(robot, wheelRight_T, wheelRadius, canvas_Rot, ...
-                qGuess, objMesh_h, objVertices, time, drawType);
+            qOut = self.drawCircle(robot, wheelRight_T, wheelRadius, ...
+                canvas_Rot, qGuess, objMesh_h, objVertices, time, drawType);
             
             self.L.mlog = {self.L.DEBUG,funcName,['END FUNCTION: ', ...
                 funcName, char(13)]};                
@@ -1895,22 +1905,22 @@ classdef RobotMovement < handle
             % DRAWING LEFT PYLON
             % RMRC from BOTTOM LEFT -> BOTTOM RIGHT
             actualBLL_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualBLL_T, bottomRL_T, ...
-                objMesh_h, objVertices, time/4, drawType, 1, 1, 0);
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualBLL_T, bottomRL_T, ...
+                objMesh_h, objVertices, time/4, drawType, 1, 1, 0);        
             
             % RMRC from BOTTOM RIGHT -> TOP RIGHT
             actualBRL_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualBRL_T, topRL_T, ...
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualBRL_T, topRL_T, ...
                 objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % RMRC from TOP RIGHT -> TOP LEFT
             actualTRL_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualTRL_T, topLL_T, ...
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualTRL_T, topLL_T, ...
                 objMesh_h, objVertices, time/4, drawType, 1, 1, 0);
             
             % RMRC from TOP LEFT -> BOTTOM LEFT
             actualTLL_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualTLL_T, actualBLL_T, ...
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualTLL_T, actualBLL_T, ...
                 objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % PICK UP PEN 5CM TO MOVE TO RIGHT PYLON
@@ -1927,22 +1937,22 @@ classdef RobotMovement < handle
             % DRAWING RIGHT PYLON
             % RMRC from BOTTOM LEFT -> BOTTOM RIGHT
             actualBLR_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualBLR_T, bottomRR_T, ...
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualBLR_T, bottomRR_T, ...
                 objMesh_h, objVertices, time/4, drawType, 1, 1, 0);
             
             % RMRC from BOTTOM RIGHT -> TOP RIGHT
             actualBRR_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualBRR_T, topRR_T, ...
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualBRR_T, topRR_T, ...
                 objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % RMRC from TOP RIGHT -> TOP LEFT
             actualTRR_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualTRR_T, topLR_T, ...
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualTRR_T, topLR_T, ...
                 objMesh_h, objVertices, time/4, drawType, 1, 1, 0);
             
             % RMRC from TOP LEFT -> BOTTOM LEFT
             actualTLR_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualTLR_T, actualBLR_T, ...
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualTLR_T, actualBLR_T, ...
                 objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % PICK UP PEN 5CM TO MOVE TO ROAD START
@@ -1958,11 +1968,11 @@ classdef RobotMovement < handle
                 
             % DRAW ROAD
             actualRS_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualRS_T, roadEnd_T, ...
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualRS_T, roadEnd_T, ...
                 objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % DRAW ARCH
-            qOut = self.RMRC_7DOF_ARC_OBJ(robot, centre_T, startTheta, ...
+            [qOut, ~] = self.RMRC_7DOF_ARC_OBJ(robot, centre_T, startTheta, ...
                 endTheta, archRadius, objMesh_h, objVertices, time, drawType, ...
                 "cw", 0, 1, 1, 0);
             
@@ -1972,16 +1982,16 @@ classdef RobotMovement < handle
             
             % Draw Beam 1
             actualB1_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualB1_T, endBeam1_T, ...
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualB1_T, endBeam1_T, ...
                 objMesh_h, objVertices, time/2, drawType, 1, 1, 0);
             
             % PICK UP PEN 5CM TO MOVE TO BEAM 2 START
-            qOut = self.moveViaWaypoint_UP(robot, 0.05, startBeam2_T, objMesh_h, ...
-                objVertices, qOut, qGuess, 20);
+            qOut = self.moveViaWaypoint_UP(robot, 0.05, startBeam2_T, ...
+                objMesh_h, objVertices, qOut, qGuess, 20);
             
             % Draw Beam 2
             actualB2_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualB2_T, endBeam2_T, ...
+            [qOut, ~]  = self.RMRC_7DOF_OBJ(robot, actualB2_T, endBeam2_T, ...
                 objMesh_h, objVertices, time/2, drawType, 1, 1, 0);
             
             % PICK UP PEN 5CM TO MOVE TO BEAM 3 START
@@ -1990,7 +2000,7 @@ classdef RobotMovement < handle
             
             % Draw Beam 3
             actualB3_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualB3_T, endBeam3_T, ...
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualB3_T, endBeam3_T, ...
                 objMesh_h, objVertices, time/2, drawType, 1, 1, 0);
                 
             self.L.mlog = {self.L.DEBUG,funcName,['END FUNCTION: ', ...
@@ -2073,14 +2083,14 @@ classdef RobotMovement < handle
             
             % RMRC ARC to draw BOAT HULL
             actualLeft_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_ARC_OBJ(robot, hullCentre_T, sTheta_R, ...
-                eTheta_R, boatRadius, objMesh_h, objVertices, time, drawType, ...
-                "ccw", 0, 1, 1, 0);
+            [qOut, ~] = self.RMRC_7DOF_ARC_OBJ(robot, hullCentre_T, ...
+                sTheta_R, eTheta_R, boatRadius, objMesh_h, objVertices, time, ...
+                drawType, "ccw", 0, 1, 1, 0);
             
             % RMRC to draw BOAT DECK
             actualRight_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualRight_T, actualLeft_T, ...
-                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualRight_T, ...
+                actualLeft_T, objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % LIFT PEN TO MOVE TO BOTTOM OF MAST
             qOut = self.moveViaWaypoint_UP(robot, 0.05, mastBottom_T, objMesh_h, ...
@@ -2088,25 +2098,24 @@ classdef RobotMovement < handle
             
             % RMRC UP MAST
             actualMastB_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualMastB_T, mastTop_T, ...
-                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualMastB_T, ...
+                mastTop_T, objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % RMRC to SAIL RIGHT
             actualMastT_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualMastT_T, sailRight_T, ...
-                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualMastT_T, ...
+                sailRight_T, objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % RMRC to SAIL LEFT
             actualSailR_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualSailR_T, sailLeft_T, ...
-                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualSailR_T, ...
+                sailLeft_T, objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
             % RMRC to LEFT SAIL TOP
             actualSailL_T = robot.fkine(qOut);
-            qOut = self.RMRC_7DOF_OBJ(robot, actualSailL_T, sailLeftTop_T, ...
-                objMesh_h, objVertices, time, drawType, 1, 1, 0);
+            [qOut, ~] = self.RMRC_7DOF_OBJ(robot, actualSailL_T, ...
+                sailLeftTop_T, objMesh_h, objVertices, time, drawType, 1, 1, 0);
             
-
             self.L.mlog = {self.L.DEBUG,funcName,['END FUNCTION: ', ...
                 funcName, char(13)]};         
         end
@@ -2178,6 +2187,13 @@ classdef RobotMovement < handle
                 check = true;
             else
                 check = false;
+            end
+        end
+        
+        function deletePlot(self)
+            % This function aims to delete the canvas plot
+            for i = 1:length(self.trailPlot_h)
+                try delete(self.trailPlot_h(i)); end
             end
         end
         

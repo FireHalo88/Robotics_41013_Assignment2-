@@ -148,6 +148,7 @@ handles.inJoystickMode = 0;     % Boolean to track whether or not the user is in
 handles.colour = 'blackPen';    % Tracking colour chosen by user
 handles.shape = 'Circle';       % Tracking drawing chosen by user
 handles.shape_h = [];           % Handle holding visualisation plot
+handles.canvasPlot_h = [];      % Handle holding canvas plot
 handles.drawing = [];
 handles.drawingPath = '';
 % Handle for Robot Movement Class
@@ -1513,8 +1514,19 @@ function startDrawingBtn_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+% Set status to Green G to indicate we are in run mode!
+set(handles.status, 'BackgroundColor','green');
+set(handles.status, 'String','G');
+    
 axes(handles.axes2);
 hold on
+
+% Delete previous canvas drawing/plot if it exists
+% for i = 1:length(handles.canvasPlot_h)
+%     try delete(handles.canvasPlot_h(i)); end
+% end
+
+handles.rMove.deletePlot();
 
 % Set handles.colour to be the colour pen chosen from the Button Group
 h = get(handles.colourBtnGroup,'SelectedObject');
@@ -1632,45 +1644,53 @@ qGuess_Lower = qGuess_1_Lower;
 switch handles.shape
     case 'Circle'
         % Drawing a Circle centred at 0,0
-        qOut = handles.rMove.drawCircle(handles.myRobot, pointCanvas_T, 0.05, ...
-            canvas_Rot, qGuess_Lower, penMesh_h, penVertices, 3, drawType);
+        qOut = handles.rMove.drawCircle(handles.myRobot, ...
+            pointCanvas_T, 0.05, canvas_Rot, qGuess_Lower, penMesh_h, penVertices, ...
+            3, drawType);
         
     case 'Square'
         % Drawing a Square centred at 0, 0
-        qOut = handles.rMove.drawSquare(handles.myRobot, pointCanvas_T, canvas_Rot, ...
-            qGuess_Lower, penMesh_h, penVertices, 2, drawType);
+        qOut = handles.rMove.drawSquare(handles.myRobot, ...
+            pointCanvas_T, canvas_Rot, qGuess_Lower, penMesh_h, penVertices, ...
+            2, drawType);
         
     case 'Triangle'
         % Drawing a Triangle centred at 0,0
-        [qOut, big_qMatrix] = handles.rMove.drawTriangle(handles.myRobot, pointCanvas_T, canvas_Rot, ...
-            qGuess_Lower, penMesh_h, penVertices, 2, drawType);
+        qOut = handles.rMove.drawTriangle(handles.myRobot, ...
+            pointCanvas_T, canvas_Rot, qGuess_Lower, penMesh_h, penVertices, ...
+            2, drawType);
         % Save qMatrices to a MAT File (maybe for playback on real robot)
         % save('drawTriangleTraj', 'qMatrix_1', 'qMatrix_2', 'qMatrix_3', 'qMatrix_4', 'big_qMatrix');
         
     case 'Star'
         % Drawing a Star centred at -0.05, 0
-        qOut = handles.rMove.drawStar(handles.myRobot, pointCanvas_T, canvas_Rot, ...
-            qGuess_Lower, penMesh_h, penVertices, 2, drawType);
+        qOut = handles.rMove.drawStar(handles.myRobot, ...
+            pointCanvas_T, canvas_Rot, qGuess_Lower, penMesh_h, penVertices, ...
+            2, drawType);
         
     case 'Crescent'
         % Drawing a Crescent centred at 0, 0
-        qOut = handles.rMove.drawCrescent(handles.myRobot, pointCanvas_T, 0.05, ...
-            canvas_Rot, qGuess_Lower, penMesh_h, penVertices, 2, drawType);
+        qOut = handles.rMove.drawCrescent(handles.myRobot, ...
+            pointCanvas_T, 0.05, canvas_Rot, qGuess_Lower, penMesh_h, penVertices, ...
+            2, drawType);
         
     case 'Car'
         % Drawing a Car centred at -0.15, 0
-        qOut = handles.rMove.drawCar(handles.myRobot, pointCanvas_T, canvas_Rot, ...
-                qGuess_Lower, penMesh_h, penVertices, 2, drawType);
+        qOut = handles.rMove.drawCar(handles.myRobot, ...
+            pointCanvas_T, canvas_Rot, qGuess_Lower, penMesh_h, penVertices, ...
+            2, drawType);
             
     case 'Bridge'
         % Drawing a Bridge centred at -0.15, 0
-        qOut = handles.rMove.drawBridge(handles.myRobot, pointCanvas_T, canvas_Rot, ...
-                qGuess_Lower, penMesh_h, penVertices, 2, drawType);
+        qOut = handles.rMove.drawBridge(handles.myRobot, ...
+            pointCanvas_T, canvas_Rot, qGuess_Lower, penMesh_h, penVertices, ...
+            2, drawType);
             
     case 'Boat'
         % Drawing a Boat centred at -0.15+0.01, 0
-        qOut = handles.rMove.drawBoat(handles.myRobot, pointCanvas_T, canvas_Rot, ...
-                qGuess_Lower, penMesh_h, penVertices, 2, drawType);
+        qOut = handles.rMove.drawBoat(handles.myRobot, ...
+            pointCanvas_T, canvas_Rot, qGuess_Lower, penMesh_h, penVertices, ...
+            2, drawType);
         
 end
 
@@ -2434,10 +2454,11 @@ if handles.vsState == 1
         cam_T = handles.myRobot.fkine(newQ);
         cam.T = cam_T;
         
-        % Update handles structure
-        guidata(hObject, handles);
         % Update GUI with Robot XYZ, RPY and Joint Angles
         updateTeachGUI(handles);
+        
+        % Update handles structure
+        %guidata(hObject, handles);
         
         % Check if all the errors are less than one pixel (may use this for
         % a boolean to prevent infinite running at low velocities which
@@ -2453,6 +2474,8 @@ if handles.vsState == 1
    
 else
     try delete(handles.sSign_h); end
+    % Update GUI with Robot XYZ, RPY and Joint Angles
+    updateTeachGUI(handles);
 end
 
 
