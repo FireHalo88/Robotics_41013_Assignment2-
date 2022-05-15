@@ -123,7 +123,7 @@ handles.greenPenVertices = objectVertices{5};
 handles.bluePen_h = objectMeshes_h{6};
 handles.bluePenVertices = objectVertices{6};
 
-[handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject("boy8.ply",transl(-0.6, 0.6, 0.0));
+[handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject("boy8.ply",transl(-0.58, 0.62, -0.08));
 view(3);
 
 % Calculate the Robot EE Position with FK
@@ -2470,7 +2470,7 @@ handles.TBP = get(hObject,'Value');
 if handles.TBP == 0
 	% Delete Mesh if it exists (it should)
 	try delete(handles.boyMesh_h); end
-    handles.rMove.boyTranslation = [-0.6, 0.6, 0];
+    handles.rMove.boyTranslation = [-0.6, 0.6, -0.05];
 	% Replot boy at some position
 	[handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject("boy8.ply",transl(-0.6, 0.6, 0));
 
