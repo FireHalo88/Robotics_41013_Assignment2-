@@ -7,6 +7,8 @@ classdef VisualServoing < handle
         L;      % LogFile
         stopSign_h; % Stop Sign Surface Plot
         ssMesh_h;   % Stop Sign PLY Mesh
+        sign_T;     % Global Transform of the Sign
+        signLength = 0.2;   % Length of the sign in m.
     end
     
     methods
@@ -60,15 +62,82 @@ classdef VisualServoing < handle
             set(ssMesh_h, 'Vertices', ssTransformVertices(:, 1:3));
             
             self.ssMesh_h = ssMesh_h;
+            self.sign_T = sign_T;
         end
         
-        function MoveSign(~, objMesh_h, objVertices, sign_T)
+        function MoveSign(self, objMesh_h, objVertices, sign_T)
             % Transform Object to this Pose
             objTransformVertices = [objVertices,ones(size(objVertices,1),1)] ...
                 * sign_T';
             set(objMesh_h, 'Vertices', objTransformVertices(:,1:3));
+            
+            self.sign_T = sign_T;
                
             drawnow();
+        end
+        
+        function [signFromEE_T] = signFromEE(self, robot)
+            % This function takes a Robot Manipulator and determines the
+            % transform from the End Effector to the current pose of the
+            % Stop Sign
+            currQ = robot.getpos();
+            EE_TR = robot.fkine(currQ);
+            self.sign_T
+            signFromEE_T = inv(EE_TR)*self.sign_T;
+        end
+        
+        function [P] = determineCartesianCornerPoints(self, sign_T)
+            % This function will return a matrix of the XYZ points defining
+            % the eight corners of the Stop Sign Octagon, given its 4x4
+            % transform (which is the centre of the sign) - Note that the
+            % thickness of the sign is negligable.
+            
+            % Pre-allocate size for the P array
+            P = zeros(3, 8);    % 3 Rows for XYZ, 8 Columns for 8 Corner Coordinates
+            % Get XYZ of Sign Centre
+            centreSign = sign_T(1:3, 4);
+            
+            % Defining Corners (TOP RIGHT -> CCW)
+            % Top Right
+            topRight = [centreSign(1); centreSign(2)+self.signLength/4; ...
+                centreSign(3)+self.signLength/2];
+            P(:, 1) = topRight;
+            
+            % Top Left
+            topLeft = [centreSign(1); centreSign(2)-self.signLength/4; ...
+                centreSign(3)+self.signLength/2];
+            P(:, 2) = topLeft;
+            
+            % Top Middle Left
+            topMiddleLeft = [centreSign(1); centreSign(2)-self.signLength/2; ...
+                centreSign(3)+self.signLength/4];
+            P(:, 3) = topMiddleLeft;
+            
+            % Bottom Middle Left
+            bottomMiddleLeft = [centreSign(1); centreSign(2)-self.signLength/2; ...
+                centreSign(3)-self.signLength/4];
+            P(:, 4) = bottomMiddleLeft;
+            
+            % Bottom Left
+            bottomLeft = [centreSign(1); centreSign(2)-self.signLength/4; ...
+                centreSign(3)-self.signLength/2];
+            P(:, 5) = bottomLeft;
+            
+            % Bottom Right
+            bottomRight = [centreSign(1); centreSign(2)+self.signLength/4; ...
+                centreSign(3)-self.signLength/2];
+            P(:, 6) = bottomRight;
+            
+            % Bottom Middle Right
+            bottomMiddleRight = [centreSign(1); centreSign(2)+self.signLength/2; ...
+                centreSign(3)-self.signLength/4];
+            P(:, 7) = bottomMiddleRight;
+            
+            % Top Middle Right
+            topMiddleRight = [centreSign(1); centreSign(2)+self.signLength/2; ...
+                centreSign(3)+self.signLength/4];
+            P(:, 8) = topMiddleRight;
+            
         end
         
         function deleteSign(self)

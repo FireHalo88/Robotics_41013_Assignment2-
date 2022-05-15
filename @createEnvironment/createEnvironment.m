@@ -104,7 +104,7 @@ function[object_h, objectVertices] = placeObjectsBetter(~, canvas,table, ...
                 %Canvas
                 case 1 
                     %object_h{i} = PlaceObject('canvas2.ply'); % Importing Canvas
-                    object_h{i} = PlaceObject('canvas30x20.ply'); % Importing Canvas
+                    object_h{i} = PlaceObject('canvas30x30.ply'); % Importing Canvas
                     objectVertices{i} = get(object_h{i},'Vertices'); % Extracting vertices data
                     transformedVertices = [objectVertices{i},ones(size(objectVertices{i},1),1)] * canvas'; % Transforming vertices
                     set(object_h{i},'Vertices',transformedVertices(:,1:3)); % Updating token location

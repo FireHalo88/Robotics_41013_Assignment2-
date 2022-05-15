@@ -90,7 +90,7 @@ pen1_T = transl(0.02, -0.3, 0.273);
 pen2_T = transl(0.07, -0.3, 0.273);
 pen3_T = transl(0.12, -0.3, 0.273);
 pen4_T = transl(0.17, -0.3, 0.273);
-canvas_T = transl(-0.3, -0.2, 0.22);
+canvas_T = transl(-0.3, -0.15, 0.22);   % If 40x40, use (-0.3, -0.2, 0.22)
 handles.blackPen_T = pen1_T;
 handles.redPen_T = pen2_T;
 handles.greenPen_T = pen3_T;
@@ -107,8 +107,8 @@ hansCute.plotModel();
 
 % Plot Environment
 % Create Instance of Environment Class
-environ = createEnvironment(workspace);
-[objectMeshes_h, objectVertices] = environ.placeObjectsBetter(canvas_T, table_T, ...
+handles.environ = createEnvironment(workspace);
+[objectMeshes_h, objectVertices] = handles.environ.placeObjectsBetter(canvas_T, table_T, ...
     pen1_T, pen2_T, pen3_T, pen4_T, safetyBarrierPoint1_T, safetyBarrierPoint2_T, ...
     safetyBarrierPoint3_T, safetyBarrierPoint4_T, guard_T, fireExtinguisher_T);
 
@@ -1549,8 +1549,8 @@ hold on
 
 usingRMRC = 1;
 if usingRMRC == 0
-    pen_T = pen_T*transl(-0.01, 0, 0);
-    pen_TR = pen_T*trotx(pi/2)*trotz(pi); % Shifting target transform slightly so pen is centred in gripper
+    adjPen_T = pen_T*transl(-0.01, 0, 0); % Adjusting target transform slightly so pen is centred in gripper
+    pen_TR = adjPen_T*trotx(pi/2)*trotz(pi);
     %qGuess_Pen = [25 90 0 0 -65 0 90]*pi/180;
     %qGuess_Pen = [60 45 0 105 0 -60 90]*pi/180;
 
@@ -1559,7 +1559,7 @@ if usingRMRC == 0
     % Use RMRC to move the Hans Cute back up 10cm
     % Define starting and desired end transform
     start_T = handles.myRobot.fkine(qOut);
-    end_T = pen_T*transl(0, -0.08, 0);  % Y-Axis pointing downwards
+    end_T = adjPen_T*transl(0, -0.08, 0);  % Y-Axis pointing downwards
     % RMRC (with object) Parameters: Robot, Start 4x4, End 4x4, Object Mesh, ...
     % Object Vertices, Time of Traj, Plot Traj Trail?, Plot Traj Data?
     qOut = handles.rMove.RMRC_7DOF(handles.myRobot, start_T, end_T, ...
@@ -1567,8 +1567,8 @@ if usingRMRC == 0
     
 else
     % Move above the target point
-    pen_T = pen_T*transl(-0.01, 0, 0.1);
-    pen_TR = pen_T*trotx(pi/2)*trotz(pi);
+    adjPen_T = pen_T*transl(-0.01, 0, 0.1); % Adjusting target transform slightly so pen is centred in gripper
+    pen_TR = adjPen_T*trotx(pi/2)*trotz(pi);
     [qOut, qMatrix_1] = handles.rMove.MoveRobotToObject2(handles.myRobot, pen_TR, ...
         qGuess_Pen, steps);
     updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
@@ -1578,7 +1578,7 @@ else
     % Plot Traj Trail?, Plot Traj Data?
     % Moving down:
     start_T = handles.myRobot.fkine(qOut);
-    end_T = pen_T*transl(0, 0, -0.08);  % Y-Axis pointing downwards
+    end_T = adjPen_T*transl(0, 0, -0.08);  % Y-Axis pointing downwards
     [qOut, qMatrix_2] = handles.rMove.RMRC_7DOF(handles.myRobot, start_T, end_T, 1, 0, 0);
     updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
     
@@ -1586,7 +1586,7 @@ else
     % Object Vertices, Time of Traj, Colour for Plot, Plot Traj Trail?, Plot Traj Data?
     % Moving up:
     start_T = handles.myRobot.fkine(qOut);
-    end_T = pen_T;
+    end_T = adjPen_T*transl(0, 0, 0.025);
     [qOut, qMatrix_3] = handles.rMove.RMRC_7DOF_OBJ(handles.myRobot, start_T, end_T, ...
         penMesh_h, penVertices, 1, 'c*', 0, 0, 0);
     updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
@@ -1595,7 +1595,7 @@ end
 % Move above Canvas
 % Define EE Canvas Translation Matrices
 pointCanvas = transl(-0.15, 0, handles.canvas_T(3,4)+0.08);
-aboveCanvas = pointCanvas*transl(0, 0, 0.07);
+aboveCanvas = pointCanvas*transl(0, 0, 0.12);   % OG: 0, 0, 0.07
 % Define EE Canvas Rotation Matrix
 canvas_Rot = troty(-pi/2)*trotz(pi/2); % __/-\_ config
 %canvas_Rot = trotx(pi/2)*trotz(pi);    % Right-Hand config
@@ -1644,7 +1644,7 @@ switch handles.shape
         [qOut, big_qMatrix] = handles.rMove.drawTriangle(handles.myRobot, pointCanvas_T, canvas_Rot, ...
             qGuess_Lower, penMesh_h, penVertices, 2, drawType);
         % Save qMatrices to a MAT File (maybe for playback on real robot)
-        save('drawTriangleTraj', 'qMatrix_1', 'qMatrix_2', 'qMatrix_3', 'qMatrix_4', 'big_qMatrix');
+        % save('drawTriangleTraj', 'qMatrix_1', 'qMatrix_2', 'qMatrix_3', 'qMatrix_4', 'big_qMatrix');
         
     case 'Star'
         % Drawing a Star centred at -0.05, 0
@@ -1675,29 +1675,42 @@ end
 
 updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
 
-%robot, centre_T, startTheta, ...
-%endTheta, radius, objMesh_h, objVertices, time, drawType, ...
-%moveToStart, onCanvas, plotTrail, plotData
-% handles.rMove.RMRC_7DOF_ARC_OBJ(handles.myRobot, pointCanvas_T, 0, ...
-%     pi, 0.05, penMesh_h, penVertices, 2, drawType, 1, 1, 1, 0);
-% updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
+% After drawing the image, move the pen back to its original position
+% Move back up above canvas
+qOut = handles.rMove.MoveRobotWithObject2(handles.myRobot, aboveCanvas_T, ...
+    penMesh_h, penVertices, qGuess_Pen, 30);
 
-% % Move to point at canvas with RMRC -> EE Pose needs to be Canvas Thickness + Pen
-% start_T = handles.myRobot.fkine(qOut);
-% end_T = pointCanvas_T;
-% qOut = handles.rMove.RMRC_7DOF_OBJ(handles.myRobot, start_T, end_T, ...
-%         penMesh_h, penVertices, 1, drawType, 0, 0, 0);
-% updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
-% 
-% % Draw a straight line across
-% start_T = handles.myRobot.fkine(qOut);
-% end_T = transl(start_T(1,4), start_T(2,4)+0.1, handles.canvas_T(3,4)+0.08)*canvas_Rot;
-% qOut = handles.rMove.RMRC_7DOF_OBJ(handles.myRobot, start_T, end_T, ...
-%         penMesh_h, penVertices, 2, drawType, 1, 1, 1);
-% updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
+% Moving above the pen pickup/dropoff location
+qOut = handles.rMove.MoveRobotWithObject2(handles.myRobot, pen_TR, ...
+    penMesh_h, penVertices, qGuess_Pen, steps);
+updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
+
+% RMRC to move the pen directly downwards
+start_T = handles.myRobot.fkine(qOut);
+end_T = adjPen_T*transl(0, 0, -0.08);
+qOut = handles.rMove.RMRC_7DOF_OBJ(handles.myRobot, start_T, end_T, ...
+            penMesh_h, penVertices, 1, 'c*', 0, 0, 0);
+updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
+
+% Need to transform the pen back to its original transform
+penTransformVertices = [penVertices,ones(size(penVertices,1),1)] * pen_T';
+set(penMesh_h, 'Vertices', penTransformVertices(:,1:3));
+
+% RMRC to move back up without the pen
+start_T = handles.myRobot.fkine(qOut);
+end_T = adjPen_T;
+qOut = handles.rMove.RMRC_7DOF(handles.myRobot, start_T, end_T, 1, 0, 0);
+updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
+
+% Move robot back to initial position (q = zeros(1,7))
+initQ = zeros(1,7);
+qOut = handles.rMove.MoveRobot(handles.myRobot, qOut, initQ, 30);
+updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
+
+% Update handles structure
+guidata(hObject, handles); 
     
         
-
 % --- Executes on button press in resumeBtn.
 function resumeBtn_Callback(hObject, eventdata, handles)
 % hObject    handle to resumeBtn (see GCBO)
@@ -2302,27 +2315,134 @@ if handles.vsState == 1
     [handles.sSign_h, handles.sSignVertices] = handles.visualServo.CreateSign(handles.sSign_T);
     drawnow();
     
-    % Create image target (points in the image plane) 
+    % Create image target (points in the image plane)
+    resU = 1024;
+    resV = 1024;
     cenU = 512;
     cenV = 512;
-    lenSignPixels = 120;
+    lenSignPixels = 400;
     % Use order to define as 2 -> 1 -> 8 -> 7 -> ... -> 3 (From Book
     % Drawing).
-    pStar = [cenU+lenSignPixels/4, cenU+-lenSignPixels/4, cenU-lenSignPixels/2, ...
+    pStar = [cenU+lenSignPixels/4, cenU-lenSignPixels/4, cenU-lenSignPixels/2, ...
              cenU-lenSignPixels/2, cenU-lenSignPixels/4, cenU+lenSignPixels/4, ...
              cenU+lenSignPixels/2, cenU+lenSignPixels/2;                            % U Coordinates
              cenV-lenSignPixels/2, cenV-lenSignPixels/2, cenV-lenSignPixels/4, ...
              cenV+lenSignPixels/4, cenV+lenSignPixels/2, cenV+lenSignPixels/2, ...
-             cen+lenSignPixels/4, cenV-lenSignPixels/4];                            % V Coordinates
+             cenV+lenSignPixels/4, cenV-lenSignPixels/4];                            % V Coordinates
     
     % Update handles structure
     guidata(hObject, handles);
     
-    signFromEE_T = handles.visualServo.signFromEE(handles.myRobot)
+    % Get Transform of Sign in frame of Robot End Effector
+    signFromEE_T = handles.visualServo.signFromEE(handles.myRobot);
+    
+    % Initialise Camera Object and define FPS
+    cam = CentralCamera('focal', 0.08, 'pixel', 10e-5, ...
+    'resolution', [resU resV], 'centre', [cenU cenV], 'name', 'ATV_Cam');
+    fps = 25;
+    
+    % Get Robot EE Pose and set it as the Camera Position
+    currQ = handles.myRobot.getpos()';
+    Tc0 = handles.myRobot.fkine(currQ);
+    cam.T = Tc0;
+    
+    % Define the visual servoing gain (0 < lambda < 1) and an estimated
+    % value for the depth. 
+    lambda = 0.8;
+    % Estimating Depth as distance from EE to centre of Sign
+    depth = sqrt(signFromEE_T(1,4)^2 + signFromEE_T(2,4)^2 + signFromEE_T(3,4)^2);
+    
+    % Get the current cartesian points 'P' of the Stop Sign corners
+    P = handles.visualServo.determineCartesianCornerPoints(handles.sSign_T);
+    
+    cam.clf()
+
+    % Display image view. Using the Vision Toolbox, plot the target in the
+    % Image View.
+    %axes(handles.axes3)
+    cam.plot(pStar, '*');
+    cam.hold(true);
+
+    % Display current view using the projection of the 3D points into the image
+    % at the current camera position.
+    cam.plot(P, 'Tcam', Tc0, 'o');
+    
+    pause(2);
     
     while(handles.vsState == 1)
         % VS CODE GOES HERE
+        % Get the current cartesian points 'P' of the Stop Sign corners
+        P = handles.visualServo.determineCartesianCornerPoints(handles.sSign_T);
         
+        % Compute the view of the camera by projecting the 3D points into the image
+        % plane.
+        %axes(handles.axes3)
+        uv = cam.plot(P);
+        
+        % Calculate the error in the image
+        e = pStar - uv;     % Desired - Observed
+        e = e(:);           % Compute image plane error as a column
+        
+        % Compute the current Image Jacobian/Interaction Matrix
+        % using the Vision Toolbox function
+        J = cam.visjac_p(uv, depth);
+        
+        % Compute the desired velocity ofthe camera given the error andthe Image Jacobian
+        % Note: This is the desired velocity of the end-effector
+        % NOTE: As we took the error to be Desired - Observed, Lambda is
+        % positive in this equation. If we took the error to be Observed -
+        % Desired, Lambda would have to be set negative (x -1) - This is
+        % the way we learnt it in Sensors and Control (so note that
+        % Robotics and SNC equate the error in reverse).
+        camVelocity = lambda*pinv(J)*e;
+        
+        % Calculate the joint velocities for the Robot to start minimising
+        % the error between the desired and observed.
+        % Compute Robot Jacobian and Inverse 
+        % Manipulator Jacobian -> Jacobian in END EFFECTOR REFERENCE FRAME
+        J2 = handles.myRobot.jacobn(currQ);
+        J_Inv = pinv(J2);   % Calculating the Psuedoinverse
+        
+        % Calc. Joint Velocities
+        qDot = J_Inv*camVelocity;    % qDot = pinv(Manipulator Jacobian)*lambda*pinv(Image Jacobian)*(Desired - Observed)
+    
+        % Ensure no Joint Velocities are set to >pi/s (rad/s)
+        % Find any joints with qDot > pi. If 'joint' ISN'T EMPTY 
+        % (~ = logical NOT), replace all qDot(joint) with pi.
+        joint = find(qDot > pi);
+        if ~isempty(joint)
+            qDot(joint) = pi;
+        end
+        
+        % Similarly as above, ensure no Joint Velocities are set to <-pi/s (rad/s)
+        % Find any joints with qDot < -pi. If 'joint' ISN'T EMPTY 
+        % (~ = logical NOT), replace all qDot(joint) with -pi.
+        joint = find(qDot < -pi);
+        if ~isempty(joint)
+            qDot(joint) = -pi;
+        end
+        
+        % Calculate the joint displacements (tip: DeltaT = 1/fps)
+        newQ = currQ + (1/fps)*qDot;
+        % Update current joint position to new joint position
+        currQ = newQ;
+        
+        % Display the robot and camera in the calculated new position
+        %axes(handles.axes2)
+        handles.myRobot.animate(newQ');
+        cam_T = handles.myRobot.fkine(newQ);
+        cam.T = cam_T;
+        
+        % Update handles structure
+        guidata(hObject, handles);
+        % Update GUI with Robot XYZ, RPY and Joint Angles
+        updateTeachGUI(handles);
+        
+        % Check if all the errors are less than one pixel (may use this for
+        % a boolean to prevent infinite running at low velocities which
+        % isn't necessarily efficient when an error this low is definitely 
+        % feasible enough).
+        errorCheck = find(abs(e) > 1);
         
         % Continously check each loop iteration if the vsState has been
         % updated to break out of the loop.      
@@ -2342,14 +2462,17 @@ function boyPoseBtn_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of boyPoseBtn
-handles.TBP = get(hhObject,'Value');
+handles.TBP = get(hObject,'Value');
+% Update handles structure
+guidata(hObject, handles);
 
 if handles.TBP == 0
-    %Boy Pose = XYZ
+    % Boy Pose = XYZ
 else
-    %Boy Pose = XYZ on table
-    %Create Mesh for Boy
+    % Boy Pose = XYZ on Table
+    % Create Mesh for Boy
 end
+
 
 % --- Executes on button press in lcdBtn.
 function lcdBtn_Callback(hObject, eventdata, handles)
