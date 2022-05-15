@@ -8,7 +8,7 @@ classdef RobotMovement < handle
         trailPlot_h;
         eStopState=0; %Emergency stop flag/toggle 0=Normal operation, 1=Emergency stopped
         goSignal=1; %Flag for resuming process after Estop. 0=disabled, 1=signaled to go
-        boyTranslation=[-0.6, 0.6, 0]; %Boy's Current Translation
+        boyTranslation=[-0.6, 0.6, -0.05]; %Boy's Current Translation
     end
     
     methods
@@ -80,15 +80,24 @@ classdef RobotMovement < handle
                         display("Collision with Boy");
                    end
                end
-
+               checkBoyEnteringWorkspace = lightCurtainCode(robot,self.boyTranslation,1);
                FK = robot.fkine(qpMatrix(end, :));
-
+%                 display("1 "+FK);
                % Check for the end-effector leaving the light curtain area
                checkJointCollisionWithLigthCurtain = lightCurtainCode(robot,FK,2);               
                %If true, TRIGGER THE ESTOP
-               if(checkJointCollisionWithLigthCurtain == true)
+               if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
                     self.eStopState = 1;
                     self.goSignal=0;
+               end
+
+               %Check if eStop is active, and lock in while loop if it
+               %is, also regress one "frame"
+               if self.eStopState==1
+                   i= i-1; 
+               end
+               while (self.eStopState==1||self.goSignal==0)
+                   pause(0.1);
                end
 
                % Plot Robot Moving
@@ -158,13 +167,21 @@ classdef RobotMovement < handle
                    if(checkCollisionBoy == true)
                         display("Collision with Boy");
                    end
+                   %Check if eStop is active, and lock in while loop if it
+                   %is, also regress one "frame"
+                   if self.eStopState==1
+                       i= i-1; 
+                   end
+                   while (self.eStopState==1||self.goSignal==0)
+                       pause(0.1);
+                   end
                end  
                FK = robot.fkine(qpMatrix(end, :));
-
+                checkBoyEnteringWorkspace = lightCurtainCode(robot,self.boyTranslation,1);
                % Check for the end-effector leaving the light curtain area
                checkJointCollisionWithLigthCurtain = lightCurtainCode(robot,FK,2);               
                %If true, TRIGGER THE ESTOP
-               if(checkJointCollisionWithLigthCurtain == true)
+               if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
                     self.eStopState = 1;
                     self.goSignal=0;
                end
@@ -241,7 +258,7 @@ classdef RobotMovement < handle
                         checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
                         checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),boy_centerpnt, self.boyTranslation, boy_width, boy_depth, boy_height);
                    end
-
+                   
                    %If any of them return true, TRIGGER THE ESTOP
                    if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
                         self.eStopState = 1;
@@ -259,11 +276,11 @@ classdef RobotMovement < handle
                    end
                end
                FK = robot.fkine(qpMatrix(end, :));
-                
+                checkBoyEnteringWorkspace = lightCurtainCode(robot,self.boyTranslation,1);
                % Check for the end-effector leaving the light curtain area
                checkJointCollisionWithLigthCurtain = lightCurtainCode(robot,FK,2);               
                %If true, TRIGGER THE ESTOP
-               if(checkJointCollisionWithLigthCurtain == true)
+               if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
                     self.eStopState = 1;
                     self.goSignal=0;
                end
@@ -375,13 +392,23 @@ classdef RobotMovement < handle
                % Get Robot Pose with Forward Kinematics
                robot_TR = robot.fkine(qpMatrix(i, :));
                edited_TR = robot_TR*trotx(pi/2);
+                checkBoyEnteringWorkspace = lightCurtainCode(robot,self.boyTranslation,1);
 
                % Check for the end-effector leaving the light curtain area
                checkJointCollisionWithLigthCurtain = lightCurtainCode(robot,robot_TR,2);               
                %If true, TRIGGER THE ESTOP
-               if(checkJointCollisionWithLigthCurtain == true)
+               if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
                     self.eStopState = 1;
                     self.goSignal=0;
+               end
+
+               %Check if eStop is active, and lock in while loop if it
+               %is, also regress one "frame"
+               if self.eStopState==1
+                   i= i-1; 
+               end
+               while (self.eStopState==1||self.goSignal==0)
+                   pause(0.1);
                end
 
                % Transform Object to this Pose
@@ -418,13 +445,22 @@ classdef RobotMovement < handle
                % Get Robot Pose with Forward Kinematics
                robot_TR = robot.fkine(qpMatrix(i, :));
                edited_TR = robot_TR*trotx(pi/2);
-
+                checkBoyEnteringWorkspace = lightCurtainCode(robot,self.boyTranslation,1);
                % Check for the end-effector leaving the light curtain area
                checkJointCollisionWithLigthCurtain = lightCurtainCode(robot,robot_TR,2);               
                %If true, TRIGGER THE ESTOP
-               if(checkJointCollisionWithLigthCurtain == true)
+               if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
                     self.eStopState = 1;
                     self.goSignal=0;
+               end
+
+               %Check if eStop is active, and lock in while loop if it
+               %is, also regress one "frame"
+               if self.eStopState==1
+                   i= i-1; 
+               end
+               while (self.eStopState==1||self.goSignal==0)
+                   pause(0.1);
                end
 
                % Transform Object to this Pose
@@ -519,15 +555,24 @@ classdef RobotMovement < handle
                % Get Robot Pose with Forward Kinematics
                robot_TR = robot.fkine(qpMatrix(i, :));               
                edited_TR = robot_TR*trotx(pi/2);
-               
+                checkBoyEnteringWorkspace = lightCurtainCode(robot,self.boyTranslation,1);
                % Check for the end-effector leaving the light curtain area
                checkJointCollisionWithLigthCurtain = lightCurtainCode(robot,robot_TR,2);               
                %If true, TRIGGER THE ESTOP
-               if(checkJointCollisionWithLigthCurtain == true)
+               if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
                     self.eStopState = 1;
                     self.goSignal=0;
                end
                
+               %Check if eStop is active, and lock in while loop if it
+               %is, also regress one "frame"
+               if self.eStopState==1
+                   i= i-1; 
+               end
+               while (self.eStopState==1||self.goSignal==0)
+                   pause(0.1);
+               end
+
                %Check if eStop is active, and lock in while loop if it
                %is, also regress one "frame"
                if self.eStopState==1
@@ -742,7 +787,16 @@ classdef RobotMovement < handle
                 trail(:, i) = FK(1:3, 4);
                 robot.animate(qMatrix(i, :));
                 drawnow();
-                
+               %Check if the boy is within the robot's workspace 
+               checkBoyEnteringWorkspace = lightCurtainCode(robot,self.boyTranslation,1);
+               % Check for the end-effector leaving the light curtain area
+               checkJointCollisionWithLigthCurtain = lightCurtainCode(robot,FK,2);               
+               %If true, TRIGGER THE ESTOP
+               if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
+                    self.eStopState = 1;
+                    self.goSignal=0;
+               end
+
                 %Check if eStop is active, and lock in while loop if it
                 %is, also regress one "frame"
                 if self.eStopState==1
@@ -1002,7 +1056,16 @@ classdef RobotMovement < handle
                end                 
                 % Get FK
                 FK = robot.fkine(qMatrix(i, :));
-                %display(FK);
+               %Check if the boy is within the robot's workspace 
+               checkBoyEnteringWorkspace = lightCurtainCode(robot,self.boyTranslation,1);
+               % Check for the end-effector leaving the light curtain area
+               checkJointCollisionWithLigthCurtain = lightCurtainCode(robot,FK,2);               
+               %If true, TRIGGER THE ESTOP
+               if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
+                    self.eStopState = 1;
+                    self.goSignal=0;
+               end
+
                 editedFK = FK*trotx(pi/2);
                 % Save FK value for trail
                 trail(:, i) = FK(1:3, 4);
@@ -1322,7 +1385,17 @@ classdef RobotMovement < handle
 
                 % Get FK
                 FK = robot.fkine(qMatrix(i, :));
-                %display(FK);
+
+               %Check if the boy is within the robot's workspace 
+               checkBoyEnteringWorkspace = lightCurtainCode(robot,self.boyTranslation,1);
+               % Check for the end-effector leaving the light curtain area
+               checkJointCollisionWithLigthCurtain = lightCurtainCode(robot,FK,2);               
+               %If true, TRIGGER THE ESTOP
+               if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
+                    self.eStopState = 1;
+                    self.goSignal=0;
+               end
+               
                 editedFK = FK*trotx(pi/2);
                 % Save FK value for trail
                 trail(:, i) = FK(1:3, 4);
@@ -2154,6 +2227,14 @@ classdef RobotMovement < handle
             
             % Animate Robot Moving
             for i = 1:steps         
+                checkBoyEnteringWorkspace = lightCurtainCode(robot,self.boyTranslation,1);
+               % Check for the end-effector leaving the light curtain area
+               checkJointCollisionWithLigthCurtain = lightCurtainCode(robot,qMatrix(i, :),2);               
+               %If true, TRIGGER THE ESTOP
+               if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
+                    self.eStopState = 1;
+                    self.goSignal=0;
+               end
                 robot.animate(qMatrix(i, :));
                 drawnow();
                 pause(0.01);

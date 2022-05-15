@@ -17,8 +17,8 @@ function [collision] = lightCurtainCode(robot, translation,object)
             end
         case 2 %Check if joint are outside the light curtain area
             collision = false;
-            if(translation (1,1) < safetyBarrierPoint1(1,1) || translation (1,1) > safetyBarrierPoint4(1,1))
-                if(translation (1,2) < safetyBarrierPoint1(1,2) || translation (1,2) > safetyBarrierPoint4(1,2))
+            if(translation (1,4) < safetyBarrierPoint1(1,1) || translation (1,4) > safetyBarrierPoint4(1,1))
+                if(translation (2,4) < safetyBarrierPoint1(1,2) || translation (2,4) > safetyBarrierPoint4(1,2))
                     collision = true; %Out Of Bounds
                 end
             end
