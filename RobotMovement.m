@@ -8,7 +8,7 @@ classdef RobotMovement < handle
         trailPlot_h;
         eStopState=0; %Emergency stop flag/toggle 0=Normal operation, 1=Emergency stopped
         goSignal=1; %Flag for resuming process after Estop. 0=disabled, 1=signaled to go
-        boyTranslation=[-0.6, 0.6, -0.05]; %Boy's Current Translation
+        boyTranslation=[-0.6, 0.6, -0.05]; %Boy's Initial Translation
     end
     
     methods
@@ -25,9 +25,9 @@ classdef RobotMovement < handle
             % TO BE ADDED: COLLISION AVOIDANCE/DETECTION
             [table_translation, canvas_translation, table_centerpnt, table_width, ...
             table_depth, table_height, canvas_centerpnt, canvas_width, ...
-            canvas_depth, canvas_height] = generateCollisionBlocks(0);
+            canvas_depth, canvas_height] = self.generateCollisionBlocks(0);
 
-            [boy_centerpnt, boy_width, boy_depth, boy_height] = generateBoyCollision(self.boyTranslation);
+            [boy_centerpnt, boy_width, boy_depth, boy_height] = self.generateBoyCollision(self.boyTranslation);
             % Defining and logging to log file for information
             funcName = 'MoveRobotToObject';
             self.L.mlog = {self.L.DEBUG,funcName,['RUNNING FUNCTION: ', ...
@@ -225,9 +225,9 @@ classdef RobotMovement < handle
             % TO BE ADDED: COLLISION AVOIDANCE/DETECTION
             [table_translation, canvas_translation, table_centerpnt, table_width, ...
             table_depth, table_height, canvas_centerpnt, canvas_width, ...
-            canvas_depth, canvas_height] = generateCollisionBlocks(0);
+            canvas_depth, canvas_height] = self.generateCollisionBlocks(0);
 
-            [boy_centerpnt, boy_width, boy_depth, boy_height] = generateBoyCollision(self.boyTranslation);
+            [boy_centerpnt, boy_width, boy_depth, boy_height] = self.generateBoyCollision(self.boyTranslation);
             % Defining and logging to log file for information
             funcName = 'MoveRobotToObject2';
             self.L.mlog = {self.L.DEBUG,funcName,['RUNNING FUNCTION: ', ...
@@ -333,9 +333,9 @@ classdef RobotMovement < handle
             % TO BE ADDED: COLLISION AVOIDANCE/DETECTION
             [table_translation, canvas_translation, table_centerpnt, table_width, ...
             table_depth, table_height, canvas_centerpnt, canvas_width, ...
-            canvas_depth, canvas_height] = generateCollisionBlocks(0);
+            canvas_depth, canvas_height] = self.generateCollisionBlocks(0);
 
-            [boy_centerpnt, boy_width, boy_depth, boy_height] = generateBoyCollision(self.boyTranslation);
+            [boy_centerpnt, boy_width, boy_depth, boy_height] = self.generateBoyCollision(self.boyTranslation);
             % Defining and logging to log file for information
             funcName = 'MoveRobotWithObject';
             self.L.mlog = {self.L.DEBUG,funcName,['RUNNING FUNCTION: ', ...
@@ -500,9 +500,9 @@ classdef RobotMovement < handle
             % TO BE ADDED: COLLISION AVOIDANCE/DETECTION
             [table_translation, canvas_translation, table_centerpnt, table_width, ...
             table_depth, table_height, canvas_centerpnt, canvas_width, ...
-            canvas_depth, canvas_height] = generateCollisionBlocks(0);
+            canvas_depth, canvas_height] = self.generateCollisionBlocks(0);
 
-            [boy_centerpnt, boy_width, boy_depth, boy_height] = generateBoyCollision(self.boyTranslation);
+            [boy_centerpnt, boy_width, boy_depth, boy_height] = self.generateBoyCollision(self.boyTranslation);
             % Defining and logging to log file for information
             funcName = 'MoveRobotWithObject2';
             self.L.mlog = {self.L.DEBUG,funcName,['RUNNING FUNCTION: ', ...
@@ -664,9 +664,9 @@ classdef RobotMovement < handle
             %Create Collision Boxes for Canvas, Table and Boy
             [table_translation, canvas_translation, table_centerpnt, table_width, ...
             table_depth, table_height, canvas_centerpnt, canvas_width, ...
-            canvas_depth, canvas_height] = generateCollisionBlocks(0);
+            canvas_depth, canvas_height] = self.generateCollisionBlocks(0);
 
-            [boy_centerpnt, boy_width, boy_depth, boy_height] = generateBoyCollision(self.boyTranslation);
+            [boy_centerpnt, boy_width, boy_depth, boy_height] = self.generateBoyCollision(self.boyTranslation);
 
             % Create straight line trajectory in X-Y-Z plane at current RPY
             s = lspb(0,1,steps);            % Trapezoidal Trajectory Scalar
@@ -936,9 +936,9 @@ classdef RobotMovement < handle
             %Create Collision Boxes for Canvas, Table and Boy
             [table_translation, canvas_translation, table_centerpnt, table_width, ...
             table_depth, table_height, canvas_centerpnt, canvas_width, ...
-            canvas_depth, canvas_height] = generateCollisionBlocks(0);
+            canvas_depth, canvas_height] = self.generateCollisionBlocks(0);
 
-            [boy_centerpnt, boy_width, boy_depth, boy_height] = generateBoyCollision(self.boyTranslation);
+            [boy_centerpnt, boy_width, boy_depth, boy_height] = self.generateBoyCollision(self.boyTranslation);
 
             % Create straight line trajectory in X-Y-Z plane at current RPY
             s = lspb(0,1,steps);            % Trapezoidal Trajectory Scalar
@@ -1240,9 +1240,9 @@ classdef RobotMovement < handle
             %Create Collision Boxes for Canvas, Table and Boy
             [table_translation, canvas_translation, table_centerpnt, table_width, ...
             table_depth, table_height, canvas_centerpnt, canvas_width, ...
-            canvas_depth, canvas_height] = generateCollisionBlocks(0);
+            canvas_depth, canvas_height] = self.generateCollisionBlocks(0);
 
-            [boy_centerpnt, boy_width, boy_depth, boy_height] = generateBoyCollision(self.boyTranslation);
+            [boy_centerpnt, boy_width, boy_depth, boy_height] = self.generateBoyCollision(self.boyTranslation);
             
             % Get X-Y-Z of Centre Pose
             startXYZ = centre_T(1:3, 4);
@@ -2288,42 +2288,42 @@ classdef RobotMovement < handle
         
         function deletePlot(self)
             % This function aims to delete the canvas plot
-            for i = 1:length(self.trailPlot_h)
-                try delete(self.trailPlot_h(i)); end
-            end
+%             for i = 1:length(self.trailPlot_h)
+%                 try delete(self.trailPlot_h(i)); end
+%             end
         end
         
+        %This creates the collision boxes for the canvas and the table    
+        function [table_translation, canvas_translation, table_centerpnt, table_width, table_depth, table_height, canvas_centerpnt, canvas_width, canvas_depth, canvas_height] = generateCollisionBlocks(self, state) 
+            plotOptions.plotFaces = true;
+            switch state
+                case 0 %For Table and Canvas
+                    %Sets up collision rectangles for the canvas and table
+                    table_translation = [0.1, 0.0, -0.005];    
+                    canvas_translation = [-0.3, -0.2, 0.215];                        
+
+                    %Places Collision Detection for Table            
+                    [table_centerpnt, table_width, table_depth, table_height] = PLY_Obstacle_Dimensions(3,1);        
+                    [table_vertex,table_faces,table_faceNormals] = ActualRectangularPrism(table_centerpnt, table_translation, table_width, table_depth, table_height ,plotOptions);
+                    axis equal
+
+                    %Places Collision Detection for Canvas
+                    [canvas_centerpnt, canvas_width, canvas_depth, canvas_height] = PLY_Obstacle_Dimensions(4,0);
+                    [canvas_vertex,canvas_faces,canvas_faceNormals] = ActualRectangularPrism(canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height ,plotOptions);
+                    axis equal
+            end
+        end
+
+        %This creates the collision boxes for the canvas and the table    
+        function [boy_centerpnt, boy_width, boy_depth, boy_height] = generateBoyCollision (self, boyTranslation)
+            plotOptions.plotFaces = true;
+            %boy_translation = [0.5, 0.0, 0.22]; % OG: [-0.2, 0.0, 0.22]
+            %Places Collision Detection for Canvas
+            [boy_centerpnt, boy_width, boy_depth, boy_height] = PLY_Obstacle_Dimensions(1,1);
+            [boy_vertex,boy_faces,boy_faceNormals] = ActualRectangularPrism(boy_centerpnt, boyTranslation, boy_width, boy_depth, boy_height ,plotOptions);
+            axis equal
+        end
     end
             
 end
 
-%This creates the collision boxes for the canvas and the table    
-function [table_translation, canvas_translation, table_centerpnt, table_width, table_depth, table_height, canvas_centerpnt, canvas_width, canvas_depth, canvas_height] = generateCollisionBlocks(state) 
-    plotOptions.plotFaces = true;
-    switch state
-        case 0 %For Table and Canvas
-            %Sets up collision rectangles for the canvas and table
-            table_translation = [0.1, 0.0, -0.005];    
-            canvas_translation = [-0.3, -0.2, 0.215];                        
-        
-            %Places Collision Detection for Table            
-            [table_centerpnt, table_width, table_depth, table_height] = PLY_Obstacle_Dimensions(3,1);        
-            [table_vertex,table_faces,table_faceNormals] = ActualRectangularPrism(table_centerpnt, table_translation, table_width, table_depth, table_height ,plotOptions);
-            axis equal
-        
-            %Places Collision Detection for Canvas
-            [canvas_centerpnt, canvas_width, canvas_depth, canvas_height] = PLY_Obstacle_Dimensions(4,0);
-            [canvas_vertex,canvas_faces,canvas_faceNormals] = ActualRectangularPrism(canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height ,plotOptions);
-            axis equal
-    end
-end
-
-%This creates the collision boxes for the canvas and the table    
-function [boy_centerpnt, boy_width, boy_depth, boy_height] = generateBoyCollision (boyTranslation)
-    plotOptions.plotFaces = true;
-    %boy_translation = [0.5, 0.0, 0.22]; % OG: [-0.2, 0.0, 0.22]
-    %Places Collision Detection for Canvas
-    [boy_centerpnt, boy_width, boy_depth, boy_height] = PLY_Obstacle_Dimensions(1,1);
-    [boy_vertex,boy_faces,boy_faceNormals] = ActualRectangularPrism(boy_centerpnt, boyTranslation, boy_width, boy_depth, boy_height ,plotOptions);
-    axis equal
-end
