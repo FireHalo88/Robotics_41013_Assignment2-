@@ -132,6 +132,7 @@ for i = 0.6:-0.005:-0.5
     %test = PLY_Collision_Detection(2, 0.0,0.0,0.4,0.3,0.75,robot, [pi,0,0], centerpnt, translation, width, depth, height);
     %test = plottingCollisionDetection(myRobot, [0,-0.5*pi,0,0,0,0,0], [0,-0.5*pi,0,0,0,0,0],centerpnt, translation, width, depth, height);
     test = lightCurtainCode(myRobot,translation, 1);
+    
     if test == false
        drawnow; % Update simulation
        pause(0.2); % Wait before execution
