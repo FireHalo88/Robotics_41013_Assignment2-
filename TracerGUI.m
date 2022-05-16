@@ -128,7 +128,7 @@ view(3);
 
 % Calculate the Robot EE Position with FK
 myRobot_TR = myRobot.fkine(q);
-checkRobotIsInBounds = lightCurtainCode("myRobot", myRobot_TR, 2);
+checkRobotIsInBounds = lightCurtainCode(myRobot_TR, 2);
 if(checkRobotIsInBounds == true)
     disp("WARNING: Hans Cute Robot is out of bounds, move back in bounds!");
 end
@@ -299,7 +299,7 @@ handles.myRobot.animate(allQ);
 % Now we want to update the EE Position on the GUI
 % Calculate the Robot EE Position with FK
 myRobot_TR = handles.myRobot.fkine(allQ);
-checkRobotIsInBounds = lightCurtainCode("myRobot", myRobot_TR, 2);
+checkRobotIsInBounds = lightCurtainCode(myRobot_TR, 2);
 if(checkRobotIsInBounds == true)
     disp("WARNING: Hans Cute Robot is out of bounds, move back in bounds!");
 end
@@ -353,7 +353,7 @@ handles.myRobot.animate(allQ);
 % Calculate the Robot EE Position with FK
 myRobot_TR = handles.myRobot.fkine(allQ);
 
-checkRobotIsInBounds = lightCurtainCode("myRobot", myRobot_TR, 2);
+checkRobotIsInBounds = lightCurtainCode(myRobot_TR, 2);
 if(checkRobotIsInBounds == true)
     disp("WARNING: Hans Cute Robot is out of bounds, move back in bounds!");
 end
@@ -408,7 +408,7 @@ handles.myRobot.animate(allQ);
 % Calculate the Robot EE Position with FK
 myRobot_TR = handles.myRobot.fkine(allQ);
 
-checkRobotIsInBounds = lightCurtainCode("myRobot", myRobot_TR, 2);
+checkRobotIsInBounds = lightCurtainCode(myRobot_TR, 2);
 if(checkRobotIsInBounds == true)
     disp("WARNING: Hans Cute Robot is out of bounds, move back in bounds!");
 end
@@ -462,7 +462,7 @@ handles.myRobot.animate(allQ);
 % Calculate the Robot EE Position with FK
 myRobot_TR = handles.myRobot.fkine(allQ);
 
-checkRobotIsInBounds = lightCurtainCode("myRobot", myRobot_TR, 2);
+checkRobotIsInBounds = lightCurtainCode(myRobot_TR, 2);
 if(checkRobotIsInBounds == true)
     disp("WARNING: Hans Cute Robot is out of bounds, move back in bounds!");
 end
@@ -517,7 +517,7 @@ handles.myRobot.animate(allQ);
 % Calculate the Robot EE Position with FK
 myRobot_TR = handles.myRobot.fkine(allQ);
 
-checkRobotIsInBounds = lightCurtainCode("myRobot", myRobot_TR, 2);
+checkRobotIsInBounds = lightCurtainCode(myRobot_TR, 2);
 if(checkRobotIsInBounds == true)
     disp("WARNING: Hans Cute Robot is out of bounds, move back in bounds!");
 end
@@ -573,7 +573,7 @@ handles.myRobot.animate(allQ);
 % Calculate the Robot EE Position with FK
 myRobot_TR = handles.myRobot.fkine(allQ);
 
-checkRobotIsInBounds = lightCurtainCode("myRobot", myRobot_TR, 2);
+checkRobotIsInBounds = lightCurtainCode(myRobot_TR, 2);
 if(checkRobotIsInBounds == true)
     disp("WARNING: Hans Cute Robot is out of bounds, move back in bounds!");
 end
@@ -627,7 +627,7 @@ handles.myRobot.animate(allQ);
 % Calculate the Robot EE Position with FK
 myRobot_TR = handles.myRobot.fkine(allQ);
 
-checkRobotIsInBounds = lightCurtainCode("myRobot", myRobot_TR, 2);
+checkRobotIsInBounds = lightCurtainCode(myRobot_TR, 2);
 if(checkRobotIsInBounds == true)
     disp("WARNING: Hans Cute Robot is out of bounds, move back in bounds!");
 end
@@ -691,7 +691,7 @@ else
     % Calculate the Robot EE Position with FK
     myRobot_TR = handles.myRobot.fkine(allQ);
 
-    checkRobotIsInBounds = lightCurtainCode("myRobot", myRobot_TR, 2);
+    checkRobotIsInBounds = lightCurtainCode(myRobot_TR, 2);
     if(checkRobotIsInBounds == true)
         disp("WARNING: Hans Cute Robot is out of bounds, move back in bounds!");
     end
@@ -751,7 +751,7 @@ else
     % Calculate the Robot EE Position with FK
     myRobot_TR = handles.myRobot.fkine(allQ);
 
-    checkRobotIsInBounds = lightCurtainCode("myRobot", myRobot_TR, 2);
+    checkRobotIsInBounds = lightCurtainCode(myRobot_TR, 2);
     if(checkRobotIsInBounds == true)
         disp("WARNING: Hans Cute Robot is out of bounds, move back in bounds!");
     end
@@ -810,7 +810,7 @@ else
     % Calculate the Robot EE Position with FK
     myRobot_TR = handles.myRobot.fkine(allQ);
 
-    checkRobotIsInBounds = lightCurtainCode("myRobot", myRobot_TR, 2);
+    checkRobotIsInBounds = lightCurtainCode(myRobot_TR, 2);
     if(checkRobotIsInBounds == true)
         disp("WARNING: Hans Cute Robot is out of bounds, move back in bounds!");
     end
@@ -869,7 +869,7 @@ else
     % Calculate the Robot EE Position with FK
     myRobot_TR = handles.myRobot.fkine(allQ);
 
-    checkRobotIsInBounds = lightCurtainCode("myRobot", myRobot_TR, 2);
+    checkRobotIsInBounds = lightCurtainCode(myRobot_TR, 2);
     if(checkRobotIsInBounds == true)
         disp("WARNING: Hans Cute Robot is out of bounds, move back in bounds!");
     end
@@ -928,7 +928,7 @@ else
     % Calculate the Robot EE Position with FK
     myRobot_TR = handles.myRobot.fkine(allQ);
 
-    checkRobotIsInBounds = lightCurtainCode("myRobot", myRobot_TR, 2);
+    checkRobotIsInBounds = lightCurtainCode(myRobot_TR, 2);
     if(checkRobotIsInBounds == true)
         disp("WARNING: Hans Cute Robot is out of bounds, move back in bounds!");
     end
@@ -987,7 +987,7 @@ else
     % Calculate the Robot EE Position with FK
     myRobot_TR = handles.myRobot.fkine(allQ);
 
-    checkRobotIsInBounds = lightCurtainCode("myRobot", myRobot_TR, 2);
+    checkRobotIsInBounds = lightCurtainCode(myRobot_TR, 2);
     if(checkRobotIsInBounds == true)
         disp("WARNING: Hans Cute Robot is out of bounds, move back in bounds!");
     end
@@ -1046,7 +1046,7 @@ else
     % Calculate the Robot EE Position with FK
     myRobot_TR = handles.myRobot.fkine(allQ);
 
-    checkRobotIsInBounds = lightCurtainCode("myRobot", myRobot_TR, 2);
+    checkRobotIsInBounds = lightCurtainCode(myRobot_TR, 2);
     if(checkRobotIsInBounds == true)
         disp("WARNING: Hans Cute Robot is out of bounds, move back in bounds!");
     end
@@ -1146,7 +1146,7 @@ if vsState == 0
     % Get new EE pose with FK and update XYZ, RPY values
     myRobot_TR = handles.myRobot.fkine(newQ)
 
-    checkRobotIsInBounds = lightCurtainCode("myRobot", myRobot_TR, 2);
+    checkRobotIsInBounds = lightCurtainCode(myRobot_TR, 2);
     if(checkRobotIsInBounds == true)
         disp("WARNING: Hans Cute Robot is out of bounds, move back in bounds!");
     end
@@ -1226,7 +1226,7 @@ if vsState == 0
     % Get new EE pose with FK and update XYZ, RPY values
     myRobot_TR = handles.myRobot.fkine(newQ)
 
-    checkRobotIsInBounds = lightCurtainCode("myRobot", myRobot_TR, 2);
+    checkRobotIsInBounds = lightCurtainCode(myRobot_TR, 2);
     if(checkRobotIsInBounds == true)
         disp("WARNING: Hans Cute Robot is out of bounds, move back in bounds!");
     end
@@ -1306,7 +1306,7 @@ if vsState == 0
     % Get new EE pose with FK and update XYZ, RPY values
     myRobot_TR = handles.myRobot.fkine(newQ)
 
-    checkRobotIsInBounds = lightCurtainCode("myRobot", myRobot_TR, 2);
+    checkRobotIsInBounds = lightCurtainCode(myRobot_TR, 2);
     if(checkRobotIsInBounds == true)
         disp("WARNING: Hans Cute Robot is out of bounds, move back in bounds!");
     end
@@ -1386,7 +1386,7 @@ if vsState == 0
     % Get new EE pose with FK and update XYZ, RPY values
     myRobot_TR = handles.myRobot.fkine(newQ)
 
-    checkRobotIsInBounds = lightCurtainCode("myRobot", myRobot_TR, 2);
+    checkRobotIsInBounds = lightCurtainCode(myRobot_TR, 2);
     if(checkRobotIsInBounds == true)
         disp("WARNING: Hans Cute Robot is out of bounds, move back in bounds!");
     end
@@ -1465,7 +1465,7 @@ if vsState == 0
     % Get new EE pose with FK and update XYZ, RPY values
     myRobot_TR = handles.myRobot.fkine(newQ)
 
-    checkRobotIsInBounds = lightCurtainCode("myRobot", myRobot_TR, 2);
+    checkRobotIsInBounds = lightCurtainCode(myRobot_TR, 2);
     if(checkRobotIsInBounds == true)
         disp("WARNING: Hans Cute Robot is out of bounds, move back in bounds!");
     end
@@ -1545,7 +1545,7 @@ if vsState == 0
     % Get new EE pose with FK and update XYZ, RPY values
     myRobot_TR = handles.myRobot.fkine(newQ)
 
-    checkRobotIsInBounds = lightCurtainCode("myRobot", myRobot_TR, 2);
+    checkRobotIsInBounds = lightCurtainCode(myRobot_TR, 2);
     if(checkRobotIsInBounds == true)
         disp("WARNNIG: Hans Cute Robot is out of bounds, move back in bounds!")
     end

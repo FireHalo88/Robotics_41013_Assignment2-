@@ -1,4 +1,4 @@
-function [collision] = lightCurtainCode(robot, translation,object)
+function [collision] = lightCurtainCode(translation,object)
     safetyBarrierPoint1 = [-0.43, -0.52, 0.0];
     safetyBarrierPoint2 = [-0.43, 0.46, 0.0];    
     safetyBarrierPoint3 = [0.42, -0.52, 0.0];
