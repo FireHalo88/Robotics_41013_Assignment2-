@@ -45,7 +45,8 @@ classdef VisualServoing < handle
             % Add a Brick with the 'PlaceObject' function and using ...
             % 'Brick.ply' as the input argument. Then get the vertices ...
             % out of the mesh handle to use later on.
-            ssMesh_h = PlaceObject('StopSign_Resized2_PLY.ply');
+            %ssMesh_h = PlaceObject('StopSign_Resized2_PLY.ply');
+            ssMesh_h = PlaceObject('StopSign_15x15_PLY.ply');
             %axis equal
             ssVertices = get(ssMesh_h,'Vertices');
 

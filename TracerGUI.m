@@ -2312,7 +2312,7 @@ function rcBtn_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of vsBtn
+% Hint: get(hObject,'Value') returns toggle state of rcBtn
 handles.rcState = get(hObject, 'Value');    % Get state of Joystick Control Mode
 % Setup Controller
 handles.id = 1; 
@@ -2448,13 +2448,13 @@ if handles.vsState == 1
     % Animate Robot into a Pose for Visual Servoing
     qVS = [0 20 0 70 0 0 90]*pi/180;
 %     handles.myRobot.animate(qVS);
-    vs_T = transl(-0.13, 0, 0.45)*troty(-pi/2);
+    vs_T = transl(-0.13, 0, 0.45)*troty(-pi/2)*trotz(pi/4);
     handles.rMove.MoveRobotToObject2(handles.myRobot, vs_T, qVS, 30);
     updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
     
     % Plot Stop Sign 
     % handles.stopSign_h = visualServo.plotSign(handles.myRobot, 1);
-    handles.sSign_T = transl(-0.3, 0, 0.5)*trotx(pi/2)*troty(pi/2);
+    handles.sSign_T = transl(-0.4, 0, 0.5)*trotx(pi/2)*troty(pi/2);
     [handles.sSign_h, handles.sSignVertices] = handles.visualServo.CreateSign(handles.sSign_T);
     drawnow();
     
@@ -2463,7 +2463,7 @@ if handles.vsState == 1
     resV = 1024;
     cenU = 512;
     cenV = 512;
-    lenSignPixels = 400;
+    lenSignPixels = 460;
     % Use order to define as 2 -> 1 -> 8 -> 7 -> ... -> 3 (From Book
     % Drawing).
     pStar = [cenU+lenSignPixels/4, cenU-lenSignPixels/4, cenU-lenSignPixels/2, ...
@@ -2491,7 +2491,7 @@ if handles.vsState == 1
     
     % Define the visual servoing gain (0 < lambda < 1) and an estimated
     % value for the depth. 
-    lambda = 0.8;
+    lambda = 0.6;
     % Estimating Depth as distance from EE to centre of Sign
     depth = sqrt(signFromEE_T(1,4)^2 + signFromEE_T(2,4)^2 + signFromEE_T(3,4)^2);
     
@@ -2549,6 +2549,20 @@ if handles.vsState == 1
         % Calc. Joint Velocities
         qDot = J_Inv*camVelocity;    % qDot = pinv(Manipulator Jacobian)*lambda*pinv(Image Jacobian)*(Desired - Observed)
     
+        % Ensure no joint velocities will cause robot to exceed joint
+        % limits
+        for j = 1:length(qDot)
+            if q(j) < r.model.qlim(j,1)
+                disp(['Joint ', num2str(j), ' is below allowable limits! ', ...
+                    'Joint is at: ', num2str(q(j)), ', limit is: ', num2str(r.model.qlim(j,1))]);
+            elseif q(j) > r.model.qlim(j,2)
+                disp(['Joint ', num2str(j), ' is above allowable limits! ', ...
+                    'Joint is at: ', num2str(q(j)), ', limit is: ', num2str(r.model.qlim(j,2))]);
+            else
+                continue
+            end
+        end
+        
         % Ensure no Joint Velocities are set to >pi/s (rad/s)
         % Find any joints with qDot > pi. If 'joint' ISN'T EMPTY 
         % (~ = logical NOT), replace all qDot(joint) with pi.
