@@ -22,7 +22,7 @@ function varargout = TracerGUI(varargin)
 
 % Edit the above text to modify the response to help TracerGUI
 
-% Last Modified by GUIDE v2.5 14-May-2022 18:47:25
+% Last Modified by GUIDE v2.5 16-May-2022 23:46:20
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -153,8 +153,7 @@ handles.colour = 'blackPen';    % Tracking colour chosen by user
 handles.shape = 'Circle';       % Tracking drawing chosen by user
 handles.shape_h = [];           % Handle holding visualisation plot
 handles.canvasPlot_h = [];      % Handle holding canvas plot
-handles.drawing = [];
-handles.drawingPath = '';
+handles.LCDState_2 = 0;         % Boolean denoting initial state for LCD code (no boy movement).
 % Handle for Robot Movement Class
 rMove = RobotMovement;
 handles.rMove = rMove;
@@ -2651,21 +2650,115 @@ function lcdBtn_Callback(hObject, eventdata, handles)
 % hObject    handle to lcdBtn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.LCD = get(hObject,'Value');
 
-try 
-    delete(handles.boyMesh_h); 
+% FOR A TOGGLE BUTTON -> USE THIS CODE
+% Determine current state of button
+% handles.LCDState = get(hObject, 'Value');
+% 
+% If state = 1, have boy start translating in positive X
+% if handles.LCDState == 1
+%     Delete previous mesh of Boy
+%     try delete(handles.boyMesh_h); end
+%     
+%     Define new transform
+%     handles.boy_T = transl(-0.55, 0, -0.07)*trotz(pi/2);
+%     [handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject('boy8.ply', handles.boy_T);
+%     for i = 1:25
+%         Transform Object to a new Pose -> +1CM IN X = -1CM IN BOY'S Y
+%         handles.boy_T = handles.boy_T*transl(0, -0.01, 0);
+%         boyTransformVertices = [handles.boyVertices,ones(size(handles.boyVertices,1),1)] ...
+%             * handles.boy_T';
+%         set(handles.boyMesh_h, 'Vertices', boyTransformVertices(:,1:3));
+%         drawnow();
+%         
+%         Update GUI Handles Structure
+%         guidata(hObject, handles);
+%     end
+% If state = 0, have boy start translating in negative X
+% else
+%     for i = 1:25
+%         Transform Object to a new Pose -> -1CM IN X = +1CM IN BOY'S Y
+%         handles.boy_T = handles.boy_T*transl(0, 0.01, 0);
+%         boyTransformVertices = [handles.boyVertices,ones(size(handles.boyVertices,1),1)] ...
+%             * handles.boy_T';
+%         set(handles.boyMesh_h, 'Vertices', boyTransformVertices(:,1:3));
+%         drawnow();
+%         
+%         Update GUI Handles Structure
+%         guidata(hObject, handles);
+%     end
+% end
+% 
+% Update GUI Handles Structure
+% guidata(hObject, handles);
+
+% A WAY WHERE WE CAN HAVE IT MOVE SIMILTANEOUSLY TO THE ROBOT -> NEEDS TO
+% BE A PUSHBUTTON
+% STATE 0 = NOT MOVING
+% STATE 1 = MOVE +X (-Y IN BOY FRAME)
+% STATE 2 = MOVE -X (+Y IN BOY FRAME)
+
+% If state = 0, convert state to 1 and send positive X translation code to
+% the Robot Movement class
+if handles.LCDState_2 == 0
+    % Delete previous mesh of Boy
+    try delete(handles.boyMesh_h); end
+    
+    % New LCD State = 1 (forward movement)
+    handles.LCDState_2 = 1;
+    
+    % Define new transform
+    handles.boy_T = transl(-0.55, 0, -0.07)*trotz(pi/2);
+    [handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject('boy8.ply', handles.boy_T);
+    % Send these to the Robot Movement Class
+    handles.rMove.boy_T = handles.boy_T;
+    handles.rMove.boyMesh_h = handles.boyMesh_h;
+    handles.rMove.boyVertices = handles.boyVertices;
+    % Update boolean and direction in Robot Movement class to indicate we
+    % want the boy to start moving
+    handles.rMove.translateBoy = 1;
+    handles.rMove.boyTranslationDir = "+x";
+    
+% If state = 1, convert to state 2 and send negative X translation code to
+% the Robot Movement class
+elseif handles.LCDState_2 == 1
+    % New LCD State = 2 (backward movement)
+    handles.LCDState_2 = 2;
+    
+    % Update boolean and direction in Robot Movement class to indicate we
+    % want the boy to start moving
+    handles.rMove.translateBoy = 1;
+    handles.rMove.boyTranslationDir = "-x";
+
+% If state = 2, convert to state 0 and send NO translation code to
+% the Robot Movement class
+else
+    % New LCD State = 0 (no movement)
+    handles.LCDState_2 = 0;
+    
+    % Update boolean in Robot Movement class to indicate we
+    % want the boy to stop moving completely.
+    handles.rMove.translateBoy = 0;
 end
+
+% Update GUI Handles Structure
+guidata(hObject, handles);
+
+
+% handles.LCD = get(hObject,'Value');
+% 
+% try 
+%     delete(handles.boyMesh_h); 
+% end
 % Setup Scene
-steps = 50;
-Xstep = 1;
-X = zeros(3, steps);
-s = lspb(0,1,steps);
+% steps = 50;
+% Xstep = 1;
+% X = zeros(3, steps);
+% s = lspb(0,1,steps);
 % Waypoints where the boy will move
-boyPose0 = [-0.55, 0.5, -0.075]; 
-boyPose1 = [-0.6, 0, -0.075]; 
-boyPose2 = [-0.4, 0, -0.075]; 
-
-
-guidata(hObject, handles);  
-
+% boyPose0 = [-0.55, 0.5, -0.075]; 
+% boyPose1 = [-0.6, 0, -0.075]; 
+% boyPose2 = [-0.4, 0, -0.075]; 
+% 
+% 
+% guidata(hObject, handles);  

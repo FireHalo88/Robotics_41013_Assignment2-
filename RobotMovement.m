@@ -8,6 +8,11 @@ classdef RobotMovement < handle
         trailPlot_h;
         eStopState=0; %Emergency stop flag/toggle 0=Normal operation, 1=Emergency stopped
         goSignal=1; %Flag for resuming process after Estop. 0=disabled, 1=signaled to go
+        translateBoy = 0;   % Boolean to determine if Boy is to be translated
+        boyTranslationDir = "+x";   % Flag determining direction of translation of Boy
+        boy_T;
+        boyMesh_h;
+        boyVertices;
         boyTranslation=[-0.6, 0.6, -0.05]; %Boy's Initial Translation
     end
     
@@ -272,7 +277,7 @@ classdef RobotMovement < handle
                         display("Collision with Table 1");
                    end
                    if(checkCollisionBoy == true)
-                        display("Collision with Boy");
+                        display("Collision with Boy");                  
                    end
                end
                FK = robot.fkine(qpMatrix(end, :));
@@ -283,11 +288,15 @@ classdef RobotMovement < handle
                if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
                     self.eStopState = 1;
                     self.goSignal=0;
+                    
+                    % If 'translateBoy' boolean is active and boy is translating 
+                    % inside the region, we no longer want the boy to be translating.
+                    if self.translateBoy == 1 && self.boyTranslationDir == "+x"
+                        self.translateBoy = 0;
+                    end
+                    
+                    disp('BOY ENTERING LIGHT CURTAIN');
                end
-
-               % Plot Robot Moving
-               robot.animate(qpMatrix(i, :));
-               drawnow();
                
                %Check if eStop is active, and lock in while loop if it
                %is, also regress one "frame"
@@ -295,7 +304,20 @@ classdef RobotMovement < handle
                    i= i-1; 
                end
                while (self.eStopState==1||self.goSignal==0)
+                   % If boolean for translate boy is active, translate the boy.
+                   if self.translateBoy == 1
+                       self.translateBoyCM;
+                   end
                    pause(0.1);
+               end
+               
+               % Plot Robot Moving
+               robot.animate(qpMatrix(i, :));
+               drawnow();
+               
+               % If boolean for translate boy is active, translate the boy.
+               if self.translateBoy == 1
+                   self.translateBoyCM;
                end
             end
 
@@ -550,11 +572,11 @@ classdef RobotMovement < handle
                         display("Collision with Boy");
                    end
                end                      
-               % Plot Robot Moving
-               robot.animate(qpMatrix(i, :));
+               
                % Get Robot Pose with Forward Kinematics
                robot_TR = robot.fkine(qpMatrix(i, :));               
                edited_TR = robot_TR*trotx(pi/2);
+               
                 checkBoyEnteringWorkspace = lightCurtainCode(self.boyTranslation,1);
                % Check for the end-effector leaving the light curtain area
                checkJointCollisionWithLigthCurtain = lightCurtainCode(robot_TR,2);               
@@ -562,6 +584,14 @@ classdef RobotMovement < handle
                if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
                     self.eStopState = 1;
                     self.goSignal=0;
+                    
+                    % If 'translateBoy' boolean is active and boy is translating 
+                    % inside the region, we no longer want the boy to be translating.
+                    if self.translateBoy == 1 && self.boyTranslationDir == "+x"
+                        self.translateBoy = 0;
+                    end
+                    
+                    disp('BOY ENTERING LIGHT CURTAIN');
                end
                
                %Check if eStop is active, and lock in while loop if it
@@ -570,22 +600,25 @@ classdef RobotMovement < handle
                    i= i-1; 
                end
                while (self.eStopState==1||self.goSignal==0)
+                   % If boolean for translate boy is active, translate the boy.
+                   if self.translateBoy == 1
+                       self.translateBoyCM;
+                   end
                    pause(0.1);
                end
-
-               %Check if eStop is active, and lock in while loop if it
-               %is, also regress one "frame"
-               if self.eStopState==1
-                   i= i-1; 
-               end
-               while (self.eStopState==1||self.goSignal==0)
-                   pause(0.1);
-               end
-
+               
+               % Plot Robot Moving
+               robot.animate(qpMatrix(i, :));
                % Transform Object to this Pose
                objTransformVertices = [objVertices,ones(size(objVertices,1),1)] ...
                    * edited_TR';
                set(objMesh_h, 'Vertices', objTransformVertices(:,1:3));
+               
+               % If boolean for translate boy is active, translate the boy.
+               if self.translateBoy == 1
+                   self.translateBoyCM;
+               end
+              
                drawnow();
             end
 
@@ -781,12 +814,11 @@ classdef RobotMovement < handle
                         display("Collision with Boy");
                    end
                end                 
-                % Get FK
-                FK = robot.fkine(qMatrix(i, :));
-                %display(FK);
-                trail(:, i) = FK(1:3, 4);
-                robot.animate(qMatrix(i, :));
-                drawnow();
+               % Get FK
+               FK = robot.fkine(qMatrix(i, :));
+               %display(FK);
+               trail(:, i) = FK(1:3, 4);
+                
                %Check if the boy is within the robot's workspace 
                checkBoyEnteringWorkspace = lightCurtainCode(self.boyTranslation,1);
                % Check for the end-effector leaving the light curtain area
@@ -795,16 +827,36 @@ classdef RobotMovement < handle
                if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
                     self.eStopState = 1;
                     self.goSignal=0;
+                    
+                    % If 'translateBoy' boolean is active and boy is translating 
+                    % inside the region, we no longer want the boy to be translating.
+                    if self.translateBoy == 1 && self.boyTranslationDir == "+x"
+                        self.translateBoy = 0;
+                    end
+                    
+                    disp('BOY ENTERING LIGHT CURTAIN');
                end
 
-                %Check if eStop is active, and lock in while loop if it
-                %is, also regress one "frame"
-                if self.eStopState==1
-                   i= i-1; 
-                end
-                while (self.eStopState==1||self.goSignal==0)
-                   pause(0.1);
-                end
+               %Check if eStop is active, and lock in while loop if it
+               %is, also regress one "frame"
+               if self.eStopState==1
+                  i= i-1; 
+               end
+               while (self.eStopState==1||self.goSignal==0)
+                  % If boolean for translate boy is active, translate the boy.
+                  if self.translateBoy == 1
+                      self.translateBoyCM;
+                  end
+                  pause(0.1);
+               end
+               
+               robot.animate(qMatrix(i, :));
+               drawnow();
+                
+               % If boolean for translate boy is active, translate the boy.
+               if self.translateBoy == 1
+                   self.translateBoyCM;
+               end
                 
                 pause(0.01);
             end
@@ -1064,8 +1116,29 @@ classdef RobotMovement < handle
                if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
                     self.eStopState = 1;
                     self.goSignal=0;
+                    
+                    % If 'translateBoy' boolean is active and boy is translating 
+                    % inside the region, we no longer want the boy to be translating.
+                    if self.translateBoy == 1 && self.boyTranslationDir == "+x"
+                        self.translateBoy = 0;
+                    end
+                    
+                    disp('BOY ENTERING LIGHT CURTAIN');
                end
-
+                
+                %Check if eStop is active, and lock in while loop if it
+                %is, also regress one "frame"
+                if self.eStopState==1
+                   i= i-1; 
+                end
+                while (self.eStopState==1||self.goSignal==0)
+                   pause(0.1);
+                   % If boolean for translate boy is active, translate the boy.
+                   if self.translateBoy == 1
+                       self.translateBoyCM;
+                   end
+                end
+                
                 editedFK = FK*trotx(pi/2);
                 % Save FK value for trail
                 trail(:, i) = FK(1:3, 4);
@@ -1089,13 +1162,9 @@ classdef RobotMovement < handle
                 
                 drawnow();
                 
-                %Check if eStop is active, and lock in while loop if it
-                %is, also regress one "frame"
-                if self.eStopState==1
-                   i= i-1; 
-                end
-                while (self.eStopState==1||self.goSignal==0)
-                   pause(0.1);
+                % If boolean for translate boy is active, translate the boy.
+                if self.translateBoy == 1
+                    self.translateBoyCM;
                 end
                 
                 pause(0.01);
@@ -1396,8 +1465,29 @@ classdef RobotMovement < handle
                if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
                     self.eStopState = 1;
                     self.goSignal=0;
+                    
+                    % If 'translateBoy' boolean is active and boy is translating 
+                    % inside the region, we no longer want the boy to be translating.
+                    if self.translateBoy == 1 && self.boyTranslationDir == "+x"
+                        self.translateBoy = 0;
+                    end
+                    
+                    disp('BOY ENTERING LIGHT CURTAIN');
                end
-               
+                
+                %Check if eStop is active, and lock in while loop if it
+                %is, also regress one "frame"
+                if self.eStopState==1
+                   i= i-1; 
+                end
+                while (self.eStopState==1||self.goSignal==0)
+                   pause(0.1);
+                   % If boolean for translate boy is active, translate the boy.
+                   if self.translateBoy == 1
+                       self.translateBoyCM;
+                   end
+                end
+                
                 editedFK = FK*trotx(pi/2);
                 % Save FK value for trail
                 trail(:, i) = FK(1:3, 4);
@@ -1421,13 +1511,9 @@ classdef RobotMovement < handle
                 
                 drawnow();
                 
-                %Check if eStop is active, and lock in while loop if it
-                %is, also regress one "frame"
-                if self.eStopState==1
-                   i= i-1; 
-                end
-                while (self.eStopState==1||self.goSignal==0)
-                   pause(0.1);
+                % If boolean for translate boy is active, translate the boy.
+                if self.translateBoy == 1
+                    self.translateBoyCM;
                 end
                 
                 pause(0.01);
@@ -1496,6 +1582,76 @@ classdef RobotMovement < handle
                 title('Manipulability')
             end  
             
+        end
+        
+        function [qOut] = MoveRobot(self, robot, qIn, qDes, steps)
+            %This function takes a SerialLink robot, its starting joint
+            %configuration, a desired ending configuration, and animates a
+            %calculated minimum jerk trajectory between the two
+            %configurations.
+            
+            funcName = 'MoveRobot';
+            
+            %  Calculating Trajectory
+            qMatrix = jtraj(qIn, qDes, steps);
+            
+            % Animate Robot Moving
+            for i = 1:steps         
+                checkBoyEnteringWorkspace = lightCurtainCode(self.boyTranslation,1);
+                % Check for the end-effector leaving the light curtain area
+                %display(qMatrix(i,:));
+                robot_TR = robot.fkine(qMatrix(i, :));
+                checkJointCollisionWithLigthCurtain = lightCurtainCode(robot_TR,2);  
+               
+                %If true, TRIGGER THE ESTOP
+                if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
+                     self.eStopState = 1;
+                     self.goSignal=0;
+                    
+                     % If 'translateBoy' boolean is active and boy is translating 
+                     % inside the region, we no longer want the boy to be translating.
+                     if self.translateBoy == 1 && self.boyTranslationDir == "+x"
+                         self.translateBoy = 0;
+                     end
+                     
+                     disp('BOY ENTERING LIGHT CURTAIN');
+                end
+                %Check if eStop is active, and lock in while loop if it
+                %is, also regress one "frame"
+                if self.eStopState==1
+                   i= i-1; 
+                end
+                while (self.eStopState==1||self.goSignal==0)
+                   pause(0.1);
+                   % If boolean for translate boy is active, translate the boy.
+                   if self.translateBoy == 1
+                       self.translateBoyCM;
+                   end
+                end
+                
+                robot.animate(qMatrix(i, :));
+                drawnow();
+                
+                % If boolean for translate boy is active, translate the boy.
+                if self.translateBoy == 1
+                    self.translateBoyCM;
+                end
+                
+                pause(0.01);
+            end
+            
+            qOut = robot.getpos();
+            
+            % Check Robot 1 reached desired joint coordinates
+            if abs(qOut - qDes) < 0.01
+                self.L.mlog = {self.L.DEBUG,funcName,['Robot 1 has reached' ...
+                    ' its goal joint configuration (within 0.01 radians): ' ...
+                    self.L.MatrixToString(qOut)]};
+            else
+                self.L.mlog = {self.L.WARN,funcName,['Robot 1 has not reached' ...
+                    ' its goal joint configuration (within 0.01 radians): ' ...
+                    self.L.MatrixToString(qOut)]};
+            end
         end
         
         
@@ -1702,7 +1858,7 @@ classdef RobotMovement < handle
             
             % Draw Circle
             [qOut, ~] = self.RMRC_7DOF_ARC_OBJ(robot, centre_T, 0, 2*pi, radius, ...
-                objMesh_h, objVertices, time, drawType, "ccw", 0, 1, 1, 1);
+                objMesh_h, objVertices, time, drawType, "ccw", 0, 1, 1, 0);
             
             self.L.mlog = {self.L.DEBUG,funcName,['END FUNCTION: ', ...
                 funcName, char(13)]};                       
@@ -2218,57 +2374,6 @@ classdef RobotMovement < handle
                               
         end
         
-        function [qOut] = MoveRobot(self, robot, qIn, qDes, steps)
-            %This function takes a SerialLink robot, its starting joint
-            %configuration, a desired ending configuration, and animates a
-            %calculated minimum jerk trajectory between the two
-            %configurations.
-            
-            funcName = 'MoveRobot';
-            
-            %  Calculating Trajectory
-            qMatrix = jtraj(qIn, qDes, steps);
-            
-            % Animate Robot Moving
-            for i = 1:steps         
-                checkBoyEnteringWorkspace = lightCurtainCode(self.boyTranslation,1);
-               % Check for the end-effector leaving the light curtain area
-                %display(qMatrix(i,:));
-               robot_TR = robot.fkine(qMatrix(i, :));
-               checkJointCollisionWithLigthCurtain = lightCurtainCode(robot_TR,2);  
-               
-               %If true, TRIGGER THE ESTOP
-               if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
-                    self.eStopState = 1;
-                    self.goSignal=0;
-               end
-                %Check if eStop is active, and lock in while loop if it
-                %is, also regress one "frame"
-                if self.eStopState==1
-                   i= i-1; 
-                end
-                while (self.eStopState==1||self.goSignal==0)
-                   pause(0.1);
-                end
-                robot.animate(qMatrix(i, :));
-                drawnow();
-                pause(0.01);
-            end
-            
-            qOut = robot.getpos();
-            
-            % Check Robot 1 reached desired joint coordinates
-            if abs(qOut - qDes) < 0.01
-                self.L.mlog = {self.L.DEBUG,funcName,['Robot 1 has reached' ...
-                    ' its goal joint configuration (within 0.01 radians): ' ...
-                    self.L.MatrixToString(qOut)]};
-            else
-                self.L.mlog = {self.L.WARN,funcName,['Robot 1 has not reached' ...
-                    ' its goal joint configuration (within 0.01 radians): ' ...
-                    self.L.MatrixToString(qOut)]};
-            end
-        end
-        
         function [check, dist] = compareTwoPositions(~, T1, T2)
             % This function will take two 4x4 Homogenous Transform matrices 
             % and check if their positions are equal.
@@ -2323,6 +2428,37 @@ classdef RobotMovement < handle
             [boy_vertex,boy_faces,boy_faceNormals] = ActualRectangularPrism(boy_centerpnt, boyTranslation, boy_width, boy_depth, boy_height ,plotOptions);
             axis equal
         end
+        
+        function translateBoyCM(self)
+            % This function will translate the mesh of the boy by 1cm in
+            % some stated direction denoted by the class property:
+            % 'boyTranslationDir'.
+            
+            % IF +X, MOVE BOY IN GLOBAL POSTIVE X (NEGATIVE Y IN BOY
+            % REFERENCE FRAME)
+            if self.boyTranslationDir == "+x"
+                self.boy_T = self.boy_T*transl(0, -0.01, 0);
+                boyTransformVertices = [self.boyVertices,ones(size(self.boyVertices,1),1)] ...
+                    * self.boy_T';
+                set(self.boyMesh_h, 'Vertices', boyTransformVertices(:,1:3));
+                drawnow();
+                
+                self.boyTranslation = self.boy_T(1:3, 4)';  % Translation of Boy as a Row Vector
+            end
+            
+            % IF -X, MOVE BOY IN GLOBAL NEGATIVE X (POSITIVE Y IN BOY
+            % REFERENCE FRAME)
+            if self.boyTranslationDir == "-x"
+                self.boy_T = self.boy_T*transl(0, 0.01, 0);
+                boyTransformVertices = [self.boyVertices,ones(size(self.boyVertices,1),1)] ...
+                    * self.boy_T';
+                set(self.boyMesh_h, 'Vertices', boyTransformVertices(:,1:3));
+                drawnow();
+                
+                self.boyTranslation = self.boy_T(1:3, 4)';  % Translation of Boy as a Row Vector
+            end            
+        end
+        
     end
             
 end
