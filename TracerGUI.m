@@ -2637,5 +2637,21 @@ function lcdBtn_Callback(hObject, eventdata, handles)
 % hObject    handle to lcdBtn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles.LCD = get(hObject,'Value');
 
-% Hint: get(hObject,'Value') returns toggle state of lcdBtn
+try 
+    delete(handles.boyMesh_h); 
+end
+% Setup Scene
+steps = 50;
+Xstep = 1;
+X = zeros(3, steps);
+s = lspb(0,1,steps);
+% Waypoints where the boy will move
+boyPose0 = [-0.55, 0.5, -0.075]; 
+boyPose1 = [-0.6, 0, -0.075]; 
+boyPose2 = [-0.4, 0, -0.075]; 
+
+
+guidata(hObject, handles);  
+
