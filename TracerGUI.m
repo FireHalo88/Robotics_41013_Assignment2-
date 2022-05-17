@@ -127,7 +127,7 @@ handles.greenPenVertices = objectVertices{5};
 handles.bluePen_h = objectMeshes_h{6};
 handles.bluePenVertices = objectVertices{6};
 
-[handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject("boy8.ply",transl(-0.55, 0.5, -0.07));
+[handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject("boy9.ply",transl(-0.55, 0.5, -0.075));
 view(3);
 
 % Calculate the Robot EE Position with FK
@@ -2616,14 +2616,14 @@ if handles.TBP == 0
 	try delete(handles.boyMesh_h); end
     handles.rMove.boyTranslation = [-0.55, 0.5, -0.075];
 	% Replot boy at some position
-	[handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject("boy8.ply",transl(-0.55, 0.5, -0.075));
+	[handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject("boy9.ply",transl(-0.55, 0.5, -0.075));
 
 else
 	% Delete Mesh if it exists (it should)
 	try delete(handles.boyMesh_h); end
-    handles.rMove.boyTranslation = [-0.15, 0.0, 0.18];
+    handles.rMove.boyTranslation = [-0.05, -0.1, 0.18];
 	% Replot boy at some position
-	[handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject("boy8.ply",transl(-0.15, 0.0, 0.18)); 
+	[handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject("boy9.ply",transl(-0.05, -0.1, 0.18)); 
     
 end
 
@@ -2695,7 +2695,7 @@ if handles.LCDState_2 == 0
     
     % Define new transform
     handles.boy_T = transl(-0.55, 0, -0.07)*trotz(pi/2);
-    [handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject('boy8.ply', handles.boy_T);
+    [handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject('boy9.ply', handles.boy_T);
     % Send these to the Robot Movement Class
     handles.rMove.boy_T = handles.boy_T;
     handles.rMove.boyMesh_h = handles.boyMesh_h;

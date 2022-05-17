@@ -232,7 +232,7 @@ classdef RobotMovement < handle
             table_depth, table_height, canvas_centerpnt, canvas_width, ...
             canvas_depth, canvas_height] = self.generateCollisionBlocks(0);
 
-            [boy_centerpnt, boy_width, boy_depth, boy_height] = self.generateBoyCollision(self.boyTranslation);
+            [boy_centerpnt, boy_width, boy_depth, boy_height] = PLY_Obstacle_Dimensions(1,0);
             % Defining and logging to log file for information
             funcName = 'MoveRobotToObject2';
             self.L.mlog = {self.L.DEBUG,funcName,['RUNNING FUNCTION: ', ...
@@ -529,7 +529,7 @@ classdef RobotMovement < handle
             table_depth, table_height, canvas_centerpnt, canvas_width, ...
             canvas_depth, canvas_height] = self.generateCollisionBlocks(0);
 
-            [boy_centerpnt, boy_width, boy_depth, boy_height] = self.generateBoyCollision(self.boyTranslation);
+            [boy_centerpnt, boy_width, boy_depth, boy_height] = PLY_Obstacle_Dimensions(1,0);
             % Defining and logging to log file for information
             funcName = 'MoveRobotWithObject2';
             self.L.mlog = {self.L.DEBUG,funcName,['RUNNING FUNCTION: ', ...
@@ -704,7 +704,7 @@ classdef RobotMovement < handle
             table_depth, table_height, canvas_centerpnt, canvas_width, ...
             canvas_depth, canvas_height] = self.generateCollisionBlocks(0);
 
-            [boy_centerpnt, boy_width, boy_depth, boy_height] = self.generateBoyCollision(self.boyTranslation);
+            [boy_centerpnt, boy_width, boy_depth, boy_height] = PLY_Obstacle_Dimensions(1,0);
 
             % Create straight line trajectory in X-Y-Z plane at current RPY
             s = lspb(0,1,steps);            % Trapezoidal Trajectory Scalar
@@ -995,7 +995,7 @@ classdef RobotMovement < handle
             table_depth, table_height, canvas_centerpnt, canvas_width, ...
             canvas_depth, canvas_height] = self.generateCollisionBlocks(0);
 
-            [boy_centerpnt, boy_width, boy_depth, boy_height] = self.generateBoyCollision(self.boyTranslation);
+            [boy_centerpnt, boy_width, boy_depth, boy_height] = PLY_Obstacle_Dimensions(1,0);
 
             % Create straight line trajectory in X-Y-Z plane at current RPY
             s = lspb(0,1,steps);            % Trapezoidal Trajectory Scalar
@@ -1316,7 +1316,7 @@ classdef RobotMovement < handle
             table_depth, table_height, canvas_centerpnt, canvas_width, ...
             canvas_depth, canvas_height] = self.generateCollisionBlocks(0);
 
-            [boy_centerpnt, boy_width, boy_depth, boy_height] = self.generateBoyCollision(self.boyTranslation);
+            [boy_centerpnt, boy_width, boy_depth, boy_height] = PLY_Obstacle_Dimensions(1,0);
             
             % Get X-Y-Z of Centre Pose
             startXYZ = centre_T(1:3, 4);
@@ -2423,17 +2423,6 @@ classdef RobotMovement < handle
                     axis equal
             end
         end
-
-        %This creates the collision boxes for the canvas and the table    
-        function [boy_centerpnt, boy_width, boy_depth, boy_height] = generateBoyCollision (self, boyTranslation)
-            plotOptions.plotFaces = true;
-            %boy_translation = [0.5, 0.0, 0.22]; % OG: [-0.2, 0.0, 0.22]
-            %newboyTranslation = [boyTranslation(1,1)-0.2, boyTranslation(1,2)-0.1, boyTranslation(1,3)];
-            %Places Collision Detection for Canvas
-            [boy_centerpnt, boy_width, boy_depth, boy_height] = PLY_Obstacle_Dimensions(1,0);
-            %[boy_vertex,boy_faces,boy_faceNormals] = ActualRectangularPrism(boy_centerpnt, newboyTranslation , boy_width, boy_depth, boy_height ,plotOptions);
-            axis equal
-        end
         
         function translateBoyCM(self)
             % This function will translate the mesh of the boy by 1cm in
@@ -2451,7 +2440,6 @@ classdef RobotMovement < handle
                 drawnow();
                 
                 self.boyTranslation = self.boy_T(1:3, 4)';  % Translation of Boy as a Row Vector
-                %display(self.boyTranslation);
             end
             
             % IF -X, MOVE BOY IN GLOBAL NEGATIVE X (POSITIVE Y IN BOY
@@ -2466,7 +2454,6 @@ classdef RobotMovement < handle
                     drawnow();
 
                     self.boyTranslation = self.boy_T(1:3, 4)';  % Translation of Boy as a Row Vector
-                    %display(self.boyTranslation);
                 end
             end            
         end

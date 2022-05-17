@@ -17,15 +17,6 @@ vertex(6,:) = [centerpnt(1)-width+translation(1), centerpnt(2)-depth+translation
 vertex(7,:) = [centerpnt(1)-width+translation(1), centerpnt(2)+depth+translation(2), translation(3)];
 vertex(8,:) = [centerpnt(1)+width+translation(1), centerpnt(2)+depth+translation(2), height+translation(3)];
 
-% vertex(1,:)=[-0.2 0 0];
-% vertex(2,:)=[0.14 0 0];
-% vertex(3,:)=[0.14 0.2 0];
-% vertex(4,:)=[0.14 0 0.48];
-% vertex(5,:)=[-0.2 0.2 0.48];
-% vertex(6,:)=[-0.2 0 0.48];
-% vertex(7,:)=[-0.2 0.2 0];
-% vertex(8,:)=[0.14 0.2 0.48];
-
 face=[1,2,3;1,3,7;
      1,6,5;1,7,5;
      1,6,4;1,4,2;

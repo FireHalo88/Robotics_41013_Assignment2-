@@ -5,7 +5,8 @@ function [centerpnt, width, depth, height] = PLY_Obstacle_Dimensions(type, facin
         case 1 %For boy8 file dimensions
             %boyDimensions = [0.07 0.125 0.48]
             %centerpnt = [-0.03,0.1];
-            centerpnt = [-0.02,0.1];
+            %centerpnt = [-0.02,0.1];
+            centerpnt = [0,0];
             width = 0.055;
             depth = 0.06;
             height = 0.48;
