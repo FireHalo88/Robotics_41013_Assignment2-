@@ -107,6 +107,10 @@ hansCute.plotModel();
 
 % Plot Environment
 % Create Instance of Environment Class
+line([0.42 0.42],[-0.52 0.46],'color','b', 'LineWidth', 10) 
+line([-0.43 -0.43],[-0.52 0.46],'color','b', 'LineWidth', 10) 
+line([-0.43 0.42],[-0.52 -0.52],'color','b', 'LineWidth', 10) 
+line([-0.43 0.42],[0.46 0.46],'color','b', 'LineWidth', 10) 
 handles.environ = createEnvironment(workspace);
 [objectMeshes_h, objectVertices] = handles.environ.placeObjectsBetter(canvas_T, table_T, ...
     pen1_T, pen2_T, pen3_T, pen4_T, safetyBarrierPoint1_T, safetyBarrierPoint2_T, ...

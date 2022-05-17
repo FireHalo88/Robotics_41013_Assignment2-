@@ -10,7 +10,7 @@ classdef RobotMovement < handle
         goSignal=1; %Flag for resuming process after Estop. 0=disabled, 1=signaled to go
         translateBoy = 0;   % Boolean to determine if Boy is to be translated
         boyTranslationDir = "+x";   % Flag determining direction of translation of Boy
-        boy_T;
+        boy_T; %[self.boy_T(1,4), self.boy_T(2,4), self.boy_T(3,4)]
         boyMesh_h;
         boyVertices;
         boyTranslation=[-0.6, 0.6, -0.05]; %Boy's Initial Translation
@@ -2423,9 +2423,10 @@ classdef RobotMovement < handle
         function [boy_centerpnt, boy_width, boy_depth, boy_height] = generateBoyCollision (self, boyTranslation)
             plotOptions.plotFaces = true;
             %boy_translation = [0.5, 0.0, 0.22]; % OG: [-0.2, 0.0, 0.22]
+            %newboyTranslation = [boyTranslation(1,1)-0.2, boyTranslation(1,2)-0.1, boyTranslation(1,3)];
             %Places Collision Detection for Canvas
-            [boy_centerpnt, boy_width, boy_depth, boy_height] = PLY_Obstacle_Dimensions(1,1);
-            [boy_vertex,boy_faces,boy_faceNormals] = ActualRectangularPrism(boy_centerpnt, boyTranslation, boy_width, boy_depth, boy_height ,plotOptions);
+            [boy_centerpnt, boy_width, boy_depth, boy_height] = PLY_Obstacle_Dimensions(1,0);
+            %[boy_vertex,boy_faces,boy_faceNormals] = ActualRectangularPrism(boy_centerpnt, newboyTranslation , boy_width, boy_depth, boy_height ,plotOptions);
             axis equal
         end
         
@@ -2438,24 +2439,28 @@ classdef RobotMovement < handle
             % REFERENCE FRAME)
             if self.boyTranslationDir == "+x"
                 self.boy_T = self.boy_T*transl(0, -0.01, 0);
+                %self.boy_T = self.boy_T;
                 boyTransformVertices = [self.boyVertices,ones(size(self.boyVertices,1),1)] ...
                     * self.boy_T';
                 set(self.boyMesh_h, 'Vertices', boyTransformVertices(:,1:3));
                 drawnow();
                 
                 self.boyTranslation = self.boy_T(1:3, 4)';  % Translation of Boy as a Row Vector
+                %display(self.boyTranslation);
             end
             
             % IF -X, MOVE BOY IN GLOBAL NEGATIVE X (POSITIVE Y IN BOY
             % REFERENCE FRAME)
             if self.boyTranslationDir == "-x"
                 self.boy_T = self.boy_T*transl(0, 0.01, 0);
+                %self.boy_T = self.boy_T;
                 boyTransformVertices = [self.boyVertices,ones(size(self.boyVertices,1),1)] ...
                     * self.boy_T';
                 set(self.boyMesh_h, 'Vertices', boyTransformVertices(:,1:3));
                 drawnow();
                 
                 self.boyTranslation = self.boy_T(1:3, 4)';  % Translation of Boy as a Row Vector
+                %display(self.boyTranslation);
             end            
         end
         
