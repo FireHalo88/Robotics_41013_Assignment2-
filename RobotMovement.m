@@ -21,205 +21,205 @@ classdef RobotMovement < handle
            self.L = log4matlab('Robot_Movement_Log.log');
         end        
 
-        function [qOut] = MoveRobotToObject(self, robot, loc_T, dAbove, ...
-                qGuess, steps)
-            %This function takes a SerialLink robot, a desired 4x4 Transformation ...
-            %Matrix to reach, and animates a calculated minimum jerk trajectory
-            %to the configuration using waypoints.
-            
-            % TO BE ADDED: COLLISION AVOIDANCE/DETECTION
-            [table_translation, canvas_translation, table_centerpnt, table_width, ...
-            table_depth, table_height, canvas_centerpnt, canvas_width, ...
-            canvas_depth, canvas_height] = self.generateCollisionBlocks(0);
-
-            [boy_centerpnt, boy_width, boy_depth, boy_height] = self.generateBoyCollision(self.boyTranslation);
-            % Defining and logging to log file for information
-            funcName = 'MoveRobotToObject';
-            self.L.mlog = {self.L.DEBUG,funcName,['RUNNING FUNCTION: ', ...
-                funcName, char(13)]};
-            
-            % Getting the transform above the desired end location.
-            % Define a rotation of PI/2 about X to face End Effector
-            % sidewards.
-            locA_T = loc_T*transl(0,0,dAbove)*trotx(pi/2)*trotz(pi);
-
-            % Moving to Location
-            % Getting required Joint Angles to reach position above using ...
-            % Inverse Kinematics
-            newQ = robot.ikcon(locA_T, qGuess);
-
-            % Plannning a Trajectory using the Min. Jerk Method
-            % (Quintic Polynomial Method)
-            % jtraj(Starting Joint Angles, Target Joint Angles, Steps to Take)
-            qpMatrix = jtraj(robot.getpos(), newQ, steps);
-
-            % Moving to the spot above the desired location
-            for i = 1:steps
-               % Check whether there is collision with the robot and the
-               % table/canvas
-               checkRemainder = mod(i,3);
-               if(checkRemainder == 1)
-                   if((i + 4) > (steps-1))
-                        checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
-                        checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);                  
-                        checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),boy_centerpnt, self.boyTranslation, boy_width, boy_depth, boy_height);    
-                   else
-                        checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
-                        checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
-                        checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),boy_centerpnt, self.boyTranslation, boy_width, boy_depth, boy_height);
-                   end
-                   
-                   %If any of them return true, TRIGGER THE ESTOP
-                   if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
-                        self.eStopState = 1;
-                        self.goSignal=0;
-                   end
-                   
-                   if(checkCollisionCanvas == true)
-                        display("Collision with Canvas 1");
-                   end
-                   if(checkCollisionTable == true)
-                        display("Collision with Table 1");
-                   end
-                   if(checkCollisionBoy == true)
-                        display("Collision with Boy");
-                   end
-               end
-               checkBoyEnteringWorkspace = lightCurtainCode(self.boyTranslation,1);
-               FK = robot.fkine(qpMatrix(end, :));
-%                 display("1 "+FK);
-               % Check for the end-effector leaving the light curtain area
-               checkJointCollisionWithLigthCurtain = lightCurtainCode(FK,2);               
-               %If true, TRIGGER THE ESTOP
-               if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
-                    self.eStopState = 1;
-                    self.goSignal=0;
-               end
-
-               %Check if eStop is active, and lock in while loop if it
-               %is, also regress one "frame"
-               if self.eStopState==1
-                   i= i-1; 
-               end
-               while (self.eStopState==1||self.goSignal==0)
-                   pause(0.1);
-               end
-
-               % Plot Robot Moving
-               robot.animate(qpMatrix(i, :));
-               drawnow();
-            end
-
-            % Debugging pose above desired position
-            FK = robot.fkine(qpMatrix(end, :));            
-            [check, dist] = self.compareTwoPositions(FK, locA_T);
-            
-            self.L.mlog = {self.L.DEBUG,funcName,['The robot transform ' ...
-                'above input location is: ',self.L.MatrixToString(FK)]};
-            
-            if check == true
-                self.L.mlog = {self.L.DEBUG,funcName,['The robot has reached' ...
-                    ' its goal position (within 0.01m)',char(13)]};
-            else
-                self.L.mlog = {self.L.WARN,funcName,['The robot has missed ' ...
-                    'its goal position (', num2str(dist), ' > 0.01m)',char(13)]};
-            end
-            
-            % Print desired transform
-            self.L.mlog = {self.L.DEBUG,funcName,['The desired transform ' ...
-                'was: ', self.L.MatrixToString(locA_T)]};
-
-            % Moving towards desired pose/location
-            % Define a rotation of PI about X to face End Effector downwards.
-            % Adding a small offset above the desired point to prevent a
-            % collision.
-            loc_T = loc_T*transl(0,0,0.02)*trotx(pi/2)*trotz(pi);
-
-            % Inverse Kinematics
-            newQ_2 = robot.ikcon(loc_T, newQ);
-
-            % Getting Trajectory (Min Jerk Method)
-            qpMatrix = jtraj(newQ, newQ_2, steps);
-
-            % Moving to the desired pose (For Loop)
-            for i = 1:steps
-               % Check whether there is collision with the robot and the
-               % table/canvas               
-                checkRemainder = mod(i,3);
-               if(checkRemainder == 1)
-                   if((i + 5) > (steps-1))
-                        checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
-                        checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);                  
-                        checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),boy_centerpnt, self.boyTranslation, boy_width, boy_depth, boy_height);    
-                   else
-                        checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
-                        checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
-                        checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),boy_centerpnt, self.boyTranslation, boy_width, boy_depth, boy_height);
-                   end
-
-                   %If any of them return true, TRIGGER THE ESTOP
-                   if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
-                        self.eStopState = 1;
-                        self.goSignal=0;
-                   end
-                   
-                   if(checkCollisionCanvas == true)
-                        display("Collision with Canvas 1");
-                   end
-                   if(checkCollisionTable == true)
-                        display("Collision with Table 1");
-                   end
-                   if(checkCollisionBoy == true)
-                        display("Collision with Boy");
-                   end
-                   %Check if eStop is active, and lock in while loop if it
-                   %is, also regress one "frame"
-                   if self.eStopState==1
-                       i= i-1; 
-                   end
-                   while (self.eStopState==1||self.goSignal==0)
-                       pause(0.1);
-                   end
-               end  
-               FK = robot.fkine(qpMatrix(end, :));
-                checkBoyEnteringWorkspace = lightCurtainCode(self.boyTranslation,1);
-               % Check for the end-effector leaving the light curtain area
-               checkJointCollisionWithLigthCurtain = lightCurtainCode(robot,FK,2);               
-               %If true, TRIGGER THE ESTOP
-               if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
-                    self.eStopState = 1;
-                    self.goSignal=0;
-               end
-
-               % Plot robot moving
-               robot.animate(qpMatrix(i, :));
-               drawnow();
-            end
-
-            % Debugging Position
-            FK = robot.fkine(qpMatrix(end, :));
-            [check, dist] = self.compareTwoPositions(FK, loc_T);
-            
-            self.L.mlog = {self.L.DEBUG,funcName,['The robot transform at ' ...
-                'the desired pose is: ',self.L.MatrixToString(FK)]};
-
-            if check == true
-                self.L.mlog = {self.L.DEBUG,funcName,['The robot has reached' ...
-                    ' its goal position (within 0.01m)',char(13)]};
-            else
-                self.L.mlog = {self.L.WARN,funcName,['The robot has missed ' ...
-                    'its goal position (', num2str(dist), ' > 0.01m)',char(13)]};
-            end
-            
-            % Print desired transform
-            self.L.mlog = {self.L.DEBUG,funcName,['The desired transform ' ...
-                'was: ', self.L.MatrixToString(loc_T)]};
-            
-            % Return the ending pose which could be used as a guess for
-            % further movement of the robot from this position.
-            qOut = qpMatrix(end, :);
-
-        end
+%         function [qOut] = MoveRobotToObject(self, robot, loc_T, dAbove, ...
+%                 qGuess, steps)
+%             %This function takes a SerialLink robot, a desired 4x4 Transformation ...
+%             %Matrix to reach, and animates a calculated minimum jerk trajectory
+%             %to the configuration using waypoints.
+%             
+%             % TO BE ADDED: COLLISION AVOIDANCE/DETECTION
+%             [table_translation, canvas_translation, table_centerpnt, table_width, ...
+%             table_depth, table_height, canvas_centerpnt, canvas_width, ...
+%             canvas_depth, canvas_height] = self.generateCollisionBlocks(0);
+% 
+%             [boy_centerpnt, boy_width, boy_depth, boy_height] = self.generateBoyCollision(self.boyTranslation);
+%             % Defining and logging to log file for information
+%             funcName = 'MoveRobotToObject';
+%             self.L.mlog = {self.L.DEBUG,funcName,['RUNNING FUNCTION: ', ...
+%                 funcName, char(13)]};
+%             
+%             % Getting the transform above the desired end location.
+%             % Define a rotation of PI/2 about X to face End Effector
+%             % sidewards.
+%             locA_T = loc_T*transl(0,0,dAbove)*trotx(pi/2)*trotz(pi);
+% 
+%             % Moving to Location
+%             % Getting required Joint Angles to reach position above using ...
+%             % Inverse Kinematics
+%             newQ = robot.ikcon(locA_T, qGuess);
+% 
+%             % Plannning a Trajectory using the Min. Jerk Method
+%             % (Quintic Polynomial Method)
+%             % jtraj(Starting Joint Angles, Target Joint Angles, Steps to Take)
+%             qpMatrix = jtraj(robot.getpos(), newQ, steps);
+% 
+%             % Moving to the spot above the desired location
+%             for i = 1:steps
+%                % Check whether there is collision with the robot and the
+%                % table/canvas
+%                checkRemainder = mod(i,3);
+%                if(checkRemainder == 1)
+%                    if((i + 4) > (steps-1))
+%                         checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
+%                         checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);                  
+%                         checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),boy_centerpnt, self.boyTranslation, boy_width, boy_depth, boy_height);    
+%                    else
+%                         checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
+%                         checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
+%                         checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),boy_centerpnt, self.boyTranslation, boy_width, boy_depth, boy_height);
+%                    end
+%                    
+%                    %If any of them return true, TRIGGER THE ESTOP
+%                    if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
+%                         self.eStopState = 1;
+%                         self.goSignal=0;
+%                    end
+%                    
+%                    if(checkCollisionCanvas == true)
+%                         display("Collision with Canvas 1");
+%                    end
+%                    if(checkCollisionTable == true)
+%                         display("Collision with Table 1");
+%                    end
+%                    if(checkCollisionBoy == true)
+%                         display("Collision with Boy");
+%                    end
+%                end
+%                checkBoyEnteringWorkspace = lightCurtainCode(self.boyTranslation,1);
+%                FK = robot.fkine(qpMatrix(end, :));
+% %                 display("1 "+FK);
+%                % Check for the end-effector leaving the light curtain area
+%                checkJointCollisionWithLigthCurtain = lightCurtainCode(FK,2);               
+%                %If true, TRIGGER THE ESTOP
+%                if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
+%                     self.eStopState = 1;
+%                     self.goSignal=0;
+%                end
+% 
+%                %Check if eStop is active, and lock in while loop if it
+%                %is, also regress one "frame"
+%                if self.eStopState==1
+%                    i= i-1; 
+%                end
+%                while (self.eStopState==1||self.goSignal==0)
+%                    pause(0.1);
+%                end
+% 
+%                % Plot Robot Moving
+%                robot.animate(qpMatrix(i, :));
+%                drawnow();
+%             end
+% 
+%             % Debugging pose above desired position
+%             FK = robot.fkine(qpMatrix(end, :));            
+%             [check, dist] = self.compareTwoPositions(FK, locA_T);
+%             
+%             self.L.mlog = {self.L.DEBUG,funcName,['The robot transform ' ...
+%                 'above input location is: ',self.L.MatrixToString(FK)]};
+%             
+%             if check == true
+%                 self.L.mlog = {self.L.DEBUG,funcName,['The robot has reached' ...
+%                     ' its goal position (within 0.01m)',char(13)]};
+%             else
+%                 self.L.mlog = {self.L.WARN,funcName,['The robot has missed ' ...
+%                     'its goal position (', num2str(dist), ' > 0.01m)',char(13)]};
+%             end
+%             
+%             % Print desired transform
+%             self.L.mlog = {self.L.DEBUG,funcName,['The desired transform ' ...
+%                 'was: ', self.L.MatrixToString(locA_T)]};
+% 
+%             % Moving towards desired pose/location
+%             % Define a rotation of PI about X to face End Effector downwards.
+%             % Adding a small offset above the desired point to prevent a
+%             % collision.
+%             loc_T = loc_T*transl(0,0,0.02)*trotx(pi/2)*trotz(pi);
+% 
+%             % Inverse Kinematics
+%             newQ_2 = robot.ikcon(loc_T, newQ);
+% 
+%             % Getting Trajectory (Min Jerk Method)
+%             qpMatrix = jtraj(newQ, newQ_2, steps);
+% 
+%             % Moving to the desired pose (For Loop)
+%             for i = 1:steps
+%                % Check whether there is collision with the robot and the
+%                % table/canvas               
+%                 checkRemainder = mod(i,3);
+%                if(checkRemainder == 1)
+%                    if((i + 5) > (steps-1))
+%                         checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
+%                         checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);                  
+%                         checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),boy_centerpnt, self.boyTranslation, boy_width, boy_depth, boy_height);    
+%                    else
+%                         checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
+%                         checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
+%                         checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),boy_centerpnt, self.boyTranslation, boy_width, boy_depth, boy_height);
+%                    end
+% 
+%                    %If any of them return true, TRIGGER THE ESTOP
+%                    if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
+%                         self.eStopState = 1;
+%                         self.goSignal=0;
+%                    end
+%                    
+%                    if(checkCollisionCanvas == true)
+%                         display("Collision with Canvas 1");
+%                    end
+%                    if(checkCollisionTable == true)
+%                         display("Collision with Table 1");
+%                    end
+%                    if(checkCollisionBoy == true)
+%                         display("Collision with Boy");
+%                    end
+%                    %Check if eStop is active, and lock in while loop if it
+%                    %is, also regress one "frame"
+%                    if self.eStopState==1
+%                        i= i-1; 
+%                    end
+%                    while (self.eStopState==1||self.goSignal==0)
+%                        pause(0.1);
+%                    end
+%                end  
+%                FK = robot.fkine(qpMatrix(end, :));
+%                 checkBoyEnteringWorkspace = lightCurtainCode(self.boyTranslation,1);
+%                % Check for the end-effector leaving the light curtain area
+%                checkJointCollisionWithLigthCurtain = lightCurtainCode(robot,FK,2);               
+%                %If true, TRIGGER THE ESTOP
+%                if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
+%                     self.eStopState = 1;
+%                     self.goSignal=0;
+%                end
+% 
+%                % Plot robot moving
+%                robot.animate(qpMatrix(i, :));
+%                drawnow();
+%             end
+% 
+%             % Debugging Position
+%             FK = robot.fkine(qpMatrix(end, :));
+%             [check, dist] = self.compareTwoPositions(FK, loc_T);
+%             
+%             self.L.mlog = {self.L.DEBUG,funcName,['The robot transform at ' ...
+%                 'the desired pose is: ',self.L.MatrixToString(FK)]};
+% 
+%             if check == true
+%                 self.L.mlog = {self.L.DEBUG,funcName,['The robot has reached' ...
+%                     ' its goal position (within 0.01m)',char(13)]};
+%             else
+%                 self.L.mlog = {self.L.WARN,funcName,['The robot has missed ' ...
+%                     'its goal position (', num2str(dist), ' > 0.01m)',char(13)]};
+%             end
+%             
+%             % Print desired transform
+%             self.L.mlog = {self.L.DEBUG,funcName,['The desired transform ' ...
+%                 'was: ', self.L.MatrixToString(loc_T)]};
+%             
+%             % Return the ending pose which could be used as a guess for
+%             % further movement of the robot from this position.
+%             qOut = qpMatrix(end, :);
+% 
+%         end
         
         function [qOut, qpMatrix] = MoveRobotToObject2(self, robot, loc_T, qGuess, ...
                 steps)
@@ -268,6 +268,11 @@ classdef RobotMovement < handle
                    if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
                         self.eStopState = 1;
                         self.goSignal=0;
+                        
+%                         disp('BEFORE CHANGING STATUS CD');
+%                         %TracerGUI('updateStatus', 'red', 'S')
+%                         
+%                         disp('AFTER CHANGING STATUS CD');
                    end
                    
                    if(checkCollisionCanvas == true)
@@ -346,171 +351,171 @@ classdef RobotMovement < handle
 
         end
         
-        function [qOut] = MoveRobotWithObject(self, robot, end_T, dAbove, ...
-                objMesh_h, objVertices, qGuess, steps)
-            %This function takes a SerialLink robot, a desired 4x4 Transformation ...
-            %Matrix to reach, and an object mesh and animates a calculated ...
-            %minimum jerk trajectory to the desired pose using waypoints.
-            
-            % TO BE ADDED: COLLISION AVOIDANCE/DETECTION
-            [table_translation, canvas_translation, table_centerpnt, table_width, ...
-            table_depth, table_height, canvas_centerpnt, canvas_width, ...
-            canvas_depth, canvas_height] = self.generateCollisionBlocks(0);
-
-            [boy_centerpnt, boy_width, boy_depth, boy_height] = self.generateBoyCollision(self.boyTranslation);
-            % Defining and logging to log file for information
-            funcName = 'MoveRobotWithObject';
-            self.L.mlog = {self.L.DEBUG,funcName,['RUNNING FUNCTION: ', ...
-                funcName, char(13)]};
-            
-            % Getting the transform above the current location.
-            % Define a rotation of PI about X to face End Effector downwards.
-            loc_T = robot.fkine(robot.getpos());
-            loc_T = loc_T*transl(0,0,dAbove);
-            
-            % Getting required Joint Angles to reach position using ...
-            % Inverse Kinematics
-            newQ = robot.ikcon(loc_T, robot.getpos());
-            
-            % Plannning a Trajectory using the Min. Jerk Method
-            % (Quintic Polynomial Method)
-            % jtraj(Starting Joint Angles, Target Joint Angles, Steps to Take)
-            qpMatrix = jtraj(robot.getpos(), newQ, steps);
-            
-            % Moving to the spot above the object
-            for i = 1:steps
-               % Check whether there is collision with the robot and the
-               % table/canvas
-               checkRemainder = mod(i,3);
-               if(checkRemainder == 1)
-                   if((i + 5) > (steps-1))
-                        checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
-                        checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);                  
-                        checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),boy_centerpnt, self.boyTranslation, boy_width, boy_depth, boy_height);    
-                   else
-                        checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
-                        checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
-                        checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),boy_centerpnt, self.boyTranslation, boy_width, boy_depth, boy_height);
-                   end
-
-                   %If any of them return true, TRIGGER THE ESTOP
-                   if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
-                        self.eStopState = 1;
-                        self.goSignal=0;
-                   end
-                   
-                   if(checkCollisionCanvas == true)
-                        display("Collision with Canvas 1");
-                   end
-                   if(checkCollisionTable == true)
-                        display("Collision with Table 1");
-                   end
-                   if(checkCollisionBoy == true)
-                        display("Collision with Boy");
-                   end
-               end
-               % Plot robot moving
-               robot.animate(qpMatrix(i, :));
-               % Get Robot Pose with Forward Kinematics
-               robot_TR = robot.fkine(qpMatrix(i, :));
-               edited_TR = robot_TR*trotx(pi/2);
-                checkBoyEnteringWorkspace = lightCurtainCode(self.boyTranslation,1);
-
-               % Check for the end-effector leaving the light curtain area
-               checkJointCollisionWithLigthCurtain = lightCurtainCode(robot_TR,2);               
-               %If true, TRIGGER THE ESTOP
-               if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
-                    self.eStopState = 1;
-                    self.goSignal=0;
-               end
-
-               %Check if eStop is active, and lock in while loop if it
-               %is, also regress one "frame"
-               if self.eStopState==1
-                   i= i-1; 
-               end
-               while (self.eStopState==1||self.goSignal==0)
-                   pause(0.1);
-               end
-
-               % Transform Object to this Pose
-               objTransformVertices = [objVertices,ones(size(objVertices,1),1)] ...
-                   * edited_TR';
-               set(objMesh_h, 'Vertices', objTransformVertices(:,1:3));
-               
-               drawnow();
-            end
-            
-            % Debugging Position
-            FK = robot.fkine(qpMatrix(end, :));
-            [check, dist] = self.compareTwoPositions(FK, loc_T);
-            
-            self.L.mlog = {self.L.DEBUG,funcName,['The robot transform at ' ...
-                'the pose above the object is: ',self.L.MatrixToString(FK)]};
-            if check == true
-                self.L.mlog = {self.L.DEBUG,funcName,['The robot has reached' ...
-                    ' its goal position (within 0.01m)',char(13)]};
-            else
-                self.L.mlog = {self.L.WARN,funcName,['The robot has missed ' ...
-                    'its goal position (', num2str(dist), ' > 0.01m)',char(13)]};
-            end
-            
-            % Moving towards the goal/target pose
-            finQ = robot.ikcon(endT, qGuess);
-            % Getting Trajectory (Min Jerk Method)
-            qpMatrix = jtraj(newQ, finQ, steps);
-            
-            % Moving the robot and object to the end/goal pose.
-            for i = 1:steps
-               % Plot robot moving
-               robot.animate(qpMatrix(i, :));
-               % Get Robot Pose with Forward Kinematics
-               robot_TR = robot.fkine(qpMatrix(i, :));
-               edited_TR = robot_TR*trotx(pi/2);
-                checkBoyEnteringWorkspace = lightCurtainCode(self.boyTranslation,1);
-               % Check for the end-effector leaving the light curtain area
-               checkJointCollisionWithLigthCurtain = lightCurtainCode(robot_TR,2);               
-               %If true, TRIGGER THE ESTOP
-               if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
-                    self.eStopState = 1;
-                    self.goSignal=0;
-               end
-
-               %Check if eStop is active, and lock in while loop if it
-               %is, also regress one "frame"
-               if self.eStopState==1
-                   i= i-1; 
-               end
-               while (self.eStopState==1||self.goSignal==0)
-                   pause(0.1);
-               end
-
-               % Transform Object to this Pose
-               objTransformVertices = [objVertices,ones(size(objVertices,1),1)] ...
-                   * edited_TR';
-               set(objMesh_h, 'Vertices', objTransformVertices(:,1:3));
-               
-               drawnow();
-            end
-            
-            % Debugging Position
-            FK = robot.fkine(qpMatrix(end, :));
-            [check, dist] = self.compareTwoPositions(FK, end_T);
-            
-            self.L.mlog = {self.L.DEBUG,funcName,['The robot transform at ' ...
-                'the goal pose is: ',self.L.MatrixToString(FK)]};
-            if check == true
-                self.L.mlog = {self.L.DEBUG,funcName,['The robot has reached' ...
-                    ' its goal position (within 0.01m)',char(13)]};
-            else
-                self.L.mlog = {self.L.WARN,funcName,['The robot has missed ' ...
-                    'its goal position (', num2str(dist), ' > 0.01m)',char(13)]};
-            end
-            
-            % Return the ending pose which could be used as a guess for
-            % further movement of the robot from this position.
-            qOut = qpMatrix(end, :);                    
-        end
+%         function [qOut] = MoveRobotWithObject(self, robot, end_T, dAbove, ...
+%                 objMesh_h, objVertices, qGuess, steps)
+%             %This function takes a SerialLink robot, a desired 4x4 Transformation ...
+%             %Matrix to reach, and an object mesh and animates a calculated ...
+%             %minimum jerk trajectory to the desired pose using waypoints.
+%             
+%             % TO BE ADDED: COLLISION AVOIDANCE/DETECTION
+%             [table_translation, canvas_translation, table_centerpnt, table_width, ...
+%             table_depth, table_height, canvas_centerpnt, canvas_width, ...
+%             canvas_depth, canvas_height] = self.generateCollisionBlocks(0);
+% 
+%             [boy_centerpnt, boy_width, boy_depth, boy_height] = self.generateBoyCollision(self.boyTranslation);
+%             % Defining and logging to log file for information
+%             funcName = 'MoveRobotWithObject';
+%             self.L.mlog = {self.L.DEBUG,funcName,['RUNNING FUNCTION: ', ...
+%                 funcName, char(13)]};
+%             
+%             % Getting the transform above the current location.
+%             % Define a rotation of PI about X to face End Effector downwards.
+%             loc_T = robot.fkine(robot.getpos());
+%             loc_T = loc_T*transl(0,0,dAbove);
+%             
+%             % Getting required Joint Angles to reach position using ...
+%             % Inverse Kinematics
+%             newQ = robot.ikcon(loc_T, robot.getpos());
+%             
+%             % Plannning a Trajectory using the Min. Jerk Method
+%             % (Quintic Polynomial Method)
+%             % jtraj(Starting Joint Angles, Target Joint Angles, Steps to Take)
+%             qpMatrix = jtraj(robot.getpos(), newQ, steps);
+%             
+%             % Moving to the spot above the object
+%             for i = 1:steps
+%                % Check whether there is collision with the robot and the
+%                % table/canvas
+%                checkRemainder = mod(i,3);
+%                if(checkRemainder == 1)
+%                    if((i + 5) > (steps-1))
+%                         checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
+%                         checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);                  
+%                         checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i, :), qpMatrix(i, :),boy_centerpnt, self.boyTranslation, boy_width, boy_depth, boy_height);    
+%                    else
+%                         checkCollisionTable = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),table_centerpnt, table_translation, table_width, table_depth, table_height);
+%                         checkCollisionCanvas = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),canvas_centerpnt, canvas_translation, canvas_width, canvas_depth, canvas_height);   
+%                         checkCollisionBoy = plottingCollisionDetection(robot, qpMatrix(i+4, :), qpMatrix(i+4, :),boy_centerpnt, self.boyTranslation, boy_width, boy_depth, boy_height);
+%                    end
+% 
+%                    %If any of them return true, TRIGGER THE ESTOP
+%                    if(checkCollisionCanvas||checkCollisionTable||checkCollisionBoy)
+%                         self.eStopState = 1;
+%                         self.goSignal=0;
+%                    end
+%                    
+%                    if(checkCollisionCanvas == true)
+%                         display("Collision with Canvas 1");
+%                    end
+%                    if(checkCollisionTable == true)
+%                         display("Collision with Table 1");
+%                    end
+%                    if(checkCollisionBoy == true)
+%                         display("Collision with Boy");
+%                    end
+%                end
+%                % Plot robot moving
+%                robot.animate(qpMatrix(i, :));
+%                % Get Robot Pose with Forward Kinematics
+%                robot_TR = robot.fkine(qpMatrix(i, :));
+%                edited_TR = robot_TR*trotx(pi/2);
+%                 checkBoyEnteringWorkspace = lightCurtainCode(self.boyTranslation,1);
+% 
+%                % Check for the end-effector leaving the light curtain area
+%                checkJointCollisionWithLigthCurtain = lightCurtainCode(robot_TR,2);               
+%                %If true, TRIGGER THE ESTOP
+%                if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
+%                     self.eStopState = 1;
+%                     self.goSignal=0;
+%                end
+% 
+%                %Check if eStop is active, and lock in while loop if it
+%                %is, also regress one "frame"
+%                if self.eStopState==1
+%                    i= i-1; 
+%                end
+%                while (self.eStopState==1||self.goSignal==0)
+%                    pause(0.1);
+%                end
+% 
+%                % Transform Object to this Pose
+%                objTransformVertices = [objVertices,ones(size(objVertices,1),1)] ...
+%                    * edited_TR';
+%                set(objMesh_h, 'Vertices', objTransformVertices(:,1:3));
+%                
+%                drawnow();
+%             end
+%             
+%             % Debugging Position
+%             FK = robot.fkine(qpMatrix(end, :));
+%             [check, dist] = self.compareTwoPositions(FK, loc_T);
+%             
+%             self.L.mlog = {self.L.DEBUG,funcName,['The robot transform at ' ...
+%                 'the pose above the object is: ',self.L.MatrixToString(FK)]};
+%             if check == true
+%                 self.L.mlog = {self.L.DEBUG,funcName,['The robot has reached' ...
+%                     ' its goal position (within 0.01m)',char(13)]};
+%             else
+%                 self.L.mlog = {self.L.WARN,funcName,['The robot has missed ' ...
+%                     'its goal position (', num2str(dist), ' > 0.01m)',char(13)]};
+%             end
+%             
+%             % Moving towards the goal/target pose
+%             finQ = robot.ikcon(endT, qGuess);
+%             % Getting Trajectory (Min Jerk Method)
+%             qpMatrix = jtraj(newQ, finQ, steps);
+%             
+%             % Moving the robot and object to the end/goal pose.
+%             for i = 1:steps
+%                % Plot robot moving
+%                robot.animate(qpMatrix(i, :));
+%                % Get Robot Pose with Forward Kinematics
+%                robot_TR = robot.fkine(qpMatrix(i, :));
+%                edited_TR = robot_TR*trotx(pi/2);
+%                 checkBoyEnteringWorkspace = lightCurtainCode(self.boyTranslation,1);
+%                % Check for the end-effector leaving the light curtain area
+%                checkJointCollisionWithLigthCurtain = lightCurtainCode(robot_TR,2);               
+%                %If true, TRIGGER THE ESTOP
+%                if(checkJointCollisionWithLigthCurtain == true || checkBoyEnteringWorkspace == true)
+%                     self.eStopState = 1;
+%                     self.goSignal=0;
+%                end
+% 
+%                %Check if eStop is active, and lock in while loop if it
+%                %is, also regress one "frame"
+%                if self.eStopState==1
+%                    i= i-1; 
+%                end
+%                while (self.eStopState==1||self.goSignal==0)
+%                    pause(0.1);
+%                end
+% 
+%                % Transform Object to this Pose
+%                objTransformVertices = [objVertices,ones(size(objVertices,1),1)] ...
+%                    * edited_TR';
+%                set(objMesh_h, 'Vertices', objTransformVertices(:,1:3));
+%                
+%                drawnow();
+%             end
+%             
+%             % Debugging Position
+%             FK = robot.fkine(qpMatrix(end, :));
+%             [check, dist] = self.compareTwoPositions(FK, end_T);
+%             
+%             self.L.mlog = {self.L.DEBUG,funcName,['The robot transform at ' ...
+%                 'the goal pose is: ',self.L.MatrixToString(FK)]};
+%             if check == true
+%                 self.L.mlog = {self.L.DEBUG,funcName,['The robot has reached' ...
+%                     ' its goal position (within 0.01m)',char(13)]};
+%             else
+%                 self.L.mlog = {self.L.WARN,funcName,['The robot has missed ' ...
+%                     'its goal position (', num2str(dist), ' > 0.01m)',char(13)]};
+%             end
+%             
+%             % Return the ending pose which could be used as a guess for
+%             % further movement of the robot from this position.
+%             qOut = qpMatrix(end, :);                    
+%         end
         
         function [qOut, qpMatrix] = MoveRobotWithObject2(self, robot, loc_T, ...
                 objMesh_h, objVertices, qGuess, steps)
@@ -2393,9 +2398,9 @@ classdef RobotMovement < handle
         
         function deletePlot(self)
             % This function aims to delete the canvas plot
-%             for i = 1:length(self.trailPlot_h)
-%                 try delete(self.trailPlot_h(i)); end
-%             end
+            for i = 1:length(self.trailPlot_h)
+                try delete(self.trailPlot_h(i)); end
+            end
         end
         
         %This creates the collision boxes for the canvas and the table    
@@ -2452,15 +2457,17 @@ classdef RobotMovement < handle
             % IF -X, MOVE BOY IN GLOBAL NEGATIVE X (POSITIVE Y IN BOY
             % REFERENCE FRAME)
             if self.boyTranslationDir == "-x"
-                self.boy_T = self.boy_T*transl(0, 0.01, 0);
-                %self.boy_T = self.boy_T;
-                boyTransformVertices = [self.boyVertices,ones(size(self.boyVertices,1),1)] ...
-                    * self.boy_T';
-                set(self.boyMesh_h, 'Vertices', boyTransformVertices(:,1:3));
-                drawnow();
-                
-                self.boyTranslation = self.boy_T(1:3, 4)';  % Translation of Boy as a Row Vector
-                %display(self.boyTranslation);
+                if self.boyTranslation(1) > -0.55      
+                    self.boy_T = self.boy_T*transl(0, 0.01, 0);
+                    %self.boy_T = self.boy_T;
+                    boyTransformVertices = [self.boyVertices,ones(size(self.boyVertices,1),1)] ...
+                        * self.boy_T';
+                    set(self.boyMesh_h, 'Vertices', boyTransformVertices(:,1:3));
+                    drawnow();
+
+                    self.boyTranslation = self.boy_T(1:3, 4)';  % Translation of Boy as a Row Vector
+                    %display(self.boyTranslation);
+                end
             end            
         end
         

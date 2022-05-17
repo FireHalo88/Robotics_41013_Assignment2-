@@ -127,7 +127,7 @@ handles.greenPenVertices = objectVertices{5};
 handles.bluePen_h = objectMeshes_h{6};
 handles.bluePenVertices = objectVertices{6};
 
-[handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject("boy8.ply",transl(-0.55, 0.5, -0.075));
+[handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject("boy8.ply",transl(-0.55, 0.5, -0.07));
 view(3);
 
 % Calculate the Robot EE Position with FK
@@ -1085,7 +1085,6 @@ function eStop_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
 %Updates estop flag of the movement class
 if handles.rMove.eStopState == 0
     handles.rMove.eStopState = 1;
@@ -1097,6 +1096,9 @@ else
     set(handles.status, 'String','I');
 end
 handles.rMove.goSignal=0;
+
+% Update handles structure
+guidata(hObject, handles); 
 
 
 
@@ -1685,50 +1687,30 @@ qGuess_Pen = [60 60 0 80 0 -50 90]*pi/180;
 steps = 50;
 hold on
 
-usingRMRC = 1;
-if usingRMRC == 0
-    adjPen_T = pen_T*transl(-0.01, 0, 0); % Adjusting target transform slightly so pen is centred in gripper
-    pen_TR = adjPen_T*trotx(pi/2)*trotz(pi);
-    %qGuess_Pen = [25 90 0 0 -65 0 90]*pi/180;
-    %qGuess_Pen = [60 45 0 105 0 -60 90]*pi/180;
+% Move above the target point
+adjPen_T = pen_T*transl(-0.01, 0, 0.1); % Adjusting target transform slightly so pen is centred in gripper
+pen_TR = adjPen_T*trotx(pi/2)*trotz(pi);
+[qOut, qMatrix_1] = handles.rMove.MoveRobotToObject2(handles.myRobot, pen_TR, ...
+    qGuess_Pen, steps);
+updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
 
-    qOut = handles.rMove.MoveRobotToObject(handles.myRobot, pen_TR, 0.1, ...
-        qGuess_Pen, steps);
-    % Use RMRC to move the Hans Cute back up 10cm
-    % Define starting and desired end transform
-    start_T = handles.myRobot.fkine(qOut);
-    end_T = adjPen_T*transl(0, -0.08, 0);  % Y-Axis pointing downwards
-    % RMRC (with object) Parameters: Robot, Start 4x4, End 4x4, Object Mesh, ...
-    % Object Vertices, Time of Traj, Plot Traj Trail?, Plot Traj Data?
-    qOut = handles.rMove.RMRC_7DOF(handles.myRobot, start_T, end_T, ...
-        penMesh_h, penVertices, 1, 0, 0);
-    
-else
-    % Move above the target point
-    adjPen_T = pen_T*transl(-0.01, 0, 0.1); % Adjusting target transform slightly so pen is centred in gripper
-    pen_TR = adjPen_T*trotx(pi/2)*trotz(pi);
-    [qOut, qMatrix_1] = handles.rMove.MoveRobotToObject2(handles.myRobot, pen_TR, ...
-        qGuess_Pen, steps);
-    updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
-    
-    % Use RMRC to move down towards the pen and then back up with it
-    % RMRC (no object) Parameters: Robot, Start 4x4, End 4x4, Time of Traj, ...
-    % Plot Traj Trail?, Plot Traj Data?
-    % Moving down:
-    start_T = handles.myRobot.fkine(qOut);
-    end_T = adjPen_T*transl(0, 0, -0.08);  % Y-Axis pointing downwards
-    [qOut, qMatrix_2] = handles.rMove.RMRC_7DOF(handles.myRobot, start_T, end_T, 1, 0, 0);
-    updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
-    
-    % RMRC (with object) Parameters: Robot, Start 4x4, End 4x4, Object Mesh, ...
-    % Object Vertices, Time of Traj, Colour for Plot, Plot Traj Trail?, Plot Traj Data?
-    % Moving up:
-    start_T = handles.myRobot.fkine(qOut);
-    end_T = adjPen_T*transl(0, 0, 0.025);
-    [qOut, qMatrix_3] = handles.rMove.RMRC_7DOF_OBJ(handles.myRobot, start_T, end_T, ...
-        penMesh_h, penVertices, 1, 'c*', 0, 0, 0);
-    updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
-end
+% Use RMRC to move down towards the pen and then back up with it
+% RMRC (no object) Parameters: Robot, Start 4x4, End 4x4, Time of Traj, ...
+% Plot Traj Trail?, Plot Traj Data?
+% Moving down:
+start_T = handles.myRobot.fkine(qOut);
+end_T = adjPen_T*transl(0, 0, -0.08);  % Y-Axis pointing downwards
+[qOut, qMatrix_2] = handles.rMove.RMRC_7DOF(handles.myRobot, start_T, end_T, 1, 0, 0);
+updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
+
+% RMRC (with object) Parameters: Robot, Start 4x4, End 4x4, Object Mesh, ...
+% Object Vertices, Time of Traj, Colour for Plot, Plot Traj Trail?, Plot Traj Data?
+% Moving up:
+start_T = handles.myRobot.fkine(qOut);
+end_T = adjPen_T*transl(0, 0, 0.025);
+[qOut, qMatrix_3] = handles.rMove.RMRC_7DOF_OBJ(handles.myRobot, start_T, end_T, ...
+penMesh_h, penVertices, 1, 'c*', 0, 0, 0);
+updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
 
 % Move above Canvas
 % Define EE Canvas Translation Matrices
@@ -2766,3 +2748,13 @@ guidata(hObject, handles);
 % 
 % 
 % guidata(hObject, handles);  
+
+% function updateStatus(hObject, eventdata, handles)
+%     disp('CALL UPDATE STATUS FUNCTION');
+%     
+%     handles = guidata(hObject);
+%     
+% %     set(handles.status, 'BackgroundColor', colour);
+% %     set(handles.status, 'String', s);
+%     set(handles.status, 'BackgroundColor', 'red');
+%     set(handles.status, 'String', 'S');
