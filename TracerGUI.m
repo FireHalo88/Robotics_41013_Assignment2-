@@ -2621,9 +2621,9 @@ if handles.TBP == 0
 else
 	% Delete Mesh if it exists (it should)
 	try delete(handles.boyMesh_h); end
-    handles.rMove.boyTranslation = [-0.05, -0.1, 0.18];
+    handles.rMove.boyTranslation = [-0.15, 0, 0.18];
 	% Replot boy at some position
-	[handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject("boy9.ply",transl(-0.05, -0.1, 0.18)); 
+	[handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject("boy9.ply",transl(-0.15, 0, 0.18)); 
     
 end
 
