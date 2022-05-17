@@ -12,7 +12,8 @@ function [collision] = lightCurtainCode(translation,object)
     switch object
         case 1 %For Boy entering workspace
             collision = false;
-            centerpnt = [0.12,-0.35];
+            %centerpnt = [0.12,-0.35];
+            centerpnt = [0 0];
             boyTranslation = [translation(1) - centerpnt(1), translation(2), translation(3)];
             %check the whole width of the boy
             for i = 0.0275:-0.0025:-0.0275
