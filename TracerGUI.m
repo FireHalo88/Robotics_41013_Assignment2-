@@ -127,7 +127,7 @@ handles.greenPenVertices = objectVertices{5};
 handles.bluePen_h = objectMeshes_h{6};
 handles.bluePenVertices = objectVertices{6};
 
-[handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject("boy9.ply",transl(-0.55, 0.5, -0.075));
+[handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject("boy9.ply",transl(-0.55, 0.5, -0.07));
 view(3);
 
 % Calculate the Robot EE Position with FK
@@ -1644,14 +1644,14 @@ function startDrawingBtn_Callback(hObject, eventdata, handles)
 % Set status to Green G to indicate we are in run mode!
 set(handles.status, 'BackgroundColor','green');
 set(handles.status, 'String','G');
+
+% Share GUI data to RobotMovement Class
+% SOURCE: https://au.mathworks.com/matlabcentral/answers/67105-update-static-text-for-guide-gui-from-main-matlab-function
+% Jan Simon (2013)
+handles.rMove.GuiHandles = ancestor(hObject, 'figure');
     
 axes(handles.axes2);
 hold on
-
-% Delete previous canvas drawing/plot if it exists
-% for i = 1:length(handles.canvasPlot_h)
-%     try delete(handles.canvasPlot_h(i)); end
-% end
 
 handles.rMove.deletePlot();
 
@@ -1718,25 +1718,12 @@ pointCanvas = transl(-0.15, 0, handles.canvas_T(3,4)+0.08);
 aboveCanvas = pointCanvas*transl(0, 0, 0.12);   % OG: 0, 0, 0.07
 % Define EE Canvas Rotation Matrix
 canvas_Rot = troty(-pi/2)*trotz(pi/2); % __/-\_ config
-%canvas_Rot = trotx(pi/2)*trotz(pi);    % Right-Hand config
-%canvas_Rot = trotx(-pi/2);             % Left-Hand config
-%canvas_Rot = trotx(-pi/2)*troty(-pi/2);
-% Define full Canvas 4x4 Homogenous Matrices
 pointCanvas_T = pointCanvas*canvas_Rot;
 aboveCanvas_T = aboveCanvas*canvas_Rot;
 
 % Move to a point above the Canvas
 qGuess_Canvas = [0 60 0 85 0 -55 90]*pi/180;       % __/-\_ config
 qGuess_1_Lower = [0 61 0 104 0 -75 0]*pi/180;
-%qGuess_Canvas = [130 -90 -90 40 0 65 0]*pi/180;     % RH CONFIG trotx(pi/2)*trotz(pi) OR trotx(pi/2)*troty(-7*pi/36)*trotz(pi)
-%qGuess_2_Lower = [142 -104 -90 12 6 81 -20]*pi/180;
-%qGuess_Canvas = [-90 -90 -90 -55 0 -85 0]*pi/180;  % LH CONFIG CANVAS BOTTOM LEFT
-%qGuess_Canvas = [-120 -90 -90 -55 0 -55 0]*pi/180; % Best of the worst -> LH CONFIG
-%qGuess_4_Lower = [-126 -104 -97 -41 22 -61 32]*pi/180;
-%qGuess_Canvas = [-140 -85 -85 -40 0 -40 0]*pi/180; % LH CONFIG (not perfect)
-%qGuess_Canvas = [125 -90 -90 75 0 70 0]*pi/180;    % RH CONFIG 90 DEG <-
-%qGuess_Canvas = [119 -85 -79 51 32 84 -21]*pi/180; % RH CONFIG (in-between qGuess 2 and qGuess 6)
-%qGuess_Canvas = [-20*pi/180 qOut(2:7)];
 [qOut, qMatrix_4] = handles.rMove.MoveRobotWithObject2(handles.myRobot, aboveCanvas_T, ...
     penMesh_h, penVertices, qGuess_Canvas, steps);
 updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
@@ -2427,12 +2414,11 @@ handles.vsState = get(hObject, 'Value');    % Get state of Visual Servoing Mode
 guidata(hObject, handles);
 
 axes(handles.axes2)
-hold on
+%hold on
 
 if handles.vsState == 1
     % Animate Robot into a Pose for Visual Servoing
     qVS = [0 20 0 70 0 0 90]*pi/180;
-%     handles.myRobot.animate(qVS);
     vs_T = transl(-0.13, 0, 0.45)*troty(-pi/2)*trotz(pi/4);
     handles.rMove.MoveRobotToObject2(handles.myRobot, vs_T, qVS, 30);
     updateTeachGUI(handles); % Update Teach GUI with new joint states + XYXRPY values
@@ -2448,7 +2434,7 @@ if handles.vsState == 1
     resV = 1024;
     cenU = 512;
     cenV = 512;
-    lenSignPixels = 460;
+    lenSignPixels = 340;
     % Use order to define as 2 -> 1 -> 8 -> 7 -> ... -> 3 (From Book
     % Drawing).
     pStar = [cenU+lenSignPixels/4, cenU-lenSignPixels/4, cenU-lenSignPixels/2, ...
@@ -2458,44 +2444,47 @@ if handles.vsState == 1
              cenV+lenSignPixels/4, cenV+lenSignPixels/2, cenV+lenSignPixels/2, ...
              cenV+lenSignPixels/4, cenV-lenSignPixels/4];                            % V Coordinates
     
-    % Update handles structure
-    guidata(hObject, handles);
-    
     % Get Transform of Sign in frame of Robot End Effector
     signFromEE_T = handles.visualServo.signFromEE(handles.myRobot);
     
     % Initialise Camera Object and define FPS
-    cam = CentralCamera('focal', 0.08, 'pixel', 10e-5, ...
-    'resolution', [resU resV], 'centre', [cenU cenV], 'name', 'ATV_Cam');
+    handles.cam = CentralCamera('focal', 0.08, 'pixel', 10e-5, ...
+        'resolution', [resU resV], 'centre', [cenU cenV], 'name', 'ATV_Cam');
     fps = 25;
     
     % Get Robot EE Pose and set it as the Camera Position
     currQ = handles.myRobot.getpos()';
     Tc0 = handles.myRobot.fkine(currQ);
-    cam.T = Tc0;
+    handles.cam.T = Tc0;
     
     % Define the visual servoing gain (0 < lambda < 1) and an estimated
     % value for the depth. 
-    lambda = 0.6;
+    lambda = 0.7;
     % Estimating Depth as distance from EE to centre of Sign
     depth = sqrt(signFromEE_T(1,4)^2 + signFromEE_T(2,4)^2 + signFromEE_T(3,4)^2);
+    
+    % Display points in 3D and the camera
+    % handles.cam.plot_camera('Tcam',Tc0,'scale',0.03); % This line leads to errors when trying to delete the stop sign
     
     % Get the current cartesian points 'P' of the Stop Sign corners
     P = handles.visualServo.determineCartesianCornerPoints(handles.sSign_T);
     
-    cam.clf()
+    handles.cam.clf()
 
     % Display image view. Using the Vision Toolbox, plot the target in the
     % Image View.
     %axes(handles.axes3)
-    cam.plot(pStar, '*');
-    cam.hold(true);
+    handles.cam.plot(pStar, '*');
+    handles.cam.hold(true);
 
     % Display current view using the projection of the 3D points into the image
     % at the current camera position.
-    cam.plot(P, 'Tcam', Tc0, 'o');
+    handles.cam.plot(P, 'Tcam', Tc0, 'o');
     
-    pause(2);
+    % Update handles structure
+    guidata(hObject, handles);
+    
+    pause(1);
     
     while(handles.vsState == 1)
         % VS CODE GOES HERE
@@ -2505,7 +2494,7 @@ if handles.vsState == 1
         % Compute the view of the camera by projecting the 3D points into the image
         % plane.
         %axes(handles.axes3)
-        uv = cam.plot(P);
+        uv = handles.cam.plot(P);
         
         % Calculate the error in the image
         e = pStar - uv;     % Desired - Observed
@@ -2513,7 +2502,7 @@ if handles.vsState == 1
         
         % Compute the current Image Jacobian/Interaction Matrix
         % using the Vision Toolbox function
-        J = cam.visjac_p(uv, depth);
+        J = handles.cam.visjac_p(uv, depth);
         
         % Compute the desired velocity ofthe camera given the error andthe Image Jacobian
         % Note: This is the desired velocity of the end-effector
@@ -2534,17 +2523,16 @@ if handles.vsState == 1
         % Calc. Joint Velocities
         qDot = J_Inv*camVelocity;    % qDot = pinv(Manipulator Jacobian)*lambda*pinv(Image Jacobian)*(Desired - Observed)
     
-        % Ensure no joint velocities will cause robot to exceed joint
-        % limits
-        for j = 1:length(qDot)
-            if q(j) < r.model.qlim(j,1)
-                disp(['Joint ', num2str(j), ' is below allowable limits! ', ...
-                    'Joint is at: ', num2str(q(j)), ', limit is: ', num2str(r.model.qlim(j,1))]);
-            elseif q(j) > r.model.qlim(j,2)
-                disp(['Joint ', num2str(j), ' is above allowable limits! ', ...
-                    'Joint is at: ', num2str(q(j)), ', limit is: ', num2str(r.model.qlim(j,2))]);
-            else
-                continue
+        % Ensure no joint velocities will cause robot to exceed joint limits
+        % Check if next joint is outside allowable joint limits.
+        % If TRUE -> trigger E-STOP and STOP MOTOR (qDot = 0)
+        for joint = 1:7
+            if currQ(joint) + (1/fps)*qDot(joint) ...
+                    < handles.myRobot.qlim(joint, 1) ...
+                    || currQ(joint) + (1/fps)*qDot(joint) ...
+                    > handles.myRobot.qlim(joint, 2)
+                qDot(joint) = 0;
+                disp('Motors Stopped - Vis. Servo.!');
             end
         end
         
@@ -2573,13 +2561,13 @@ if handles.vsState == 1
         %axes(handles.axes2)
         handles.myRobot.animate(newQ');
         cam_T = handles.myRobot.fkine(newQ);
-        cam.T = cam_T;
+        handles.cam.T = cam_T;
         
         % Update GUI with Robot XYZ, RPY and Joint Angles
         updateTeachGUI(handles);
         
         % Update handles structure
-        %guidata(hObject, handles);
+        guidata(hObject, handles);
         
         % Check if all the errors are less than one pixel (may use this for
         % a boolean to prevent infinite running at low velocities which
@@ -2595,8 +2583,11 @@ if handles.vsState == 1
    
 else
     try delete(handles.sSign_h); end
+    drawnow();
     % Update GUI with Robot XYZ, RPY and Joint Angles
     updateTeachGUI(handles);
+    % Update handles structure
+    guidata(hObject, handles);
 end
 
 
@@ -2636,53 +2627,6 @@ function lcdBtn_Callback(hObject, eventdata, handles)
 % hObject    handle to lcdBtn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% FOR A TOGGLE BUTTON -> USE THIS CODE
-% Determine current state of button
-% handles.LCDState = get(hObject, 'Value');
-% 
-% If state = 1, have boy start translating in positive X
-% if handles.LCDState == 1
-%     Delete previous mesh of Boy
-%     try delete(handles.boyMesh_h); end
-%     
-%     Define new transform
-%     handles.boy_T = transl(-0.55, 0, -0.07)*trotz(pi/2);
-%     [handles.boyMesh_h, handles.boyVertices] = handles.environ.CreateObject('boy8.ply', handles.boy_T);
-%     for i = 1:25
-%         Transform Object to a new Pose -> +1CM IN X = -1CM IN BOY'S Y
-%         handles.boy_T = handles.boy_T*transl(0, -0.01, 0);
-%         boyTransformVertices = [handles.boyVertices,ones(size(handles.boyVertices,1),1)] ...
-%             * handles.boy_T';
-%         set(handles.boyMesh_h, 'Vertices', boyTransformVertices(:,1:3));
-%         drawnow();
-%         
-%         Update GUI Handles Structure
-%         guidata(hObject, handles);
-%     end
-% If state = 0, have boy start translating in negative X
-% else
-%     for i = 1:25
-%         Transform Object to a new Pose -> -1CM IN X = +1CM IN BOY'S Y
-%         handles.boy_T = handles.boy_T*transl(0, 0.01, 0);
-%         boyTransformVertices = [handles.boyVertices,ones(size(handles.boyVertices,1),1)] ...
-%             * handles.boy_T';
-%         set(handles.boyMesh_h, 'Vertices', boyTransformVertices(:,1:3));
-%         drawnow();
-%         
-%         Update GUI Handles Structure
-%         guidata(hObject, handles);
-%     end
-% end
-% 
-% Update GUI Handles Structure
-% guidata(hObject, handles);
-
-% A WAY WHERE WE CAN HAVE IT MOVE SIMILTANEOUSLY TO THE ROBOT -> NEEDS TO
-% BE A PUSHBUTTON
-% STATE 0 = NOT MOVING
-% STATE 1 = MOVE +X (-Y IN BOY FRAME)
-% STATE 2 = MOVE -X (+Y IN BOY FRAME)
 
 % If state = 0, convert state to 1 and send positive X translation code to
 % the Robot Movement class
@@ -2730,31 +2674,7 @@ end
 % Update GUI Handles Structure
 guidata(hObject, handles);
 
-
-% handles.LCD = get(hObject,'Value');
-% 
-% try 
-%     delete(handles.boyMesh_h); 
-% end
-% Setup Scene
-% steps = 50;
-% Xstep = 1;
-% X = zeros(3, steps);
-% s = lspb(0,1,steps);
-% Waypoints where the boy will move
-% boyPose0 = [-0.55, 0.5, -0.075]; 
-% boyPose1 = [-0.6, 0, -0.075]; 
-% boyPose2 = [-0.4, 0, -0.075]; 
-% 
-% 
-% guidata(hObject, handles);  
-
-% function updateStatus(hObject, eventdata, handles)
-%     disp('CALL UPDATE STATUS FUNCTION');
-%     
-%     handles = guidata(hObject);
-%     
-% %     set(handles.status, 'BackgroundColor', colour);
-% %     set(handles.status, 'String', s);
-%     set(handles.status, 'BackgroundColor', 'red');
-%     set(handles.status, 'String', 'S');
+function updateStatus(handles, colour, s)
+% This function will update the 'Status' symbol on the GUI
+set(handles.status, 'BackgroundColor', colour);
+set(handles.status, 'String', s);

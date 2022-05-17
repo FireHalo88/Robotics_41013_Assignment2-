@@ -8,7 +8,7 @@ classdef VisualServoing < handle
         stopSign_h; % Stop Sign Surface Plot
         ssMesh_h;   % Stop Sign PLY Mesh
         sign_T;     % Global Transform of the Sign
-        signLength = 0.2;   % Length of the sign in m.
+        signLength = 0.15;   % Length of the sign in m.
     end
     
     methods
