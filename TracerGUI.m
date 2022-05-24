@@ -176,7 +176,6 @@ end
 % UIWAIT makes TracerGUI wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
-
 % --- Outputs from this function are returned to the command line.
 function varargout = TracerGUI_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
@@ -209,13 +208,11 @@ switch popup_sel_index
         surf(peaks);
 end
 
-
 % --------------------------------------------------------------------
 function FileMenu_Callback(hObject, eventdata, handles)
 % hObject    handle to FileMenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
 
 % --------------------------------------------------------------------
 function OpenMenuItem_Callback(hObject, eventdata, handles)
@@ -783,8 +780,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-
 function q3_Callback(hObject, eventdata, handles)
 % hObject    handle to q3 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -841,8 +836,6 @@ function q3_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
 
 function q4_Callback(hObject, eventdata, handles)
 % hObject    handle to q4 (see GCBO)
@@ -901,8 +894,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-
 function q5_Callback(hObject, eventdata, handles)
 % hObject    handle to q5 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -959,8 +950,6 @@ function q5_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
 
 function q6_Callback(hObject, eventdata, handles)
 % hObject    handle to q6 (see GCBO)
@@ -1019,8 +1008,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-
 function q7_Callback(hObject, eventdata, handles)
 % hObject    handle to q7 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -1078,7 +1065,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 % --- Executes on button press in eStop.
 function eStop_Callback(hObject, eventdata, handles)
 % hObject    handle to eStop (see GCBO)
@@ -1099,8 +1085,6 @@ handles.rMove.goSignal=0;
 
 % Update handles structure
 guidata(hObject, handles); 
-
-
 
 % --- Executes on button press in up_X.
 function up_X_Callback(hObject, eventdata, handles)
@@ -2254,7 +2238,6 @@ hold off
 guidata(hObject, handles);
 
 
-
 % --- Executes on selection change in chooseShapeDDM.
 function chooseShapeDDM_Callback(hObject, eventdata, handles)
 % hObject    handle to chooseShapeDDM (see GCBO)
@@ -2263,7 +2246,6 @@ function chooseShapeDDM_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns chooseShapeDDM contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from chooseShapeDDM
-
 
 % --- Executes during object creation, after setting all properties.
 function chooseShapeDDM_CreateFcn(hObject, eventdata, handles)
@@ -2276,7 +2258,6 @@ function chooseShapeDDM_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 % --- Executes on button press in rcBtn.
 function rcBtn_Callback(hObject, eventdata, handles)
@@ -2399,8 +2380,6 @@ if handles.rcState == 1
         end     
     end
 end
-        
-
 
 % --- Executes on button press in vsBtn.
 function vsBtn_Callback(hObject, eventdata, handles)
@@ -2589,7 +2568,6 @@ else
     % Update handles structure
     guidata(hObject, handles);
 end
-
 
 % --- Executes on button press in boyPoseBtn.
 function boyPoseBtn_Callback(hObject, eventdata, handles)
